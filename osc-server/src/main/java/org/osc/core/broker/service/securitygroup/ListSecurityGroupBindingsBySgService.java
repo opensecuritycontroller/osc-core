@@ -73,9 +73,7 @@ public class ListSecurityGroupBindingsBySgService
                     FailurePolicyType.valueOf(sgInterface.getFailurePolicyType().name()), sgInterface.getOrder());
             virtualSystemBindingDto.setMarkedForDeletion(sgInterface.getMarkedForDeletion());
             virtualSystemBindingDto.setBinded(true);
-			if (this.apiFactoryService.supportsMultiplePolicies(vs)) {
-				virtualSystemBindingDto.setMultiplePoliciesSupported(true);
-			}
+			virtualSystemBindingDto.setMultiplePoliciesSupported(this.apiFactoryService.supportsMultiplePolicies(vs));
             if (vs.getDomain() != null) {
                 for (Policy policy : vs.getDomain().getPolicies()) {
                     PolicyDto dto = new PolicyDto();
@@ -102,9 +100,8 @@ public class ListSecurityGroupBindingsBySgService
                     // FAIL_OPEN
                     VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(
                             vs.getId(), vs.getDistributedAppliance().getName(), null, failurePolicyType, order);
-        			if (this.apiFactoryService.supportsMultiplePolicies(vs)) {
-        				virtualSystemBindingDto.setMultiplePoliciesSupported(true);
-        			}
+					virtualSystemBindingDto
+							.setMultiplePoliciesSupported(this.apiFactoryService.supportsMultiplePolicies(vs));
 
                     if (vs.getDomain() != null) {
                         for (Policy policy : vs.getDomain().getPolicies()) {

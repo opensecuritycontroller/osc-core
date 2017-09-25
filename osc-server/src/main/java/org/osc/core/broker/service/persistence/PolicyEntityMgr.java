@@ -40,8 +40,8 @@ public class PolicyEntityMgr {
 	}
 
 	/**
-	 * Verifies if the request contains valid policies supported by security manager available on the OSC. If request
-	 * contains one or more invalid policies the service fails.
+	 * Verifies if the request contains valid policies supported by security manager available on the OSC.
+	 * If the request contains one or more invalid policies, throw an exception.
 	 */
 	public static Set<Policy> findPoliciesById(EntityManager em, Set<Long> ids) throws VmidcBrokerValidationException, Exception {
 		Set<Policy> policies = new HashSet<>();

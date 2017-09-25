@@ -18,7 +18,6 @@ package org.osc.core.broker.service.securitygroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -117,18 +116,8 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 							"Service to bind: " + serviceToBindTo + " must have a policy id.");
 				}
 
-				Set<Policy> policies = new HashSet<>();
-				Policy policy = null;
-				for (Long policyId : serviceToBindTo.getPolicyIds()) {
-					policy = PolicyEntityMgr.findById(em, policyId);
-
-					if (policy == null) {
-						throw new VmidcBrokerValidationException(
-								"Policy with Id: " + serviceToBindTo.getPolicyIds() + "  is not found.");
-					} else {
-						policies.add(policy);
-					}
-				}
+				Set<Policy> policies = null;
+				policies = PolicyEntityMgr.findPoliciesById(em, serviceToBindTo.getPolicyIds());
 
 				if (this.apiFactoryService.supportsFailurePolicy(this.securityGroup)) {
 					// If failure policy is supported, failure policy is a required field
@@ -153,7 +142,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 						.findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
 				if (sgi == null) {
 					// If the policy is null the tag should also be null
-					Long tag = policy == null ? null : VirtualSystemEntityMgr.generateUniqueTag(em, vs);
+					Long tag = policies == null ? null : VirtualSystemEntityMgr.generateUniqueTag(em, vs);
 					String tagString = tag == null ? null : SecurityGroupInterface.ISC_TAG_PREFIX + tag;
 
 					// Create a new security group interface for this service

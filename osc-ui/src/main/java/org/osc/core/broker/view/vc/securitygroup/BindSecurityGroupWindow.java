@@ -138,7 +138,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 					// Do not update the policy binding from the UI.
 					// Policy mapping for manager supporting multiple policies is not supported through UI.
 					Set<Long> policyIdSet = null;
-					if (previousBinding.isMultiplePoliciesSupported()) {
+					if (previousBinding.isMultiplePoliciesSupported() && previousBinding.isBinded()) {
 						policyIdSet = previousBinding.getPolicyIds();
 					} else {
 						Object selectedPolicy = ((ComboBox) selectedService.getItemProperty(PROPERTY_ID_POLICY)
