@@ -22,21 +22,32 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Conforms the deployment pods for a Kubernetes deployment.
  *
  */
-@Component(service = ConformK8sInspectionPortMetaTask.class)
-public class ConformK8sInspectionPortMetaTask extends TransactionalMetaTask {
+@Component(service = ConformK8sDeploymentSpecInspectionPortsMetaTask.class)
+public class ConformK8sDeploymentSpecInspectionPortsMetaTask extends TransactionalMetaTask {
+    @Reference
+    DeleteK8sDAIInspectionPortTask deleteK8sDAIInspectionPortTask;
+
+    @Reference
+    RegisterK8sDAIInspectionPortTask registerK8sDAIInspectionPortTask;
+
     private DeploymentSpec ds;
     private TaskGraph tg;
 
-    public ConformK8sInspectionPortMetaTask create(DeploymentSpec ds) {
-        ConformK8sInspectionPortMetaTask task = new ConformK8sInspectionPortMetaTask();
+    public ConformK8sDeploymentSpecInspectionPortsMetaTask create(DeploymentSpec ds) {
+        ConformK8sDeploymentSpecInspectionPortsMetaTask task = new ConformK8sDeploymentSpecInspectionPortsMetaTask();
+        task.deleteK8sDAIInspectionPortTask = this.deleteK8sDAIInspectionPortTask;
+        task.registerK8sDAIInspectionPortTask = this.registerK8sDAIInspectionPortTask;
         task.ds = ds;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -46,11 +57,22 @@ public class ConformK8sInspectionPortMetaTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
+        this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
+
+        for (DistributedApplianceInstance dai : this.ds.getDistributedApplianceInstances()) {
+            // If this is an orphan DAI (not associated with a pod and its network) we must clean up the inspection port.
+            if (dai.getInspectionOsIngressPortId() == null) {
+                this.tg.addTask(this.deleteK8sDAIInspectionPortTask.create(dai));
+            } else {
+                this.tg.addTask(this.registerK8sDAIInspectionPortTask.create(dai));
+            }
+        }
     }
 
     @Override
     public String getName() {
-        return String.format("Conforming the K8s inspection ports for the deployment spec '%s'", this.ds.getName());
+        return String.format("Conforming the K8s inspection ports for the deployment spec %s", this.ds.getName());
     }
 
     @Override

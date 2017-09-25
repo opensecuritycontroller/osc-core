@@ -22,26 +22,29 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.rest.client.k8s.KubernetesDeploymentApi;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.sdk.controller.DefaultInspectionPort;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
- * This task is responsible for deleting or cleaning up a DAI in the OSC database for a deleted pod.
+ * This task is responsible for deleting a DAI inspection port from the SDN controller.
  */
-@Component(service = DeleteOrCleanK8sDAITask.class)
-public class DeleteOrCleanK8sDAITask extends TransactionalTask {
+@Component(service = DeleteK8sDAIInspectionPortTask.class)
+public class DeleteK8sDAIInspectionPortTask extends TransactionalTask {
     private DistributedApplianceInstance dai;
 
-    public DeleteOrCleanK8sDAITask create(DistributedApplianceInstance daiForDeletion) {
-        return create(daiForDeletion, null);
-    }
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
-    DeleteOrCleanK8sDAITask create(DistributedApplianceInstance dai, KubernetesDeploymentApi k8sDeploymentApi) {
-        DeleteOrCleanK8sDAITask task = new DeleteOrCleanK8sDAITask();
+    public DeleteK8sDAIInspectionPortTask create(DistributedApplianceInstance dai) {
+        DeleteK8sDAIInspectionPortTask task = new DeleteK8sDAIInspectionPortTask();
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
+        task.apiFactoryService = this.apiFactoryService;
         task.dai = dai;
 
         return task;
@@ -49,25 +52,21 @@ public class DeleteOrCleanK8sDAITask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<DistributedApplianceInstance> dsEmgr = new OSCEntityManager<DistributedApplianceInstance>(DistributedApplianceInstance.class, em, this.txBroadcastUtil);
-        this.dai = dsEmgr.findByPrimaryKey(this.dai.getId());
+        OSCEntityManager<DistributedApplianceInstance> daiEmgr = new OSCEntityManager<DistributedApplianceInstance>(DistributedApplianceInstance.class, em, this.txBroadcastUtil);
+        this.dai = daiEmgr.findByPrimaryKey(this.dai.getId());
 
-        // If the DAI is associated with an existing inspection element on the SDN controller
-        // do not delete it, instead clear out the network information.
-        if (this.dai.getInspectionElementId() == null) {
-            OSCEntityManager.delete(em, this.dai, this.txBroadcastUtil);
-        } else {
-            this.dai.setInspectionOsIngressPortId(null);
-            this.dai.setInspectionIngressMacAddress(null);
-            this.dai.setInspectionOsEgressPortId(null);
-            this.dai.setInspectionEgressMacAddress(null);
-            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
+        try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(this.dai.getVirtualSystem())) {
+            DefaultInspectionPort inspectionPort = new DefaultInspectionPort(null, null, this.dai.getInspectionElementId(), this.dai.getInspectionElementParentId());
+            redirection.removeInspectionPort(inspectionPort);
         }
+
+        // After removing the inspection port from the SDN controller we can now delete this orphan DAI
+        OSCEntityManager.delete(em, this.dai, this.txBroadcastUtil);
     }
 
     @Override
     public String getName() {
-        return String.format("Deleting or cleaning the K8s dai %s", this.dai.getId());
+        return String.format("Deleting the inspection port for the K8s dai %s", this.dai.getName());
     }
 
     @Override

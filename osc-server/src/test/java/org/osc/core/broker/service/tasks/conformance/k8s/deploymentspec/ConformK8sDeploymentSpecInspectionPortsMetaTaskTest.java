@@ -16,12 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec;
 
-import static org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec.ConformK8sDeploymentPodsMetaTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec.ConformK8sDeploymentSpecInspectionPortsMetaTaskTestData.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import javax.persistence.EntityManager;
 
@@ -39,11 +37,7 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.k8s.KubernetesDeploymentApi;
-import org.osc.core.broker.rest.client.k8s.KubernetesPod;
 import org.osc.core.broker.rest.client.k8s.KubernetesPodApi;
-import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -51,7 +45,7 @@ import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.test.util.TestTransactionControl;
 
 @RunWith(Parameterized.class)
-public class ConformK8sDeploymentPodsMetaTaskTest {
+public class ConformK8sDeploymentSpecInspectionPortsMetaTaskTest {
     public EntityManager em;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
@@ -64,7 +58,7 @@ public class ConformK8sDeploymentPodsMetaTaskTest {
     TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
-    ConformK8sDeploymentPodsMetaTask factoryTask;
+    ConformK8sDeploymentSpecInspectionPortsMetaTask factoryTask;
 
     @Mock
     private KubernetesPodApi k8sPodApi;
@@ -73,7 +67,7 @@ public class ConformK8sDeploymentPodsMetaTaskTest {
 
     private TaskGraph expectedGraph;
 
-    public ConformK8sDeploymentPodsMetaTaskTest(DeploymentSpec ds, TaskGraph tg) {
+    public ConformK8sDeploymentSpecInspectionPortsMetaTaskTest(DeploymentSpec ds, TaskGraph tg) {
         this.ds = ds;
         this.expectedGraph = tg;
     }
@@ -90,14 +84,6 @@ public class ConformK8sDeploymentPodsMetaTaskTest {
         Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         populateDatabase();
-
-        registerKubernetesPods(DS_NO_DAI_ORPHAN_PODS, ORPHAN_PODS);
-        registerKubernetesPods(DS_ORPHAN_DAIS_NO_PODS, new ArrayList<>());
-        List<KubernetesPod> mixedPods = new ArrayList<>();
-        mixedPods.addAll(ORPHAN_PODS);
-        mixedPods.addAll(MATCHING_PODS);
-        registerKubernetesPods(DS_SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS, mixedPods);
-        registerKubernetesPods(DS_DAIS_PODS_MATCHING, MATCHING_PODS);
     }
 
     @After
@@ -130,12 +116,10 @@ public class ConformK8sDeploymentPodsMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        this.factoryTask.deleteOrCleanK8sDAITask = new CleanK8sDAITask();
-        this.factoryTask.createOrUpdateK8sDAITask = new CreateOrUpdateK8sDAITask();
-        this.factoryTask.conformK8sInspectionPortMetaTask = new ConformK8sDeploymentSpecInspectionPortsMetaTask();
-        this.factoryTask.managerCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
+        this.factoryTask.deleteK8sDAIInspectionPortTask = new DeleteK8sDAIInspectionPortTask();
+        this.factoryTask.registerK8sDAIInspectionPortTask = new RegisterK8sDAIInspectionPortTask();
 
-        ConformK8sDeploymentPodsMetaTask task = this.factoryTask.create(this.ds, this.k8sPodApi);
+        ConformK8sDeploymentSpecInspectionPortsMetaTask task = this.factoryTask.create(this.ds);
 
         // Act.
         task.execute();
@@ -147,16 +131,9 @@ public class ConformK8sDeploymentPodsMetaTaskTest {
     @Parameters()
     public static Collection<Object[]> getTestData() {
         return Arrays.asList(new Object[][] {
-            {DS_NO_DAI_ORPHAN_PODS, conformOrphanK8sPodsAsDaisGraph(DS_NO_DAI_ORPHAN_PODS)},
-            {DS_ORPHAN_DAIS_NO_PODS, conformOrphanDaisGraph(DS_ORPHAN_DAIS_NO_PODS)},
-            {DS_SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS, conformOrphanDaisAndOrphanPodsGraph(DS_SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS)},
-            {DS_DAIS_PODS_MATCHING, conformDaisMatchingPodsGraph(DS_DAIS_PODS_MATCHING)},
+            {DS_WITH_ONLY_ORPHAN_DAIS, deleteDAIsInspectionPortGraph(DS_WITH_ONLY_ORPHAN_DAIS)},
+            {DS_WITHOUT_ORPHAN_DAIS, registerDAIsInspectionPortGraph(DS_WITHOUT_ORPHAN_DAIS)},
+            {DS_NO_DAIS, emptyGraph()},
         });
-    }
-
-    private void registerKubernetesPods(DeploymentSpec ds, List<KubernetesPod> k8sPods) throws VmidcException {
-        Mockito
-        .when(this.k8sPodApi.getPodsByLabel(KubernetesDeploymentApi.OSC_DEPLOYMENT_LABEL_NAME + "=" + K8sUtil.getK8sName(ds)))
-        .thenReturn(k8sPods);
     }
 }

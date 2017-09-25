@@ -17,7 +17,6 @@
 package org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,119 +30,82 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.k8s.KubernetesPod;
-import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.virtualization.VirtualizationType;
 
-public class ConformK8sDeploymentPodsMetaTaskTestData {
+public class ConformK8sDeploymentSpecInspectionPortsMetaTaskTestData {
     public static List<DeploymentSpec> TEST_DEPLOYMENT_SPECS = new ArrayList<>();
 
-    private static List<String> KNOWN_POD_IDS = Arrays.asList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    public static DeploymentSpec DS_NO_DAIS =
+            createDS("DS_NO_DAIS");
 
-    public static List<KubernetesPod> ORPHAN_PODS = Arrays.asList(createKubernetesPod(), createKubernetesPod(), createKubernetesPod());
+    public static DeploymentSpec DS_WITH_ONLY_ORPHAN_DAIS =
+            createDSWithDAIs("DS_WITH_ONLY_ORPHAN_DAIS", 0, 2);
 
-    public static List<KubernetesPod> MATCHING_PODS = Arrays.asList(createKubernetesPod(KNOWN_POD_IDS.get(0)), createKubernetesPod(KNOWN_POD_IDS.get(1)));
 
-    public static DeploymentSpec DS_NO_DAI_ORPHAN_PODS =
-            createDS("DS_NO_DAI_ORPHAN_PODS");
+    public static DeploymentSpec DS_WITHOUT_ORPHAN_DAIS =
+            createDSWithDAIs("DS_WITHOUT_ORPHAN_DAIS", 2, 0);
 
-    public static DeploymentSpec DS_ORPHAN_DAIS_NO_PODS =
-            createDSWithDAIs("DS_ORPHAN_DAIS_NO_PODS", 3, false);
 
-    public static DeploymentSpec DS_SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS =
-            createDSWithDAIs("DS_SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS", 2, true);
+    public static DeploymentSpec DS_WITH_SOME_ORPHAN_DAIS_SOME_ASSIGNED_DAIS =
+            createDSWithDAIs("DS_WITH_SOME_ORPHAN_DAIS_SOME_ASSIGNED_DAIS", 2, 2);
 
-    public static DeploymentSpec DS_DAIS_PODS_MATCHING =
-            createDSWithDAIs("DS_DAIS_PODS_MATCHING", 0, true);
 
-    public static TaskGraph conformOrphanK8sPodsAsDaisGraph(DeploymentSpec ds) {
-        TaskGraph expectedGraph = new TaskGraph();
-
-        for(KubernetesPod pod : ORPHAN_PODS) {
-            expectedGraph.addTask(new CreateOrUpdateK8sDAITask().create(ds, pod));
-        }
-
-        expectedGraph.appendTask(new ConformK8sDeploymentSpecInspectionPortsMetaTask().create(ds), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-
-        return expectedGraph;
-    }
-
-    public static TaskGraph conformOrphanDaisGraph(DeploymentSpec ds) {
+    public static TaskGraph deleteDAIsInspectionPortGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
 
         for(DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-            expectedGraph.addTask(new CleanK8sDAITask().create(dai));
+            expectedGraph.addTask(new DeleteK8sDAIInspectionPortTask().create(dai));
         }
-
-        expectedGraph.appendTask(new ConformK8sDeploymentSpecInspectionPortsMetaTask().create(ds), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
     }
 
-    public static TaskGraph conformOrphanDaisAndOrphanPodsGraph(DeploymentSpec ds) {
+    public static TaskGraph registerDAIsInspectionPortGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
-
-        for(KubernetesPod pod : ORPHAN_PODS) {
-            expectedGraph.addTask(new CreateOrUpdateK8sDAITask().create(ds, pod));
-        }
 
         for(DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-            if (!KNOWN_POD_IDS.contains(dai.getExternalId())) {
-                expectedGraph.addTask(new CleanK8sDAITask().create(dai));
-            }
+            expectedGraph.addTask(new RegisterK8sDAIInspectionPortTask().create(dai));
         }
 
-        expectedGraph.appendTask(new ConformK8sDeploymentSpecInspectionPortsMetaTask().create(ds), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-
         return expectedGraph;
     }
 
-    public static TaskGraph conformDaisMatchingPodsGraph(DeploymentSpec ds) {
-        TaskGraph expectedGraph = new TaskGraph();
-
-        expectedGraph.appendTask(new ConformK8sDeploymentSpecInspectionPortsMetaTask().create(ds), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-
-        return expectedGraph;
-    }
-
-    public static TaskGraph emptyDSGraph() {
+    public static TaskGraph emptyGraph() {
         return new TaskGraph();
     }
 
-    private static KubernetesPod createKubernetesPod() {
-        return createKubernetesPod(null);
+    public static TaskGraph deleteAndRegiserDAIsInspectionPortGraph(DeploymentSpec ds) {
+        TaskGraph expectedGraph = new TaskGraph();
+
+        for(DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
+            if (dai.getInspectionOsIngressPortId() == null) {
+                expectedGraph.addTask(new DeleteK8sDAIInspectionPortTask().create(dai));
+            } else {
+                expectedGraph.addTask(new RegisterK8sDAIInspectionPortTask().create(dai));
+            }
+        }
+
+        return expectedGraph;
     }
 
-    private static KubernetesPod createKubernetesPod(String podId) {
-        KubernetesPod k8sPod = new KubernetesPod("name", "namespace", podId == null ? UUID.randomUUID().toString() : podId, "node");
-        return k8sPod;
-    }
-
-    private static void addDAIToDS(DeploymentSpec ds, String baseName, String externalId) {
+    private static void addDAIToDS(DeploymentSpec ds, String baseName, String inspectionIngressPortId) {
         DistributedApplianceInstance dai = new DistributedApplianceInstance(ds.getVirtualSystem());
         dai.setDeploymentSpec(ds);
-        dai.setExternalId(externalId == null ? UUID.randomUUID().toString() : externalId);
-        dai.setName(baseName + "_DAI" + dai.getExternalId());
+        dai.setInspectionOsIngressPortId(inspectionIngressPortId);
+        dai.setName(baseName + "_DAI_" + UUID.randomUUID().toString());
 
         ds.getDistributedApplianceInstances().add(dai);
     }
 
-    private static DeploymentSpec createDSWithDAIs(String baseName, int countOrphanDais, boolean includeMatchingDais) {
+    private static DeploymentSpec createDSWithDAIs(String baseName, int countDAISWithNetInfo, int countDAISWithoutNetInfo) {
         DeploymentSpec ds = createDS(baseName);
 
-        for (;countOrphanDais > 0; countOrphanDais--) {
-            addDAIToDS(ds, baseName, null);
+        for (;countDAISWithNetInfo > 0; countDAISWithNetInfo--) {
+            addDAIToDS(ds, baseName, UUID.randomUUID().toString());
         }
 
-        if (includeMatchingDais) {
-            for (String KNOWN_POD_ID : KNOWN_POD_IDS) {
-                addDAIToDS(ds, baseName, KNOWN_POD_ID);
-            }
+        for (;countDAISWithoutNetInfo > 0; countDAISWithoutNetInfo--) {
+            addDAIToDS(ds, baseName, null);
         }
 
         return ds;

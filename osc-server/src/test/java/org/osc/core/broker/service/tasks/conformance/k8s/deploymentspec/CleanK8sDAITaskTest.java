@@ -37,7 +37,7 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
 
-public class DeleteOrcleanK8sDAITaskTest  {
+public class CleanK8sDAITaskTest  {
     @Mock
     protected EntityManager em;
 
@@ -54,7 +54,7 @@ public class DeleteOrcleanK8sDAITaskTest  {
     TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
-    DeleteOrCleanK8sDAITask factory;
+    CleanK8sDAITask factory;
 
     @Before
     public void testInitialize() throws Exception {
@@ -72,7 +72,7 @@ public class DeleteOrcleanK8sDAITaskTest  {
         // Arrange.
         DistributedApplianceInstance dai = createAndRegisterDAI(true, 100L);
 
-        DeleteOrCleanK8sDAITask task = this.factory.create(dai);
+        CleanK8sDAITask task = this.factory.create(dai);
 
         // Act.
         task.execute();
@@ -80,20 +80,6 @@ public class DeleteOrcleanK8sDAITaskTest  {
         // Assert.
         verify(this.em, Mockito.times(1)).merge(Mockito.argThat(new CleanNetworkInfoDAIMatcher()));
         verify(this.em, Mockito.never()).remove(Mockito.any(DistributedApplianceInstance.class));
-    }
-
-    @Test
-    public void testExecute_WithDAINotAssignedToInspectionElement_DAIDeleted() throws Exception {
-        // Arrange.
-        DistributedApplianceInstance dai = createAndRegisterDAI(false, 101L);
-
-        DeleteOrCleanK8sDAITask task = this.factory.create(dai);
-
-        // Act.
-        task.execute();
-
-        // Assert.
-        verify(this.em, Mockito.times(1)).remove(dai);
     }
 
     private class CleanNetworkInfoDAIMatcher extends ArgumentMatcher<DistributedApplianceInstance> {

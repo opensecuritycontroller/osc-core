@@ -102,9 +102,15 @@ public class CreateOrUpdateK8sDAITask extends TransactionalTask {
         dai.setExternalId(this.k8sPod.getUid());
         // Creating the new DAI with the existing/orphan DAI inspection element id
         dai.setInspectionElementId(orphanDai.isPresent() ? orphanDai.get().getInspectionElementId() : null);
-        dai.setInspectionElementParentId(orphanDai.isPresent() ? orphanDai.get().getInspectionElementParentId() : null);
+
+        // The DAI inspection element parent ID (domain id) is the same as the port element parent id
+        dai.setInspectionElementParentId(orphanDai.isPresent() ? orphanDai.get().getInspectionElementParentId() : portElement.getParentId());
         dai.setInspectionOsIngressPortId(portElement.getElementId());
         dai.setInspectionIngressMacAddress(portElement.getMacAddresses().get(0));
+
+        dai.setInspectionOsEgressPortId(portElement.getElementId());
+        dai.setInspectionEgressMacAddress(portElement.getMacAddresses().get(0));
+
         dai.setIpAddress(portElement.getPortIPs().get(0));
         dai = OSCEntityManager.create(em, dai, this.txBroadcastUtil);
         LOG.info(String.format("Created dai %s.", dai.getName()));
@@ -117,7 +123,7 @@ public class CreateOrUpdateK8sDAITask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Creating the K8s dai for deployment spec %s and pod %s", this.ds.getName(), this.k8sPod.getUid());
+        return String.format("Creating the K8s dai for deployment spec %s and pod name %s, pod id %s", this.ds.getName(), this.k8sPod.getName(), this.k8sPod.getUid());
     }
 
     @Override
