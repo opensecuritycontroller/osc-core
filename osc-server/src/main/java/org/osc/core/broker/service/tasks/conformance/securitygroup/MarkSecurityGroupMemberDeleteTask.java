@@ -18,21 +18,27 @@ package org.osc.core.broker.service.tasks.conformance.securitygroup;
 
 import javax.persistence.EntityManager;
 
+import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=MarkSecurityGroupMemberDeleteTask.class)
 public class MarkSecurityGroupMemberDeleteTask extends TransactionalTask {
+
+    private static final Logger LOG = Logger.getLogger(MarkSecurityGroupMemberDeleteTask.class);
+
+    @Override
+    public String getName() {
+        return "Delete Security Group Member " + this.sgm.getMemberName() + "; id:" + this.sgm.getId();
+    }
 
     private SecurityGroupMember sgm;
 
     @Override
-    public String getName() {
-        return String.format("Mark Security Group Member for deletion: %s", this.sgm.getMemberName());
-    }
-
-    @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        LOG.debug("Start executing " + getClass().getSimpleName() + "; SGM: " + this.sgm);
         this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
         OSCEntityManager.markDeleted(em, this.sgm, this.txBroadcastUtil);
     }

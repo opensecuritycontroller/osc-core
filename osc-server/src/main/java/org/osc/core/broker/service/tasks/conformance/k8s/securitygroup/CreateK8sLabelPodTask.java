@@ -16,9 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
@@ -32,8 +35,10 @@ import org.osc.core.broker.service.persistence.PodEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+@Component(service = CreateK8sLabelPodTask.class)
 public class CreateK8sLabelPodTask extends TransactionalTask{
     private static final Logger LOG = Logger.getLogger(CreateK8sLabelPodTask.class);
 
@@ -53,12 +58,12 @@ public class CreateK8sLabelPodTask extends TransactionalTask{
 
         if (existingPod != null) {
             for (Label existingPodLabel : existingPod.getLabels()) {
-                if (existingPodLabel.getMarkedForDeletion() == true) {
+                if (existingPodLabel.getMarkedForDeletion()) {
                     continue;
                 }
 
                 for (SecurityGroupMember sgm : existingPodLabel.getSecurityGroupMembers()) {
-                    if (sgm.getMarkedForDeletion() == true) {
+                    if (sgm.getMarkedForDeletion()) {
                         continue;
                     }
 
@@ -117,5 +122,10 @@ public class CreateK8sLabelPodTask extends TransactionalTask{
     @Override
     public String getName() {
         return String.format("Creating the pod id %s, name %s", this.k8sPod.getUid(), this.k8sPod.getName());
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.label);
     }
 }

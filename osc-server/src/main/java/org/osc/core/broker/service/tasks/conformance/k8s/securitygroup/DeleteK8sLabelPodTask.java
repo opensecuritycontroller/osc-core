@@ -16,13 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for deleting a pod and pod port from the OSC DB and it is
@@ -30,6 +34,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
  * pod entity is associated with another security group member of the same security group
  * the pod will not be deleted.
  */
+@Component(service = DeleteK8sLabelPodTask.class)
 public class DeleteK8sLabelPodTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreateK8sLabelPodTask.class);
 
@@ -63,5 +68,10 @@ public class DeleteK8sLabelPodTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format("Deleting the pod %s", this.pod.getName());
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.label);
     }
 }

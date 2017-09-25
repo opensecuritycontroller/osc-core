@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
@@ -102,5 +103,10 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
         task.k8sPodApi = this.k8sPodApi;
 
         return task;
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.sgm);
     }
 }

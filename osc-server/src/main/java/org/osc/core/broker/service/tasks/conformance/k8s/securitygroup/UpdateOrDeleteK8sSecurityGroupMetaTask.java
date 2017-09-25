@@ -16,10 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
+import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
 import org.osgi.service.component.annotations.Component;
@@ -27,6 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service = UpdateOrDeleteK8sSecurityGroupMetaTask.class)
 public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTask {
+    private static final Logger LOG = Logger.getLogger(UpdateOrDeleteK8sSecurityGroupMetaTask.class);
 
     @Reference
     CheckK8sSecurityGroupLabelMetaTask checkK8sSecurityGroupLabelMetaTask;
@@ -67,11 +73,30 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
 
         final boolean isDelete = this.sg.getMarkedForDeletion();
 
+        String domainId = null;
+
+        if (!this.sg.getSecurityGroupMembers().isEmpty()) {
+            SecurityGroupMember sgm = this.sg.getSecurityGroupMembers().iterator().next();
+
+            if (!sgm.getPodPorts().isEmpty()) {
+                domainId = sgm.getPodPorts().iterator().next().getParentId();
+            }
+        }
+
         this.sg.getSecurityGroupMembers().forEach(sgm -> {
             this.tg.addTask(this.checkK8sSecurityGroupLabelMetaTask.create(sgm, isDelete));
         });
 
-        this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
-                           isDelete, null));
+        if (domainId != null) {
+            this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
+                    isDelete, domainId));
+        } else {
+            LOG.info(String.format("This SG does not have any associated pods. Skipping port group sync."));
+        }
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.sg);
     }
 }

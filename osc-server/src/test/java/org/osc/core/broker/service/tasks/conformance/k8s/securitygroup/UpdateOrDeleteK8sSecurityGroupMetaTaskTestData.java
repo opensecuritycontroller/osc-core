@@ -19,6 +19,7 @@ package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 
@@ -33,6 +34,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
+import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
 import org.osc.core.common.virtualization.VirtualizationType;
 
@@ -44,6 +47,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
     public static SecurityGroup NO_LABEL_SG = createSecurityGroup("NO_LABEL", 0, false);
     public static SecurityGroup SINGLE_LABEL_SG = createSecurityGroup("SINGLE_LABEL", 1, false);
     public static SecurityGroup MULTI_LABEL_SG = createSecurityGroup("MULTI_LABEL", MANY, false);
+    public static SecurityGroup POPULATED_WITH_POD_SG = createSecurityGroupWithPod("POPULATED_WITH_POD_SG");
     public static SecurityGroup SINGLE_LABEL_MARKED_FOR_DELETION_SG = createSecurityGroup("SINGLE_LABEL", 1, true);
 
     public static TaskGraph createK8sGraph(SecurityGroup sg, boolean isDelete) {
@@ -53,7 +57,20 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
             expectedGraph.addTask(new CheckK8sSecurityGroupLabelMetaTask().create(sgm, isDelete));
         }
 
-        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, null));
+        return expectedGraph;
+    }
+
+    public static TaskGraph checkPortGroupK8sGraph(SecurityGroup sg, boolean isDelete) {
+        TaskGraph expectedGraph = new TaskGraph();
+
+        for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
+            expectedGraph.addTask(new CheckK8sSecurityGroupLabelMetaTask().create(sgm, isDelete));
+        }
+
+        SecurityGroupMember sgm = sg.getSecurityGroupMembers().iterator().next();
+        String domainId = sgm.getPodPorts().iterator().next().getParentId();
+
+        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, domainId));
 
         return expectedGraph;
     }
@@ -104,6 +121,30 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
             SecurityGroupMember sgm = new SecurityGroupMember(sg, label);
             sg.addSecurityGroupMember(sgm);
         }
+
+        return sg;
+    }
+
+    private static SecurityGroup createSecurityGroupWithPod(String baseName) {
+        SecurityGroup sg = createSecurityGroup(baseName, 1, false);
+        Label label = sg.getSecurityGroupMembers().iterator().next().getLabel();
+
+        PodPort podPort = new PodPort(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+
+        Pod pod = new Pod(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+
+        pod.getPorts().add(podPort);
+        podPort.setPod(pod);
+
+        label.getPods().add(pod);
 
         return sg;
     }

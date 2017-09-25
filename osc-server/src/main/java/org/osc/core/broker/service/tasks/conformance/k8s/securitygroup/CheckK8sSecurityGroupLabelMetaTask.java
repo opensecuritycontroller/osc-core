@@ -16,9 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
@@ -81,5 +84,10 @@ public class CheckK8sSecurityGroupLabelMetaTask extends TransactionalMetaTask {
     @Override
     public String toString() {
         return "CheckK8sSecurityGroupLabelMetaTask [sgm=" + this.sgm + ", isDelete=" + this.isDelete + "]";
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.sgm);
     }
 }

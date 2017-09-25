@@ -68,8 +68,8 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
     private TaskGraph expectedGraph;
 
     public UpdateOrDeleteK8sSecurityGroupMetaTaskTest(
-                    SecurityGroup sg,
-                    TaskGraph expectedGraph) {
+            SecurityGroup sg,
+            TaskGraph expectedGraph) {
         this.sg = sg;
         this.expectedGraph = expectedGraph;
     }
@@ -112,7 +112,8 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
             { NO_LABEL_SG, createK8sGraph(NO_LABEL_SG, false) },
             { SINGLE_LABEL_SG, createK8sGraph(SINGLE_LABEL_SG, false) },
             { MULTI_LABEL_SG, createK8sGraph(MULTI_LABEL_SG, false) },
-            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, createK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) }
+            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, createK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) },
+            { POPULATED_WITH_POD_SG, checkPortGroupK8sGraph(POPULATED_WITH_POD_SG, false) }
         });
     }
 }
