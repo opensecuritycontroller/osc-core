@@ -24,6 +24,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
+import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
@@ -75,7 +78,24 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
 
-        } else if (this.sgm.getType() == SecurityGroupMemberType.NETWORK) {
+        } else if (this.sgm.getType() == SecurityGroupMemberType.LABEL) {
+            Label label = this.sgm.getLabel();
+
+            if (label.getSecurityGroupMembers().size() == 1) {
+                this.log.info("No other references to Label found. Deleting Label " + label.getValue());
+                for (Pod pod : label.getPods()) {
+                    for (PodPort podPort : pod.getPorts()) {
+                        OSCEntityManager.delete(em, podPort, this.txBroadcastUtil);
+                    }
+                    OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
+                }
+                OSCEntityManager.delete(em, label, this.txBroadcastUtil);
+            } else {
+                label.getSecurityGroupMembers().remove(this.sgm);
+            }
+            this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
+
+        }  else if (this.sgm.getType() == SecurityGroupMemberType.NETWORK) {
             Network network = this.sgm.getNetwork();
 
             if (network.getSecurityGroupMembers().size() == 1) {
