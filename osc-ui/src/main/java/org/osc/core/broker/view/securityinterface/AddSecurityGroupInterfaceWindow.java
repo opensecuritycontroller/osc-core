@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.view.securityinterface;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
@@ -67,11 +70,12 @@ public class AddSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfaceW
                 dto.setTagValue(Long.parseLong(this.tag.getValue()));
 
                 PolicyDto policyDto = (PolicyDto) this.policy.getValue();
-                dto.setPolicyId(policyDto.getId());
+                // Supporting multi-policies from UI is out of scope
+                dto.setPolicies(new HashSet<>(Arrays.asList(policyDto)));
                 dto.setParentId(this.vsId);
                 dto.setFailurePolicyType(FailurePolicyType.NA);
 
-                BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<SecurityGroupInterfaceDto>();
+                BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<>();
                 req.setDto(dto);
 
                 this.addSecurityGroupInterfaceService.dispatch(req);

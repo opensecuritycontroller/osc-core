@@ -17,7 +17,10 @@
 package org.osc.core.broker.view.vc.securitygroup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
@@ -117,11 +120,32 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
 
+				List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
+						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getList();
+
+
 				for (Long selectedVsId : getSelectedServicesId()) {
+					VirtualSystemPolicyBindingDto previousBinding = null;
+					for (VirtualSystemPolicyBindingDto binding : allBindings) {
+						if (binding.getVirtualSystemId().equals(selectedVsId)) {
+							previousBinding = binding;
+							break;
+						}
+					}
 					Item selectedService = this.serviceTable.getItem(selectedVsId);
-					Object selectedPolicy = ((ComboBox) selectedService.getItemProperty(PROPERTY_ID_POLICY).getValue())
-							.getValue();
-					Long policyId = selectedPolicy == null ? null : ((PolicyDto) selectedPolicy).getId();
+
+					// TODO Larkins: Fix UI to receive the set of policies from the User
+					// Do not update the policy binding from the UI.
+					// Policy mapping for manager supporting multiple policies is not supported through UI.
+					Set<Long> policyIdSet = null;
+					if (previousBinding.isMultiplePoliciesSupported() && previousBinding.isBinded()) {
+						policyIdSet = previousBinding.getPolicyIds();
+					} else {
+						Object selectedPolicy = ((ComboBox) selectedService.getItemProperty(PROPERTY_ID_POLICY)
+								.getValue()).getValue();
+						policyIdSet = selectedPolicy == null ? null
+								: new HashSet<>(Arrays.asList(((PolicyDto) selectedPolicy).getId()));
+					}
 					String serviceName = (String) selectedService.getItemProperty(PROPERTY_ID_DA).getValue();
 					ComboBox failurePolicyComboBox = (ComboBox) selectedService
 							.getItemProperty(PROPERTY_ID_FAILURE_POLICY).getValue();
@@ -136,7 +160,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 					// send null if user did not modify this set
 					bindRequest.addServiceToBindTo(new VirtualSystemPolicyBindingDto(selectedVsId, serviceName,
-							policyId, failurePolicyType, order));
+							policyIdSet, failurePolicyType, order));
 
 				}
 
@@ -269,8 +293,11 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		for (VirtualSystemPolicyBindingDto binding : allBindings) {
 			List<PolicyDto> policies = binding.getPolicies();
 			ComboBox policyComboBox = getPolicyComboBox(policies);
-
-			policyComboBox.setRequired(policies != null && policies.size() > 0);
+			if (binding.isMultiplePoliciesSupported()) {
+				policyComboBox.setEnabled(false);
+			} else {
+				policyComboBox.setRequired(policies != null && policies.size() > 0);
+			}
 
 			ComboBox failurePolicyComboBox = getFailurePolicyComboBox();
 
@@ -278,7 +305,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 					new Object[] { binding.getOrder(), binding.getName(), policyComboBox, failurePolicyComboBox },
 					binding.getVirtualSystemId());
 
-			if (binding.isBinded()) {
+			if (binding.isBinded() && !binding.getPolicyIds().isEmpty()) {
 				// For any existing bindings, set enabled and set the order
 				// value
 				this.serviceTable.getContainerProperty(binding.getVirtualSystemId(), PROPERTY_ID_ENABLED)
@@ -286,10 +313,14 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				ComboBox comboBoxPolicy = (ComboBox) this.serviceTable
 						.getContainerProperty(binding.getVirtualSystemId(), PROPERTY_ID_POLICY).getValue();
-				comboBoxPolicy.setEnabled(policies != null && policies.size() > 0);
+				if (binding.isMultiplePoliciesSupported()) {
+					comboBoxPolicy.setEnabled(false);
+				} else {
+					comboBoxPolicy.setEnabled(policies != null && policies.size() > 0);
+				}
 				for (Object comboBoxItemId : comboBoxPolicy.getContainerDataSource().getItemIds()) {
 					if (comboBoxPolicy.getItem(comboBoxItemId).getItemProperty("id").getValue()
-							.equals(binding.getPolicyId())) {
+							.equals(binding.getPolicyIds().iterator().next())) {
 						comboBoxPolicy.select(comboBoxItemId);
 						break;
 					}
@@ -324,7 +355,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		policy.setRequired(true);
 		policy.setRequiredError("Policy cannot be empty");
 
-		BeanItemContainer<PolicyDto> policyListContainer = new BeanItemContainer<PolicyDto>(PolicyDto.class,
+		BeanItemContainer<PolicyDto> policyListContainer = new BeanItemContainer<>(PolicyDto.class,
 				policyDtoList);
 		policy.setContainerDataSource(policyListContainer);
 		policy.setItemCaptionPropertyId("policyName");

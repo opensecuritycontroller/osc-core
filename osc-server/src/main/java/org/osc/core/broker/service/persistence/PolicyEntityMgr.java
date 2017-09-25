@@ -16,23 +16,58 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import javax.persistence.EntityManager;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.dto.PolicyDto;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class PolicyEntityMgr {
 
-    public static void fromEntity(Policy entity, PolicyDto dto) {
-        dto.setId(entity.getId());
-        dto.setPolicyName(entity.getName());
-        dto.setMgrPolicyId(entity.getMgrPolicyId());
-        dto.setMgrDomainId(entity.getDomain().getId());
-        dto.setMgrDomainName(entity.getDomain().getName());
-    }
+	public static void fromEntity(Policy entity, PolicyDto dto) {
+		dto.setId(entity.getId());
+		dto.setPolicyName(entity.getName());
+		dto.setMgrPolicyId(entity.getMgrPolicyId());
+		dto.setMgrDomainId(entity.getDomain().getId());
+		dto.setMgrDomainName(entity.getDomain().getName());
+	}
 
-    public static Policy findById(EntityManager em, Long id) {
-        return em.find(Policy.class, id);
-    }
+	public static Policy findById(EntityManager em, Long id) {
+		return em.find(Policy.class, id);
+	}
 
+	/**
+	 * Verifies if the request contains valid policies supported by security manager available on the OSC.
+	 * If the request contains one or more invalid policies, throw an exception.
+	 */
+	public static Set<Policy> findPoliciesById(EntityManager em, Set<Long> ids, ApplianceManagerConnector mc)
+			throws VmidcBrokerValidationException, Exception {
+		Set<Policy> policies = new HashSet<>();
+		Set<String> invalidPolicies = new HashSet<>();
+		for (Long id : ids) {
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Policy> query = cb.createQuery(Policy.class);
+			Root<Policy> root = query.from(Policy.class);
+			query = query.select(root).where(cb.equal(root.get("id"), id),
+					cb.equal(root.join("applianceManagerConnector").get("id"), mc.getId()));
+			Policy policy = em.createQuery(query).getSingleResult();
+			if (policy == null) {
+				invalidPolicies.add(id.toString());
+			} else {
+				policies.add(policy);
+			}
+		}
+		if (invalidPolicies.size() > 0) {
+			throw new VmidcBrokerValidationException(
+					"Invalid Request. Request contains invalid policies: " + String.join(",", invalidPolicies));
+		}
+		return policies;
+	}
 }

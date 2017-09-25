@@ -28,10 +28,10 @@ public class SecurityGroupInterfaceDtoValidator {
 
         // build a map of (field,value) pairs to be checked for null/empty
         // values
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
 
         map.put("Name", dto.getName());
-        map.put("Policy", dto.getPolicyId());
+        map.put("Policy", dto.getPolicyIds());
         map.put("Tag", dto.getTagValue());
         map.put("Failure Policy", dto.getFailurePolicyType());
 
@@ -40,7 +40,7 @@ public class SecurityGroupInterfaceDtoValidator {
 
     public static void checkFieldLength(SecurityGroupInterfaceDto dto) throws Exception {
 
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
 
         map.put("Name", dto.getName());
 

@@ -14,16 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.model.plugin.manager;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.osc.sdk.manager.element.ManagerPolicyElement;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 91;
+public class ManagerPolicyElementImpl implements ManagerPolicyElement {
 
-    Connection getSQLConnection() throws SQLException;
+	private String policyId;
+	private String policyName;
+	private String domainId;
+
+	public ManagerPolicyElementImpl(String policyId, String policyName, String domainId) {
+		super();
+		this.policyId = policyId;
+		this.policyName = policyName;
+		this.domainId = domainId;
+	}
+
+	@Override
+	public String getId() {
+		return this.policyId;
+	}
+
+	@Override
+	public String getName() {
+		return this.policyName;
+	}
+
+	@Override
+	public String getDomainId() {
+		return this.domainId;
+	}
+
 }

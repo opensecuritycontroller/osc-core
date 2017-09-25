@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -38,11 +41,8 @@ public class SecurityGroupInterfaceDto extends BaseDto {
     @ApiModelProperty(required = true)
     private String name;
 
-    @ApiModelProperty(required = true)
-    private String policyName;
-
-    @ApiModelProperty(required = true)
-    private Long policyId;
+    @ApiModelProperty(required = false)
+    private Set<PolicyDto> policies;
 
     @ApiModelProperty(required = true)
     private Long tagValue;
@@ -57,6 +57,9 @@ public class SecurityGroupInterfaceDto extends BaseDto {
     @ApiModelProperty(required = true)
     private FailurePolicyType failurePolicyType;
 
+	@ApiModelProperty(readOnly = true)
+	private String managerSecurityGroupId;
+
     @ApiModelProperty(
             value = "Specifies the order of services in which traffic inspection happens. This field is required when binding an Openstack security group with a service."
                     + " This services cannot have the same order or negative order specified")
@@ -67,8 +70,7 @@ public class SecurityGroupInterfaceDto extends BaseDto {
 
     @Override
     public String toString() {
-        return "SecurityGroupInterfaceDto [name=" + this.name + ", policyName=" + this.policyName + ", policyId="
-                + this.policyId + ", tagValue=" + this.tagValue + ", userConfigurable=" + this.userConfigurable
+        return "SecurityGroupInterfaceDto [name=" + this.name + ", tagValue=" + this.tagValue + ", userConfigurable=" + this.userConfigurable
                 + ", securityGroupName=" + this.securityGroupName + ", securityGroupId=" + this.securityGroupId
                 + ", failurePolicyType=" + this.failurePolicyType + "]";
     }
@@ -81,21 +83,17 @@ public class SecurityGroupInterfaceDto extends BaseDto {
         this.name = name;
     }
 
-    public String getPolicyName() {
-        return this.policyName;
+    public Set<PolicyDto> getPolicies() {
+        return this.policies;
     }
 
-    public void setPolicyName(String virtualSystemPolicyName) {
-        this.policyName = virtualSystemPolicyName;
+    public void setPolicies(Set<PolicyDto> policies) {
+        this.policies = policies;
     }
 
-    public Long getPolicyId() {
-        return this.policyId;
-    }
-
-    public void setPolicyId(Long virtualSystemPolicyId) {
-        this.policyId = virtualSystemPolicyId;
-    }
+	public Set<Long> getPolicyIds() {
+		return this.policies.stream().map(PolicyDto::getId).collect(Collectors.toSet());
+	}
 
     public Long getTagValue() {
         return this.tagValue;
@@ -137,7 +135,15 @@ public class SecurityGroupInterfaceDto extends BaseDto {
         this.failurePolicyType = failurePolicyType;
     }
 
-    public Long getOrder() {
+    public String getManagerSecurityGroupId() {
+		return this.managerSecurityGroupId;
+	}
+
+	public void setManagerSecurityGroupId(String managerSecurityGroupId) {
+		this.managerSecurityGroupId = managerSecurityGroupId;
+	}
+
+	public Long getOrder() {
         return this.order;
     }
 

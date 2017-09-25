@@ -19,6 +19,7 @@ package org.osc.core.broker.service.dto;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -51,7 +52,7 @@ public class VirtualSystemPolicyBindingDto {
     private String name;
 
     @ApiModelProperty(required = true)
-    private Long policyId;
+    private Set<Long> policyIds;
 
     @ApiModelProperty(
             value = "Failure policy required only if the SDN controller supports Failure policy else defaults to NA",
@@ -71,18 +72,22 @@ public class VirtualSystemPolicyBindingDto {
     @ApiModelProperty(required = true)
     private boolean isBinded;
 
+	@ApiModelProperty(readOnly = true,
+			value = "Determines whether the appliance manager supports multiple policy mapping.")
+	private Boolean isMultiplePoliciesSupported;
+
     @ApiModelProperty(readOnly = true)
     private boolean markedForDeletion;
 
     public VirtualSystemPolicyBindingDto() {
     }
 
-    public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Long policyId,
+    public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds,
             FailurePolicyType failurePolicyType, long order) {
         super();
         this.virtualSystemId = virtualSystemId;
         this.name = name;
-        this.policyId = policyId;
+        this.policyIds = policyIds;
         this.failurePolicyType = failurePolicyType;
         this.order = order;
     }
@@ -99,8 +104,8 @@ public class VirtualSystemPolicyBindingDto {
         return this.virtualSystemId;
     }
 
-    public Long getPolicyId() {
-        return this.policyId;
+    public Set<Long> getPolicyIds() {
+        return this.policyIds;
     }
 
     public FailurePolicyType getFailurePolicyType() {
@@ -135,7 +140,15 @@ public class VirtualSystemPolicyBindingDto {
         this.isBinded = selected;
     }
 
-    public boolean isMarkedForDeletion() {
+    public Boolean isMultiplePoliciesSupported() {
+		return this.isMultiplePoliciesSupported;
+	}
+
+	public void setMultiplePoliciesSupported(Boolean isMultiplePoliciesSupported) {
+		this.isMultiplePoliciesSupported = isMultiplePoliciesSupported;
+	}
+
+	public boolean isMarkedForDeletion() {
         return this.markedForDeletion;
     }
 
@@ -146,7 +159,7 @@ public class VirtualSystemPolicyBindingDto {
     @Override
     public String toString() {
         return "VirtualSystemPolicyBindingDto [virtualSystemId=" + this.virtualSystemId + ", name=" + this.name + ", policyId="
-                + this.policyId + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
+                + this.policyIds + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
                 + ", policies=" + this.policies + ", isBinded=" + this.isBinded + ", markedForDeletion=" + this.markedForDeletion
                 + "]";
     }

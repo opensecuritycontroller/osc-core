@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
-import static java.util.Collections.*;
+import static java.util.Collections.emptyList;
 import static org.osc.sdk.controller.Constants.*;
 import static org.osc.sdk.manager.Constants.*;
 
@@ -322,6 +322,16 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         return this.managerRefs.get(name).getServiceReference().getProperty(propertyName);
     }
 
+	@Override
+	public Boolean supportsMultiplePolicies(String managerType) throws Exception {
+		return (Boolean) getManagerPluginProperty(managerType, SUPPORT_MULTIPLE_POLICIES);
+	}
+
+	@Override
+	public Boolean supportsMultiplePolicies(VirtualSystem vs) throws Exception {
+		return supportsMultiplePolicies(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType());
+	}
+
     @Override
     public Boolean syncsPolicyMapping(String managerType) throws Exception {
         return (Boolean) getManagerPluginProperty(managerType, SYNC_POLICY_MAPPING);
@@ -450,12 +460,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     @Override
     public Set<String> getManagerTypes() {
-        return new TreeSet<String>(this.managerRefs.keySet());
+        return new TreeSet<>(this.managerRefs.keySet());
     }
 
     @Override
     public Set<String> getControllerTypes() {
-        return new TreeSet<String>(this.sdnControllerRefs.keySet());
+        return new TreeSet<>(this.sdnControllerRefs.keySet());
     }
 
     @Override

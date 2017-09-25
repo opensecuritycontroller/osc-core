@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +33,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -98,7 +99,9 @@ public class SecurityGroupCheckMetaTaskTest {
                this.em.persist(sgi.getVirtualSystem().getDistributedAppliance());
                this.em.persist(sgi.getVirtualSystem().getApplianceSoftwareVersion());
                this.em.persist(sgi.getVirtualSystem().getDomain());
-               this.em.persist(sgi.getPolicy());
+				for (Policy policy : sgi.getPolicies()) {
+					this.em.persist(policy);
+				}
                this.em.persist(sgi.getVirtualSystem());
                this.em.persist(sgi);
            }

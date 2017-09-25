@@ -52,6 +52,10 @@ public interface ApiFactoryService {
 
     Boolean syncsPolicyMapping(String managerType) throws Exception;
 
+    Boolean supportsMultiplePolicies(String managerType) throws Exception;
+
+    Boolean supportsMultiplePolicies(VirtualSystem vs) throws Exception;
+
     Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception;
 
     Boolean syncsSecurityGroup(String managerType) throws Exception;

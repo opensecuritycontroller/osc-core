@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.mockito.Mockito;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -33,7 +32,10 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.manager.ManagerPolicyElementImpl;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.sdk.manager.element.ManagerPolicyElement;
 import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
 
 public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
@@ -104,7 +106,9 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
                 .mock(ManagerSecurityGroupInterfaceElement.class);
         Mockito.doReturn(name).when(managerSecurityGroupInterface).getName();
         Mockito.doReturn(id).when(managerSecurityGroupInterface).getSecurityGroupInterfaceId();
-        Mockito.doReturn(policyId).when(managerSecurityGroupInterface).getPolicyId();
+        Set<ManagerPolicyElement> managerPolicyElements = new HashSet<>();
+        managerPolicyElements.add(new ManagerPolicyElementImpl(policyId, null, null));
+        Mockito.doReturn(managerPolicyElements).when(managerSecurityGroupInterface).getManagerPolicyElements();
         Mockito.doReturn(tag).when(managerSecurityGroupInterface).getTag();
         return managerSecurityGroupInterface;
     }
@@ -121,12 +125,14 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
     private static SecurityGroupInterface createSgi(String sgiId, String sgiName, boolean isMarkedForDeletion,
             String tag, String policyId) {
         SecurityGroupInterface sgi = Mockito.mock(SecurityGroupInterface.class);
-        Mockito.when(sgi.getMgrSecurityGroupIntefaceId()).thenReturn(sgiId);
+        Mockito.when(sgi.getMgrSecurityGroupInterfaceId()).thenReturn(sgiId);
         Mockito.when(sgi.getName()).thenReturn(sgiName);
         Mockito.when(sgi.getMarkedForDeletion()).thenReturn(isMarkedForDeletion);
         Mockito.when(sgi.getTag()).thenReturn(tag);
         Policy policy = Mockito.mock(Policy.class);
-        Mockito.when(sgi.getMgrPolicy()).thenReturn(policy);
+        Set<Policy> policySet = new HashSet<>();
+        policySet.add(policy);
+        Mockito.when(sgi.getMgrPolicies()).thenReturn(policySet);
         Mockito.when(policy.getMgrPolicyId()).thenReturn(policyId);
 
         return sgi;

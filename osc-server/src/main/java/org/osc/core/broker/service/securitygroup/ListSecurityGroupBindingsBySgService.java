@@ -19,6 +19,7 @@ package org.osc.core.broker.service.securitygroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -46,8 +47,8 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ListSecurityGroupBindingsBySgService
-extends ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>>
-implements ListSecurityGroupBindingsBySgServiceApi {
+        extends ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>>
+        implements ListSecurityGroupBindingsBySgServiceApi {
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -62,16 +63,17 @@ implements ListSecurityGroupBindingsBySgServiceApi {
         Set<VirtualSystem> vsSet = sg.getVirtualizationConnector().getVirtualSystems();
         long order = -1;
 
-        //Existing bindings
+        // Existing bindings
         for (SecurityGroupInterface sgInterface : sg.getSecurityGroupInterfaces()) {
             VirtualSystem vs = sgInterface.getVirtualSystem();
             vsSet.remove(vs);
-            VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(vs.getId(), vs
-                    .getDistributedAppliance().getName(), sgInterface.getMgrPolicy() == null ? null : sgInterface.getMgrPolicy().getId(),
-                            FailurePolicyType.valueOf(sgInterface.getFailurePolicyType().name()),
-                            sgInterface.getOrder());
+			Set<Long> policyIds = sgInterface.getMgrPolicies().stream().map(Policy::getId).collect(Collectors.toSet());
+            VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(vs.getId(),
+                    vs.getDistributedAppliance().getName(), policyIds,
+                    FailurePolicyType.valueOf(sgInterface.getFailurePolicyType().name()), sgInterface.getOrder());
             virtualSystemBindingDto.setMarkedForDeletion(sgInterface.getMarkedForDeletion());
             virtualSystemBindingDto.setBinded(true);
+			virtualSystemBindingDto.setMultiplePoliciesSupported(this.apiFactoryService.supportsMultiplePolicies(vs));
             if (vs.getDomain() != null) {
                 for (Policy policy : vs.getDomain().getPolicies()) {
                     PolicyDto dto = new PolicyDto();
@@ -86,21 +88,20 @@ implements ListSecurityGroupBindingsBySgServiceApi {
 
         // Other available Bindings
         if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
-            FailurePolicyType failurePolicyType =
-                    this.apiFactoryService.supportsFailurePolicy(sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
+            FailurePolicyType failurePolicyType = this.apiFactoryService.supportsFailurePolicy(sg)
+                    ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
 
             for (VirtualSystem vs : vsSet) {
                 // Only allow binding to non-deleted services
                 if (!vs.getMarkedForDeletion()) {
                     order++;
-                    // Checking if the SDN controller supports failure policy. If yes giving the default Failure Policy Type value FAIL_OPEN
-                    VirtualSystemPolicyBindingDto virtualSystemBindingDto =
-                            new VirtualSystemPolicyBindingDto(
-                                    vs.getId(),
-                                    vs.getDistributedAppliance().getName(),
-                                    null,
-                                    failurePolicyType,
-                                    order);
+                    // Checking if the SDN controller supports failure policy.
+                    // If yes giving the default Failure Policy Type value
+                    // FAIL_OPEN
+                    VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(
+                            vs.getId(), vs.getDistributedAppliance().getName(), null, failurePolicyType, order);
+					virtualSystemBindingDto
+							.setMultiplePoliciesSupported(this.apiFactoryService.supportsMultiplePolicies(vs));
 
                     if (vs.getDomain() != null) {
                         for (Policy policy : vs.getDomain().getPolicies()) {

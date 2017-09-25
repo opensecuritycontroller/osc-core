@@ -141,7 +141,7 @@ public class SecurityGroupEntityMgr {
         Root<SecurityGroup> root = query.from(SecurityGroup.class);
         query = query.select(root)
                 .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
-                        cb.equal(root.get("mgrId"), mgrId))
+                        cb.equal(root.join("securityGroupInterfaces").get("mgrSecurityGroupId"), mgrId))
                 .orderBy(cb.asc(root.get("name")));
 
         try {
@@ -358,7 +358,7 @@ public class SecurityGroupEntityMgr {
     }
 
     public static Set<SecurityGroup> listByDai(EntityManager em, DistributedApplianceInstance dai) {
-        Set<SecurityGroup> sgs = new HashSet<SecurityGroup>();
+        Set<SecurityGroup> sgs = new HashSet<>();
         for (VMPort port : dai.getProtectedPorts()) {
             if (port.getVm() != null) {
                 for (SecurityGroupMember sgm : port.getVm().getSecurityGroupMembers()) {

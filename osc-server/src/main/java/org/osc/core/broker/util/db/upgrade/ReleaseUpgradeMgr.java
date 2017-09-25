@@ -247,6 +247,8 @@ public class ReleaseUpgradeMgr {
                 upgrade88to89(stmt);
             case 89:
                 upgrade89to90(stmt);
+            case 90:
+                upgrade90to91(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -257,6 +259,34 @@ public class ReleaseUpgradeMgr {
                 log.error("Current DB version is unknown !!!");
         }
     }
+
+	private static void upgrade90to91(Statement stmt) throws SQLException {
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop constraint UK_SGI_VS_TAG;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop constraint FK_SGI_POLICY;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE add column mgr_security_group_id varchar(255);");
+
+		execSql(stmt, "update SECURITY_GROUP_INTERFACE AS sgi SET sgi.mgr_security_group_id = "
+				+ "(select sg.mgr_id from SECURITY_GROUP sg where sg.id = sgi.security_group_fk);");
+
+		execSql(stmt, "alter table SECURITY_GROUP drop column if exists mgr_id;");
+
+		execSql(stmt, "create table SECURITY_GROUP_INTERFACE_POLICY (sgi_fk bigint not null, "
+				+ "policy_fk bigint not null, primary key (sgi_fk, policy_fk));");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE_POLICY add constraint FK_SGI_POLICY_SGI "
+				+ "foreign key (sgi_fk) references SECURITY_GROUP_INTERFACE;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE_POLICY add constraint FK_SGI_POLICY_POLICY "
+				+ "foreign key (policy_fk) references POLICY;");
+
+		execSql(stmt, "INSERT INTO SECURITY_GROUP_INTERFACE_POLICY "
+				+ "(sgi_fk, policy_fk) SELECT ID, policy_fk FROM SECURITY_GROUP_INTERFACE where policy_fk is not null;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists policy_fk;");
+	}
 
     private static void upgrade89to90(Statement stmt) throws SQLException {
         execSql(stmt, "alter table VM_PORT add column inspection_hook_id varchar(255) " +
@@ -399,7 +429,7 @@ public class ReleaseUpgradeMgr {
                 "references LABEL;");
     }
 
-    private static void upgrade82to83(Statement stmt) throws SQLException {
+	private static void upgrade82to83(Statement stmt) throws SQLException {
         execSql(stmt,
                 "alter table SECURITY_GROUP_INTERFACE add column security_group_fk bigint;");
         execSql(stmt,

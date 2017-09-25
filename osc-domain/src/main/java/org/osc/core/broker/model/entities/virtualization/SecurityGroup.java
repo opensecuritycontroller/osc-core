@@ -58,9 +58,6 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     @Column(name = "protect_all", nullable = false, columnDefinition = "bit default 1")
     private boolean protectAll = true;
 
-    @Column(name = "mgr_id")
-    private String mgrId;
-
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "last_job_id_fk",
             foreignKey = @ForeignKey(name = "FK_SG_LAST_JOB"))
@@ -77,7 +74,7 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     private Set<SecurityGroupMember> securityGroupMembers = new HashSet<>();
 
     @OneToMany(mappedBy = "securityGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<SecurityGroupInterface>();
+    private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<>();
 
     public SecurityGroup(VirtualizationConnector virtualizationConnector, String projectId, String projectName) {
         this.virtualizationConnector = virtualizationConnector;
@@ -160,14 +157,6 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
         this.protectAll = protectAll;
     }
 
-    public String getMgrId() {
-        return this.mgrId;
-    }
-
-    public void setMgrId(String mgrId) {
-        this.mgrId = mgrId;
-    }
-
     @Override
     public JobRecord getLastJob() {
         return this.lastJob;
@@ -190,7 +179,7 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     public String toString() {
         return "SecurityGroup [name=" + this.name + ", virtualizationConnector=" + this.virtualizationConnector + ", projectId="
                 + this.projectId + ", projectName=" + this.projectName + ", protectAll=" + this.protectAll
-                + ", mgrId=" + this.mgrId + ", lastJob=" + this.lastJob + ", securityGroupMembers=" + this.securityGroupMembers
+                + ", lastJob=" + this.lastJob + ", securityGroupMembers=" + this.securityGroupMembers
                 + ", securityGroupInterfaces=" + this.securityGroupInterfaces + ", networkElementId="
                         + this.networkElementId + "]";
     }
