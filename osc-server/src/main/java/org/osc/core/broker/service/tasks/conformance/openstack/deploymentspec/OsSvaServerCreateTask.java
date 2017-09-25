@@ -193,6 +193,9 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                   //Element object in DefaultInspectionport is not used at this point, hence null
                     controller.registerInspectionPort(
                             new DefaultInspectionPort(ingressPort, egressPort, null));
+                } else {
+                    controller.registerInspectionPort(
+                            new DefaultInspectionPort(ingressPort, egressPort, null));
                 }
             }
         }
@@ -223,11 +226,12 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     private ApplianceBootstrapInformationElement generateBootstrapInfo(final VirtualSystem vs,
             final String applianceName) throws Exception {
 
-        ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs);
-        Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();
+        try (ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs)) {
+            Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();
 
-        return deviceApi
-                .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
+            return deviceApi
+                    .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
+        }
     }
 
     @Override
