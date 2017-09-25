@@ -117,7 +117,8 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 				}
 
 				Set<Policy> policies = null;
-				policies = PolicyEntityMgr.findPoliciesById(em, serviceToBindTo.getPolicyIds());
+				policies = PolicyEntityMgr.findPoliciesById(em, serviceToBindTo.getPolicyIds(),
+						vs.getDistributedAppliance().getApplianceManagerConnector());
 
 				if (this.apiFactoryService.supportsFailurePolicy(this.securityGroup)) {
 					// If failure policy is supported, failure policy is a required field

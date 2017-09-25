@@ -47,11 +47,13 @@ public class UpdateSecurityGroupInterfaceService
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
 
         SecurityGroupInterfaceDto dto = request.getDto();
-        validateAndLoad(em, dto);
+        VirtualSystem vs = validateAndLoad(em, dto);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface();
-        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds()),
-                SecurityGroupInterface.ISC_TAG_PREFIX);
+		SecurityGroupInterface sgi = new SecurityGroupInterface();
+		SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto,
+				PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
+						vs.getDistributedAppliance().getApplianceManagerConnector()),
+				SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Updating SecurityGroupInterface: " + sgi.toString());
         OSCEntityManager.update(em, sgi, this.txBroadcastUtil);

@@ -52,8 +52,10 @@ public class AddSecurityGroupInterfaceService
         SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, null,
                 FailurePolicyType.valueOf(dto.getFailurePolicyType().name()), 0L);
 
-        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds()),
-                SecurityGroupInterface.ISC_TAG_PREFIX);
+		SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto,
+				PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
+						vs.getDistributedAppliance().getApplianceManagerConnector()),
+				SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Creating SecurityGroupInterface: " + sgi.toString());
         OSCEntityManager.create(em, sgi, this.txBroadcastUtil);

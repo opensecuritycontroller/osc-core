@@ -20,7 +20,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -43,11 +47,17 @@ public class PolicyEntityMgr {
 	 * Verifies if the request contains valid policies supported by security manager available on the OSC.
 	 * If the request contains one or more invalid policies, throw an exception.
 	 */
-	public static Set<Policy> findPoliciesById(EntityManager em, Set<Long> ids) throws VmidcBrokerValidationException, Exception {
+	public static Set<Policy> findPoliciesById(EntityManager em, Set<Long> ids, ApplianceManagerConnector mc)
+			throws VmidcBrokerValidationException, Exception {
 		Set<Policy> policies = new HashSet<>();
 		Set<String> invalidPolicies = new HashSet<>();
 		for (Long id : ids) {
-			Policy policy = em.find(Policy.class, id);
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Policy> query = cb.createQuery(Policy.class);
+			Root<Policy> root = query.from(Policy.class);
+			query = query.select(root).where(cb.equal(root.get("id"), id),
+					cb.equal(root.join("applianceManagerConnector").get("id"), mc.getId()));
+			Policy policy = em.createQuery(query).getSingleResult();
 			if (policy == null) {
 				invalidPolicies.add(id.toString());
 			} else {

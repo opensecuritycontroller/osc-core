@@ -21,7 +21,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -56,15 +55,8 @@ ServiceDispatcher<I, O> {
         }
 
 		// Validate policies
-		Set<Policy> policies = PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds());
-
-		for (Policy policy : policies) {
-			ApplianceManagerConnector mc = vs.getDistributedAppliance().getApplianceManagerConnector();
-			if (!mc.getPolicies().contains(policy)) {
-				throw new VmidcBrokerValidationException(
-						"Policy with Name: " + policy.getName() + " is not defined in the manager: " + mc.getName());
-			}
-		}
+		Set<Policy> policies = PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
+				vs.getDistributedAppliance().getApplianceManagerConnector());
 
         return vs;
     }
