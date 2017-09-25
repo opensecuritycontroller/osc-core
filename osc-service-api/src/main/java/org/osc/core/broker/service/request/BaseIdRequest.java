@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.BaseDto;
 
+import io.swagger.annotations.ApiModelProperty;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class BaseIdRequest extends BaseRequest<BaseDto> {
@@ -57,6 +59,13 @@ public class BaseIdRequest extends BaseRequest<BaseDto> {
 
     public void setParentId(long parentId) {
         this.parentId = parentId;
+    }
+
+    // Make sure swagger hides the dto field when generating documentation
+    @ApiModelProperty(hidden = true)
+    @Override
+    public BaseDto getDto() {
+        throw new UnsupportedOperationException();
     }
 
 }
