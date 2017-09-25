@@ -110,18 +110,14 @@ public class CreateK8sLabelPodTask extends TransactionalTask{
         LOG.info(String.format("Created pod entity for %s", this.k8sPod.getName()));
     }
 
-    CreateK8sLabelPodTask create(KubernetesPod k8sPod, Label label, ApiFactoryService apiFactoryService) {
+    public CreateK8sLabelPodTask create(KubernetesPod k8sPod, Label label) {
         CreateK8sLabelPodTask task = new CreateK8sLabelPodTask();
         task.k8sPod = k8sPod;
         task.label = label;
-        task.apiFactoryService = apiFactoryService;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
         return task;
-    }
-
-    public CreateK8sLabelPodTask create(KubernetesPod k8sPod, Label label) {
-        return create(k8sPod, label, null);
     }
 
     @Override

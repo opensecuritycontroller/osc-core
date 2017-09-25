@@ -105,7 +105,7 @@ public class CreateK8sLabelPodTaskTest {
     @Test
     public void testExecute_WhenSDNReturnsNullNetworkElement_ThrowsVmidcException() throws Exception {
         // Arrange.
-        CreateK8sLabelPodTask task = this.factoryTask.create(NETWORK_ELEMENT_NOT_FOUND_K8S_POD, NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL, this.apiFactoryServiceMock);
+        CreateK8sLabelPodTask task = this.factoryTask.create(NETWORK_ELEMENT_NOT_FOUND_K8S_POD, NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL);
         registerNetworkElement(NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL.getSecurityGroupMembers().iterator().next(), null, NETWORK_ELEMENT_NOT_FOUND_K8S_POD);
         this.exception.expect(VmidcException.class);
         this.exception.expectMessage("The SDN controller did not return a network element for the device");
@@ -117,7 +117,7 @@ public class CreateK8sLabelPodTaskTest {
     @Test
     public void testExecute_WithAValidNewPod_PodAndPortArePersisted() throws Exception {
         // Arrange.
-        CreateK8sLabelPodTask task = this.factoryTask.create(VALID_K8S_POD, VALID_POD_SGM_LABEL, this.apiFactoryServiceMock);
+        CreateK8sLabelPodTask task = this.factoryTask.create(VALID_K8S_POD, VALID_POD_SGM_LABEL);
         NetworkElement podPort = createNetworkElement();
         registerNetworkElement(VALID_POD_SGM_LABEL.getSecurityGroupMembers().iterator().next(), podPort, VALID_K8S_POD);
 
