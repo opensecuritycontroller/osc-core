@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MarkSecurityGroupMemberDeleteTask;
@@ -59,6 +60,8 @@ public class CheckK8sSecurityGroupLabelMetaTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
+        OSCEntityManager<SecurityGroupMember> sgmEmgr = new OSCEntityManager<SecurityGroupMember>(SecurityGroupMember.class, em, this.txBroadcastUtil);
+        this.sgm = sgmEmgr.findByPrimaryKey(this.sgm.getId());
 
         if (!this.isDelete) {
             this.tg.addTask(this.updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm, null));
