@@ -29,6 +29,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
@@ -71,8 +72,7 @@ public class SecurityGroupMemberEntityMgr {
             Label label = entity.getLabel();
             dto.setName(label.getName());
             dto.setLabel(label.getValue());
-            // TODO emanoel: address this once SGs are being sync'd
-            // addPortInfo(dto, label.getPorts());
+            addPodPortInfo(dto, entity.getPodPorts());
         }
     }
 
@@ -99,6 +99,19 @@ public class SecurityGroupMemberEntityMgr {
                     portEntity.getOpenstackId(),
                     portEntity.getMacAddresses().get(0),
                     portEntity.getPortIPs(), portEntity.getInspectionHookId());
+            portDtos.add(portDto);
+        }
+
+        dto.setPorts(portDtos);
+    }
+
+    private static void addPodPortInfo(SecurityGroupMemberItemDto dto, Set<PodPort> podPorts) {
+        Set<PortDto> portDtos = new HashSet<>();
+        for (PodPort portEntity : podPorts) {
+            PortDto portDto = new PortDto(portEntity.getId(),
+                    portEntity.getExternalId(),
+                    portEntity.getMacAddress(),
+                    portEntity.getIpAddresses(), null);
             portDtos.add(portDto);
         }
 

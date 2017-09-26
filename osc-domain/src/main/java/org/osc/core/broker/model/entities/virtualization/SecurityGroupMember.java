@@ -34,6 +34,8 @@ import javax.persistence.UniqueConstraint;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
+import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
@@ -170,4 +172,17 @@ public class SecurityGroupMember extends BaseEntity {
         }
         return ports;
     }
+
+    public Set<PodPort> getPodPorts() {
+        Set<PodPort> ports = new HashSet<>();
+        if (this.type == SecurityGroupMemberType.LABEL) {
+            for (Pod pod : this.label.getPods()) {
+                ports.addAll(pod.getPorts());
+            }
+        } else {
+            throw new IllegalArgumentException("PodPorts are only applicable to Label types!");
+        }
+        return ports;
+    }
 }
+

@@ -102,23 +102,17 @@ implements UpdateSecurityGroupServiceApi {
             log.info("Updating SecurityGroup: " + securityGroup.toString());
             OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
 
-            // TODO emanoel: remove this condition once sync is implemented for k8s SGs.
-            if (vc.getVirtualizationType().isOpenstack()) {
-                UnlockObjectMetaTask forLambda = unlockTask;
-                chain(() -> {
-                    try {
-                        Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+            UnlockObjectMetaTask forLambda = unlockTask;
+            chain(() -> {
+                try {
+                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
-                        return new BaseJobResponse(securityGroup.getId(), job.getId());
-                    } catch (Exception e) {
-                        LockUtil.releaseLocks(forLambda);
-                        throw e;
-                    }
-                });
-            } else {
-                LockUtil.releaseLocks(unlockTask);
-                return new BaseJobResponse(securityGroup.getId(), null);
-            }
+                    return new BaseJobResponse(securityGroup.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;

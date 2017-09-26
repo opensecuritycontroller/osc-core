@@ -32,6 +32,16 @@ import org.osc.core.broker.model.entities.BaseEntity;
 @Entity
 @Table(name = "POD")
 public class Pod extends BaseEntity {
+    public Pod(String name, String namespace, String node, String externalId) {
+        this.name = name;
+        this.namespace = namespace;
+        this.node = node;
+        this.externalId = externalId;
+    }
+
+    Pod() {
+    }
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -50,7 +60,27 @@ public class Pod extends BaseEntity {
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "pods")
     private Set<Label> labels = new HashSet<Label>();
 
+    public String getName() {
+        return this.name;
+    }
+
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    public String getNode() {
+        return this.node;
+    }
+
+    public String getExternalId() {
+        return this.externalId;
+    }
+
     public Set<PodPort> getPorts() {
         return this.ports;
+    }
+
+    public Set<Label> getLabels() {
+        return this.labels;
     }
 }

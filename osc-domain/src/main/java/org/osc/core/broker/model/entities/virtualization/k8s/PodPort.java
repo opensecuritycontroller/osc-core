@@ -35,6 +35,16 @@ import org.osc.core.broker.model.entities.BaseEntity;
 @Entity
 @Table(name = "POD_PORT")
 public class PodPort extends BaseEntity {
+    public PodPort(String externalId, String macAddress, String ipAddress, String parentId) {
+        this.externalId = externalId;
+        this.macAddress = macAddress;
+        this.ipAddresses.add(ipAddress);
+        this.parentId = parentId;
+    }
+
+    PodPort() {
+    }
+
     @Column(name = "external_id", nullable = false, unique = true)
     private String externalId;
 
@@ -53,4 +63,32 @@ public class PodPort extends BaseEntity {
 
     @Column(name = "parent_id", nullable = true, unique = false)
     private String parentId;
+
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public String getParentId() {
+        return this.parentId;
+    }
+
+    public String getMacAddress() {
+        return this.macAddress;
+    }
+
+    public List<String> getIpAddresses() {
+        return this.ipAddresses;
+    }
+
+    public Pod getPod() {
+        return this.pod;
+    }
+
+    public void setPod(Pod pod) {
+        this.pod = pod;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
+    }
 }
