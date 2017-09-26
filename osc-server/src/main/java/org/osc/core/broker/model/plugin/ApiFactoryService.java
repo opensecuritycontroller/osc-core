@@ -192,6 +192,8 @@ public interface ApiFactoryService {
 
     Boolean supportsPortGroup(SecurityGroup sg) throws Exception;
 
+    Boolean supportsNeutronSFC(String controllerType) throws Exception;
+
     Boolean supportsNeutronSFC(VirtualSystem vs) throws Exception;
 
     Boolean supportsNeutronSFC(SecurityGroup sg) throws Exception;

@@ -96,6 +96,9 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SecurityGroup> securityGroups = new HashSet<SecurityGroup>();
 
+    @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<ServiceFunctionChain> serviceFunctionChains = new HashSet<ServiceFunctionChain>();
+
     @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "key")
     @Column(name = "value")
@@ -279,6 +282,10 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
 
     public Set<SecurityGroup> getSecurityGroups() {
         return this.securityGroups;
+    }
+
+    public Set<ServiceFunctionChain> getServiceFunctionChains() {
+        return this.serviceFunctionChains;
     }
 
     /**

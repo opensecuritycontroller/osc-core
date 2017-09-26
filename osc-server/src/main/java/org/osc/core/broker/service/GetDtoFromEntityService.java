@@ -32,6 +32,7 @@ import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -50,6 +51,7 @@ import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
+import org.osc.core.broker.service.dto.ServiceFunctionChainDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -70,6 +72,7 @@ import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
+import org.osc.core.broker.service.persistence.ServiceFunctionChainEntityMgr;
 import org.osc.core.broker.service.persistence.TaskEntityMgr;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
@@ -194,6 +197,11 @@ ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDto
             Alert entity = getEntity(entityId, entityName, Alert.class, em);
             AlertDto dto = new AlertDto();
             AlertEntityMgr.fromEntity(entity, dto);
+            res.setDto((R) dto);
+        } else if (entityName.equals("ServiceFunctionChain")) {
+        	ServiceFunctionChain entity = getEntity(entityId, entityName, ServiceFunctionChain.class, em);
+        	ServiceFunctionChainDto dto = new ServiceFunctionChainDto();
+        	ServiceFunctionChainEntityMgr.fromEntity(entity, dto);
             res.setDto((R) dto);
         }
         return res;

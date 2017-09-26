@@ -685,7 +685,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         return supportsNeutronSFC(sg.getVirtualizationConnector().getControllerType());
     }
 
-    private Boolean supportsNeutronSFC(String controllerType) throws Exception {
+    @Override
+    public Boolean supportsNeutronSFC(String controllerType) throws Exception {
         return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_NEUTRON_SFC);
     }
 
