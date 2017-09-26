@@ -59,4 +59,12 @@ public class AddOrUpdateServiceFunctionChainRequest extends BaseRequest<BaseDto>
 	public void setVirtualSystemIds(List<Long> virtualSystemIds) {
 		this.virtualSystemIds = virtualSystemIds;
 	}
+
+    @ApiModelProperty(hidden = true)
+    @Override
+    public BaseDto getDto() {
+        return super.getDto();
+    }
+
+
 }

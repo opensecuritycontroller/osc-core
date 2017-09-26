@@ -33,7 +33,6 @@ public class BaseRequest<T extends BaseDto> implements Request {
 
     private T dto;
 
-    @ApiModelProperty(readOnly = true, hidden = true)
     @XmlElement(name = "api")
     private boolean isApi;
 
@@ -56,6 +55,8 @@ public class BaseRequest<T extends BaseDto> implements Request {
         this.dto = dto;
     }
 
+    // Make sure swagger ignores this property
+    @ApiModelProperty(readOnly = true, hidden = true)
     public boolean isApi() {
         return this.isApi;
     }
