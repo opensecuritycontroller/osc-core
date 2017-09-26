@@ -435,6 +435,7 @@ public class Schema {
                    "project_id varchar(255)," +
                    "project_name varchar(255)," +
                    "protect_all bit not null default 1," +
+                   "sfc_fk bigint, " +
                    "primary key (id)" +
                    ");",
 
@@ -1072,6 +1073,11 @@ public class Schema {
                 "add constraint FK_SG_LAST_JOB " +
                 "foreign key (last_job_id_fk) " +
                 "references JOB(id) ON DELETE SET NULL;",
+                
+			"alter table SECURITY_GROUP " +
+			    "add constraint FK_SG_SFC " +
+			    "foreign key (sfc_fk) " +
+			    "references SERVICE_FUNCTION_CHAIN;",
 
             "alter table SECURITY_GROUP_MEMBER " +
                 "add constraint FK_SGM_SG " +

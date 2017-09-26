@@ -14,16 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+package org.osc.core.broker.service.response;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 93;
+import java.util.List;
 
-    Connection getSQLConnection() throws SQLException;
+import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
+
+public class BindSecurityGroupResponse implements Response {
+	
+	private Long sfcId;
+	
+	List<VirtualSystemPolicyBindingDto> memberList;
+
+	public Long getSfcId() {
+		return sfcId;
+	}
+
+	public void setSfcId(Long sfcId) {
+		this.sfcId = sfcId;
+	}
+
+	public List<VirtualSystemPolicyBindingDto> getMemberList() {
+		return memberList;
+	}
+
+	public void setMemberList(List<VirtualSystemPolicyBindingDto> memberList) {
+		this.memberList = memberList;
+	}
+
 }

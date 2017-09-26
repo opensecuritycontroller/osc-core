@@ -121,7 +121,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
 
 				List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
-						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getList();
+						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getMemberList();
 
 
 				for (Long selectedVsId : getSelectedServicesId()) {
@@ -288,7 +288,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		this.serviceTable.removeAllItems();
 
 		List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
-				.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getList();
+				.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getMemberList();
 
 		for (VirtualSystemPolicyBindingDto binding : allBindings) {
 			List<PolicyDto> policies = binding.getPolicies();

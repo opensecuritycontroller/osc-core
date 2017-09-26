@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +30,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "virtualSystemPolicyBinding")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class VirtualSystemPolicyBindingDto {
+public class VirtualSystemPolicyBindingDto extends BaseVirtualSystemPoliciesDto {
 
     /**
      * Compares the VirtualSystemPolicyBindingDto using the order.
@@ -45,15 +44,6 @@ public class VirtualSystemPolicyBindingDto {
         }
     }
 
-    @ApiModelProperty(required = true)
-    private Long virtualSystemId;
-
-    @ApiModelProperty(required = true)
-    private String name;
-
-    @ApiModelProperty(required = true)
-    private Set<Long> policyIds;
-
     @ApiModelProperty(
             value = "Failure policy required only if the SDN controller supports Failure policy else defaults to NA",
             required = true)
@@ -64,49 +54,24 @@ public class VirtualSystemPolicyBindingDto {
             required = true)
     private Long order;
 
-    /**
-     * List of Policies owned by the Virtual System
-     */
-    private List<PolicyDto> policies = new ArrayList<>();
-
     @ApiModelProperty(required = true)
     private boolean isBinded;
 
-	@ApiModelProperty(readOnly = true,
-			value = "Determines whether the appliance manager supports multiple policy mapping.")
-	private Boolean isMultiplePoliciesSupported;
-
-    @ApiModelProperty(readOnly = true)
-    private boolean markedForDeletion;
-
     public VirtualSystemPolicyBindingDto() {
+    	
+    }
+    
+    public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds, List<PolicyDto> policies) {
+		super(virtualSystemId, name, policyIds, policies);
     }
 
-    public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds,
+	public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds,
             FailurePolicyType failurePolicyType, long order) {
-        super();
-        this.virtualSystemId = virtualSystemId;
-        this.name = name;
-        this.policyIds = policyIds;
+		super(virtualSystemId, name, policyIds);
         this.failurePolicyType = failurePolicyType;
         this.order = order;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Long getVirtualSystemId() {
-        return this.virtualSystemId;
-    }
-
-    public Set<Long> getPolicyIds() {
-        return this.policyIds;
-    }
 
     public FailurePolicyType getFailurePolicyType() {
         return this.failurePolicyType;
@@ -124,14 +89,6 @@ public class VirtualSystemPolicyBindingDto {
         this.order = order;
     }
 
-    public List<PolicyDto> getPolicies() {
-        return this.policies;
-    }
-
-    public void addPolicies(PolicyDto policy) {
-        this.policies.add(policy);
-    }
-
     public boolean isBinded() {
         return this.isBinded;
     }
@@ -140,27 +97,11 @@ public class VirtualSystemPolicyBindingDto {
         this.isBinded = selected;
     }
 
-    public Boolean isMultiplePoliciesSupported() {
-		return this.isMultiplePoliciesSupported;
-	}
-
-	public void setMultiplePoliciesSupported(Boolean isMultiplePoliciesSupported) {
-		this.isMultiplePoliciesSupported = isMultiplePoliciesSupported;
-	}
-
-	public boolean isMarkedForDeletion() {
-        return this.markedForDeletion;
-    }
-
-    public void setMarkedForDeletion(boolean markedForDeletion) {
-        this.markedForDeletion = markedForDeletion;
-    }
-
     @Override
     public String toString() {
-        return "VirtualSystemPolicyBindingDto [virtualSystemId=" + this.virtualSystemId + ", name=" + this.name + ", policyId="
-                + this.policyIds + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
-                + ", policies=" + this.policies + ", isBinded=" + this.isBinded + ", markedForDeletion=" + this.markedForDeletion
+        return "VirtualSystemPolicyBindingDto [virtualSystemId=" + this.getVirtualSystemId() + ", name=" + this.getName() + ", policyId="
+                + this.getPolicyIds() + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
+                + ", policies=" + this.getPolicies() + ", isBinded=" + this.isBinded + ", markedForDeletion=" + this.isMarkedForDeletion()
                 + "]";
     }
 

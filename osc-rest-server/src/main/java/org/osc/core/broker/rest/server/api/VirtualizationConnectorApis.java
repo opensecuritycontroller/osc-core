@@ -58,6 +58,7 @@ import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.BaseVirtualSystemPoliciesDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.dto.ServiceFunctionChainDto;
@@ -75,6 +76,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.UpdateSecurityGroupMemberRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BindSecurityGroupResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
 import org.osgi.service.component.annotations.Component;
@@ -457,7 +459,7 @@ public class VirtualizationConnectorApis {
         return this.apiUtil.getResponseForBaseRequest(this.updateSecurityGroupService, request);
     }
 
-    // SG Interface APIS
+ // SG Interface APIS
     @ApiOperation(value = "Retrieves the Security Group Bindings",
             notes = "Retrieves the all available Security Group Bindings to Security Function Service(Distributed Appliance).<br/>"
                     + "The isBinded flag indicates whether the binding is active.",
@@ -467,7 +469,7 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}/securityGroups/{sgId}/bindings")
     @GET
-    public List<VirtualSystemPolicyBindingDto> getVirtualSecurityPolicyBindings(@Context HttpHeaders headers,
+    public BindSecurityGroupResponse getVirtualSecurityPolicyBindings(@Context HttpHeaders headers,
                                                                                 @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                                                                 @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Listing Bindings for Security Group - " + sgId);
@@ -481,13 +483,9 @@ public class VirtualizationConnectorApis {
 
         this.apiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
 
-        @SuppressWarnings("unchecked")
-        ListResponse<VirtualSystemPolicyBindingDto> memberList = (ListResponse<VirtualSystemPolicyBindingDto>) this.apiUtil
-                .getListResponse(this.listSecurityGroupBindingsBySgService, new BaseIdRequest(sgId));
-
-        return memberList.getList();
+        return this.apiUtil.submitBaseRequestToService(this.listSecurityGroupBindingsBySgService, new BaseIdRequest(sgId));
     }
-
+    
     @ApiOperation(value = "Set Security Group Bindings (Openstack Only)",
             notes = "Adds/Update/Remove Security Group Bindings to Security Function Services.<br/>"
                     + "To Remove all services, pass in empty json.<br/>"
@@ -509,6 +507,52 @@ public class VirtualizationConnectorApis {
         for (VirtualSystemPolicyBindingDto vsBinding : bindings) {
             bindRequest.addServiceToBindTo(vsBinding);
         }
+        return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
+    }
+
+    @ApiOperation(value = "Set Security Group Bindings with Service Function Chain  (Openstack Only)",
+            notes = "Adds/Updates Security Group Bindings to Security Function Services.<br/>"
+                    + "To Remove all policies, pass in empty json.<br/>"
+                    + "To update services binded to, pass in the updated list of services.<br/>",
+            response = BaseJobResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/securityGroups/{sgId}/sfc/{sfcId}/bindings")
+    @PUT
+    public Response updateVirtualSecurityPolicyBindingsWithSfc(@Context HttpHeaders headers,
+                                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                                        @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
+                                                        @ApiParam(value = "Service Function Chain Id, required = false") @PathParam("sfcId") Long sfcId,
+                                                        @ApiParam(value = "List of Policies", required = true) Set<BaseVirtualSystemPoliciesDto> policies) {
+        logger.info("Update Binding SFC and Policies for Security Group - " + sgId);
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
+        bindRequest.setVcId(vcId);
+        bindRequest.setSecurityGroupId(sgId);
+        bindRequest.setSfcId(sfcId);
+        // stub SFC virtual system polices into VirtualSystemPolicyBindingDto
+        for(BaseVirtualSystemPoliciesDto policy : policies) {
+        	VirtualSystemPolicyBindingDto bindDto = new VirtualSystemPolicyBindingDto(policy.getVirtualSystemId(), 
+        																	policy.getName(), policy.getPolicyIds(), policy.getPolicies());
+        	bindRequest.addServiceToBindTo(bindDto);		
+        }
+        return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
+    }
+    
+    @ApiOperation(value = "Deletes a Service Function Chain binding with Security Group",
+            notes = "Unbind a Serice Function Chain from a Given Security group and Virtualization Connector")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/securityGroups/{sgId}/sfc")
+    @DELETE
+    public Response unbindSecurityGroupWithServiceFunctionChain(@Context HttpHeaders headers,
+												            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+												            @ApiParam(value = "Security Group Id") @PathParam("sgId") Long sgId) {
+        logger.info("Unbind Security Group Id " + sgId + "with Service Function Chain  ");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
+        bindRequest.setVcId(vcId);
+        bindRequest.setSecurityGroupId(sgId);
         return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
     }
 

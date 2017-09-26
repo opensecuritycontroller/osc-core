@@ -106,7 +106,7 @@ public class VirtualSystem extends BaseEntity {
     private TagEncapsulationType encapsulationType;
     
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "virtualSystems")
-    private List<ServiceFunctionChain> sfc = new ArrayList<ServiceFunctionChain>();
+    private List<ServiceFunctionChain> serviceFunctionChains = new ArrayList<ServiceFunctionChain>();
 
     public VirtualSystem(DistributedAppliance distributedAppliance) {
         super();
@@ -234,8 +234,17 @@ public class VirtualSystem extends BaseEntity {
     public void setEncapsulationType(TagEncapsulationType encapsulationType) {
         this.encapsulationType = encapsulationType;
     }
+    
 
-    @Override
+    public List<ServiceFunctionChain> getServiceFunctionChains() {
+		return serviceFunctionChains;
+	}
+
+	public void setServiceFunctionChains(List<ServiceFunctionChain> serviceFunctionChains) {
+		this.serviceFunctionChains = serviceFunctionChains;
+	}
+
+	@Override
     public Boolean getMarkedForDeletion() {
         return super.getMarkedForDeletion() || this.distributedAppliance.getMarkedForDeletion();
     }

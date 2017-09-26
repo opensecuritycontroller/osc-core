@@ -16,10 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.response.BindSecurityGroupResponse;
 
 public interface ListSecurityGroupBindingsBySgServiceApi
-        extends ServiceDispatcherApi<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
+        extends ServiceDispatcherApi<BaseIdRequest, BindSecurityGroupResponse> {
 }

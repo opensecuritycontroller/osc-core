@@ -37,17 +37,17 @@ public class BindSecurityGroupRequestValidator {
 		List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
 		if (services != null && !services.isEmpty()) {
 			for (VirtualSystemPolicyBindingDto service : services) {
-				if (service.getVirtualSystemId() == null || StringUtils.isBlank(service.getName())
-						|| service.getOrder() == null) {
+				if (service.getVirtualSystemId() == null || StringUtils.isBlank(service.getName())) {
 					map.put("Virtual System Id", service.getVirtualSystemId());
 					map.put("Service Name", service.getName());
+					break;
+				} else if(request.getSfcId() == null && service.getOrder() == null) {
 					map.put("Service Order", service.getOrder());
 					break;
 				}
 			}
 		}
-
+		
 		ValidateUtil.checkForNullFields(map);
 	}
-
 }
