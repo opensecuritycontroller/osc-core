@@ -68,7 +68,7 @@ public class BaseIdRequest extends BaseRequest<BaseDto> {
         throw new UnsupportedOperationException();
     }
 
-    // Make sure swagger hides the dto field when generating documentation
+    // Make sure swagger hides the api field when generating documentation
     @ApiModelProperty(hidden = true)
     @Override
     public boolean isApi() {
