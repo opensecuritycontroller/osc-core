@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
@@ -95,7 +96,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
         // Arrange.
         this.factoryTask.checkK8sSecurityGroupLabelMetaTask = new CheckK8sSecurityGroupLabelMetaTask();
         this.factoryTask.portGroupCheckMetaTask = new PortGroupCheckMetaTask();
-
+        this.factoryTask.deleteSecurityGroupFromDbTask = new DeleteSecurityGroupFromDbTask();
         UpdateOrDeleteK8sSecurityGroupMetaTask task = this.factoryTask.create(this.sg);
 
         // Act.
@@ -111,8 +112,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
             { NO_LABEL_SG, createK8sGraph(NO_LABEL_SG, false) },
             { SINGLE_LABEL_SG, createK8sGraph(SINGLE_LABEL_SG, false) },
             { MULTI_LABEL_SG, createK8sGraph(MULTI_LABEL_SG, false) },
-            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, createK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) },
-            { POPULATED_WITH_POD_SG, checkPortGroupK8sGraph(POPULATED_WITH_POD_SG, false) }
+            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, deleteSGK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) }
         });
     }
 

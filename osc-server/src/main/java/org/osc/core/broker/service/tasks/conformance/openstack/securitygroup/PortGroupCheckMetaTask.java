@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -31,8 +30,6 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service=PortGroupCheckMetaTask.class)
 public class PortGroupCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger LOG = Logger.getLogger(PortGroupCheckMetaTask.class);
-
     @Reference
     CreatePortGroupTask createPortGroupTask;
 
@@ -63,7 +60,6 @@ public class PortGroupCheckMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        LOG.info("Start executing PortGroupCheckMetaTask Task. Security Group '" + this.securityGroup + "'");
         this.tg = new TaskGraph();
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 

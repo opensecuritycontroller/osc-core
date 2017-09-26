@@ -85,25 +85,28 @@ public class CreateK8sLabelPodTask extends TransactionalTask{
             }
         }
 
-        PodPort podPort = new PodPort(
-                portElement.getElementId(),
-                portElement.getMacAddresses().get(0),
-                portElement.getPortIPs().get(0),
-                portElement.getParentId());
+        if (existingPod == null) {
+            PodPort podPort = new PodPort(
+                    portElement.getElementId(),
+                    portElement.getMacAddresses().get(0),
+                    portElement.getPortIPs().get(0),
+                    portElement.getParentId());
 
-        Pod newPod = new Pod(
-                this.k8sPod.getName(),
-                this.k8sPod.getNamespace(),
-                this.k8sPod.getNode(),
-                this.k8sPod.getUid());
+            Pod newPod = new Pod(
+                    this.k8sPod.getName(),
+                    this.k8sPod.getNamespace(),
+                    this.k8sPod.getNode(),
+                    this.k8sPod.getUid());
 
-        newPod.getPorts().add(podPort);
-        podPort.setPod(newPod);
+            newPod.getPorts().add(podPort);
+            podPort.setPod(newPod);
 
-        OSCEntityManager.create(em, podPort, this.txBroadcastUtil);
-        OSCEntityManager.create(em, newPod, this.txBroadcastUtil);
+            OSCEntityManager.create(em, podPort, this.txBroadcastUtil);
+            OSCEntityManager.create(em, newPod, this.txBroadcastUtil);
+            existingPod = newPod;
+        }
 
-        this.label.getPods().add(newPod);
+        this.label.getPods().add(existingPod);
 
         OSCEntityManager.update(em, this.label, this.txBroadcastUtil);
 

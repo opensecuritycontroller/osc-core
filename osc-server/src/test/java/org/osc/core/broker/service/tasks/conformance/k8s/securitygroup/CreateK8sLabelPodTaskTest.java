@@ -19,9 +19,6 @@ package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 import static org.mockito.Mockito.when;
 import static org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.CreateK8sLabelPodTaskTestData.*;
 
-import java.util.Arrays;
-import java.util.UUID;
-
 import javax.persistence.EntityManager;
 
 import org.junit.AfterClass;
@@ -36,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -46,7 +44,6 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
-import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
@@ -128,7 +125,31 @@ public class CreateK8sLabelPodTaskTest {
         Pod createdPod = PodEntityMgr.findExternalId(this.em, VALID_K8S_POD.getUid());
         Assert.assertNotNull("The created pod should no be null", createdPod);
         Assert.assertTrue("The persisted pod is different than expected", isExpectedPod(createdPod, VALID_K8S_POD, podPort));
-        //verify(this.em, Mockito.times(1)).persist(argThat(new PodEntityMatcher(VALID_K8S_POD, podPort)));
+        Assert.assertTrue("The label SGM should contain the created pod", VALID_POD_SGM_LABEL.getPods().contains(createdPod));
+    }
+
+    @Test
+    public void testExecute_WithAValidExistingPod_LabelIsUpdatedWithExistingPod() throws Exception {
+        // Arrange.
+        CreateK8sLabelPodTask task = this.factoryTask.create(SAME_SG_ALREADY_PROTECTED_K8S_POD, VALID_EXISTING_POD_SGM_LABEL);
+        NetworkElement podPort = SAME_SG_ALREADY_PROTECTED_POD_NETWORK_ELEMENT;
+        registerNetworkElement(VALID_EXISTING_POD_SGM_LABEL.getSecurityGroupMembers().iterator().next(), podPort, SAME_SG_ALREADY_PROTECTED_K8S_POD);
+
+        // Act.
+        task.execute();
+
+        // Assert.
+        Pod updatedPod = PodEntityMgr.findExternalId(this.em, SAME_SG_ALREADY_PROTECTED_K8S_POD.getUid());
+
+        Assert.assertNotNull("The updated pod should no be null", updatedPod);
+        Assert.assertTrue("The updated pod is different than expected", isExpectedPod(updatedPod, SAME_SG_ALREADY_PROTECTED_K8S_POD, podPort));
+
+        Label updatedLabel = this.em.find(Label.class, VALID_EXISTING_POD_SGM_LABEL.getId());
+
+        Assert.assertTrue("The label SGM should contain the created pod", updatedLabel.getPods().contains(updatedPod));
+        // The existing port should not contain its previous label and its new label
+        Assert.assertTrue("", updatedPod.getLabels().contains(EXISTING_PROTECTED_POD_SAME_SG_LABEL));
+        Assert.assertTrue("", updatedPod.getLabels().contains(VALID_EXISTING_POD_SGM_LABEL));
     }
 
     private void populateDatabase() {
@@ -138,6 +159,8 @@ public class CreateK8sLabelPodTaskTest {
             persist(VALID_POD_SGM_LABEL, this.em);
             persist(ALREADY_PROTECTED_POD_SGM_LABEL, this.em);
             persist(NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL, this.em);
+            persist(EXISTING_PROTECTED_POD_SAME_SG_LABEL, this.em);
+            persist(VALID_EXISTING_POD_SGM_LABEL, this.em);
             this.em.getTransaction().commit();
             DB_POPULATED = true;
         }
@@ -147,34 +170,6 @@ public class CreateK8sLabelPodTaskTest {
         when(this.redirectionApi.getNetworkElementByDeviceOwnerId(k8sPod.getNamespace() + ":" + k8sPod.getName())).thenReturn(networkElement);
         when(this.apiFactoryServiceMock.createNetworkRedirectionApi(sgm.getSecurityGroup().getVirtualizationConnector())).thenReturn(this.redirectionApi);
     }
-
-    /*private class PodEntityMatcher extends ArgumentMatcher<Pod> {
-        private KubernetesPod k8sPod;
-        private NetworkElement podPort;
-
-        public PodEntityMatcher(KubernetesPod k8sPod, NetworkElement podPort) {
-            this.k8sPod = k8sPod;
-            this.podPort = podPort;
-        }
-
-        @Override
-        public boolean matches(Object object) {
-            if (object == null || !(object instanceof Pod)) {
-                return false;
-            }
-
-            Pod podEntity = (Pod) object;
-            PodPort entityPort = podEntity.getPorts().iterator().next();
-            return podEntity.getName().equals(this.k8sPod.getName()) &&
-                    podEntity.getNamespace().equals(this.k8sPod.getNamespace()) &&
-                    podEntity.getNode().equals(this.k8sPod.getNode()) &&
-                    podEntity.getExternalId().equals(this.k8sPod.getUid()) &&
-                    entityPort.getExternalId().equals(this.podPort.getElementId()) &&
-                    entityPort.getParentId().equals(this.podPort.getParentId()) &&
-                    entityPort.getMacAddress().equals(this.podPort.getMacAddresses().get(0)) &&
-                    entityPort.getIpAddresses().get(0).equals(this.podPort.getPortIPs().get(0));
-        }
-    }*/
 
     private boolean isExpectedPod(Pod podEntity, KubernetesPod k8sPod, NetworkElement podPort) {
         PodPort entityPort = podEntity.getPorts().iterator().next();
@@ -186,12 +181,5 @@ public class CreateK8sLabelPodTaskTest {
                 entityPort.getParentId().equals(podPort.getParentId()) &&
                 entityPort.getMacAddress().equals(podPort.getMacAddresses().get(0)) &&
                 entityPort.getIpAddresses().get(0).equals(podPort.getPortIPs().get(0));
-    }
-
-    private DefaultNetworkPort createNetworkElement() {
-        DefaultNetworkPort networkPort = new DefaultNetworkPort(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        networkPort.setPortIPs(Arrays.asList(UUID.randomUUID().toString()));
-        networkPort.setParentId(UUID.randomUUID().toString());
-        return networkPort;
     }
 }

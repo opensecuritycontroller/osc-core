@@ -62,22 +62,33 @@ public class CreatePortGroupTask extends TransactionalTask {
 
         Set<SecurityGroupMember> members = this.securityGroup.getSecurityGroupMembers();
         List<NetworkElement> protectedPorts = new ArrayList<>();
+        String domainId = null;
         if (this.securityGroup.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
             for (SecurityGroupMember sgm : members) {
                 protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
             }
-            String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
+            domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                     this.securityGroup.getVirtualizationConnector(), protectedPorts);
             if (domainId == null){
                 throw new Exception(String.format("A domain was not found for the project: '%s' and Security Group: '%s",
                         this.securityGroup.getProjectName(), this.securityGroup.getName()));
             }
+
             for (NetworkElement elem : protectedPorts) {
                 ((NetworkElementImpl) elem).setParentId(domainId);
             }
         } else {
             for (SecurityGroupMember sgm : members) {
-                protectedPorts.addAll(getPodPorts(sgm));
+                if (domainId == null && !sgm.getPodPorts().isEmpty()) {
+                    domainId = sgm.getPodPorts().iterator().next().getParentId();
+                }
+
+                List<PodNetworkElementImpl> podPorts = getPodPorts(sgm);
+                for (PodNetworkElementImpl podPort : podPorts) {
+                    podPort.setParentId(domainId);
+                }
+
+                protectedPorts.addAll(podPorts);
             }
         }
 
@@ -99,7 +110,7 @@ public class CreatePortGroupTask extends TransactionalTask {
         return String.format("Create Port Group for security group: %s ", this.securityGroup.getName());
     }
 
-    private static List<NetworkElement> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+    private static List<PodNetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         Set<PodPort> ports = sgm.getPodPorts();
         return ports.stream()
                 .map(PodNetworkElementImpl::new)
