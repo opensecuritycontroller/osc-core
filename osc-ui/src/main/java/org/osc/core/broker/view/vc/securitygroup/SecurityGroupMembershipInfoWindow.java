@@ -118,12 +118,15 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
 
                     for (PortDto port : member.getPorts()) {
                         String ipAddressString = String.join(", ", port.getIpAddresses());
-                        Object portItem = this.treeTable.addItem(
-                                new Object[] { port.getOpenstackId().substring(0, OPENSTACK_ID_SHORTENED_LENGTH), "",
-                                        ipAddressString, port.getMacAddress() },
-                                null);
-                        this.treeTable.setChildrenAllowed(portItem, false);
-                        this.treeTable.setParent(portItem, memberItem);
+                        String shortId = port.getOpenstackId().length() > OPENSTACK_ID_SHORTENED_LENGTH ?
+                                port.getOpenstackId().substring(0, OPENSTACK_ID_SHORTENED_LENGTH) :
+                                    port.getOpenstackId();
+                                Object portItem = this.treeTable.addItem(
+                                        new Object[] { shortId, "",
+                                                ipAddressString, port.getMacAddress() },
+                                        null);
+                                this.treeTable.setChildrenAllowed(portItem, false);
+                                this.treeTable.setParent(portItem, memberItem);
                     }
                 }
             }
