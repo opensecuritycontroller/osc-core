@@ -32,8 +32,8 @@ import io.swagger.annotations.ApiModelProperty;
 public class BaseRequest<T extends BaseDto> implements Request {
 
     private T dto;
-   
-    @ApiModelProperty(readOnly = true)
+
+    @ApiModelProperty(readOnly = true, hidden = true)
     @XmlElement(name = "api")
     private boolean isApi;
 
