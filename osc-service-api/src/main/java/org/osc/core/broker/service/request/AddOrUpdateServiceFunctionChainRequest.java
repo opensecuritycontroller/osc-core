@@ -59,4 +59,13 @@ public class AddOrUpdateServiceFunctionChainRequest extends BaseRequest<BaseDto>
 	public void setVirtualSystemIds(List<Long> virtualSystemIds) {
 		this.virtualSystemIds = virtualSystemIds;
 	}
+
+    // Make sure swagger hides the dto field when generating documentation
+    @ApiModelProperty(hidden = true)
+    @Override
+    public BaseDto getDto() {
+        return super.getDto();
+    }
+
+
 }

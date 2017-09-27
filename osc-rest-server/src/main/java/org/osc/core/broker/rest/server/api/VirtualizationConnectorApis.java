@@ -57,14 +57,13 @@ import org.osc.core.broker.service.api.UpdateServiceFunctionChainServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.dto.ServiceFunctionChainDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
-import org.osc.core.broker.service.exceptions.ExceptionConstants;
-import org.osc.core.broker.service.exceptions.OscBadRequestException;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
@@ -527,8 +526,7 @@ public class VirtualizationConnectorApis {
         logger.info("Creating Service Function Chain ...");
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         if (sfcAddRequest.getDto() == null) {
-            throw new OscBadRequestException("Dto needs to be specified",
-                    ExceptionConstants.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+            sfcAddRequest.setDto(new BaseDto());
         }
         this.apiUtil.setIdAndParentIdOrThrow(sfcAddRequest.getDto(), null, vcId, "Service Function Chain");
         return this.apiUtil.getResponseForBaseRequest(this.addServiceFunctionChainService, sfcAddRequest);
@@ -602,8 +600,7 @@ public class VirtualizationConnectorApis {
         logger.info("Update Service Function Chain ...");
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         if (sfcUpdateRequest.getDto() == null) {
-            throw new OscBadRequestException("Dto needs to be specified",
-                    ExceptionConstants.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+            sfcUpdateRequest.setDto(new BaseDto());
         }
         this.apiUtil.setIdAndParentIdOrThrow(sfcUpdateRequest.getDto(), sfcId, vcId, "Service Function Chain");
         return this.apiUtil.getResponseForBaseRequest(this.updateServiceFunctionChainService, sfcUpdateRequest);
