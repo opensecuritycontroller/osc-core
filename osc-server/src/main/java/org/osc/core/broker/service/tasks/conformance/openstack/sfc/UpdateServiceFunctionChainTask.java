@@ -25,7 +25,9 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,18 +58,25 @@ public class UpdateServiceFunctionChainTask extends TransactionalTask {
     }
 
     @Override
-    public String getName() {
-        return String.format("Updating Service Function Chain '%s' for Security Group '%s' under Project '%s'",
-                this.sfc.getName(), this.securityGroup.getName(), this.securityGroup.getProjectName());
-    }
-
-    @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.sfc = em.find(ServiceFunctionChain.class, this.sfc.getId());
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
-        this.updatedPortPairGroups.size();
-        //TODO: arvind implement this
 
+        try (SdnRedirectionApi sdnApi = this.apiFactory
+                .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
+            NetworkElement updatedChain = sdnApi.updateNetworkElement(
+                    new NetworkElementImpl(this.securityGroup.getNetworkElementId()), this.updatedPortPairGroups);
+            if (!updatedChain.getElementId().equals(this.securityGroup.getNetworkElementId())) {
+                this.securityGroup.setNetworkElementId(updatedChain.getElementId());
+                em.merge(this.securityGroup);
+            }
+        }
+    }
+
+    @Override
+    public String getName() {
+        return String.format("Updating Service Function Chain '%s' for Security Group '%s' under Project '%s'",
+                this.sfc.getName(), this.securityGroup.getName(), this.securityGroup.getProjectName());
     }
 
     @Override
