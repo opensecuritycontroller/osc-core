@@ -134,6 +134,7 @@
                 <module>../security-mgr-sample-plugin</module>
                 
                 <module>../osc-nuage-plugin</module>
+                <module>../osc-pan-plugin</module>
 
 				<module>osc-tools</module>
 				<module>osc-uber-openstack4j</module>
