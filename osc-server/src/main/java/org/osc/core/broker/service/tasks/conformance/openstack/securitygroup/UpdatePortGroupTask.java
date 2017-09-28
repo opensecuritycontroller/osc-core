@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdatePortGroupTask.class)
-public class UpdatePortGroupTask  extends TransactionalTask{
+public class UpdatePortGroupTask extends TransactionalTask {
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -86,8 +86,8 @@ public class UpdatePortGroupTask  extends TransactionalTask{
                     domainId = sgm.getPodPorts().iterator().next().getParentId();
                 }
 
-                List<PodNetworkElementImpl> podPorts = getPodPorts(sgm);
-                for (PodNetworkElementImpl podPort : podPorts) {
+                List<NetworkElementImpl> podPorts = getPodPorts(sgm);
+                for (NetworkElementImpl podPort : podPorts) {
                     podPort.setParentId(domainId);
                 }
 
@@ -114,7 +114,7 @@ public class UpdatePortGroupTask  extends TransactionalTask{
         return String.format("Update Port Group for security group: %s ", this.securityGroup.getName());
     }
 
-    private static List<PodNetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+    private static List<NetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         Set<PodPort> ports = sgm.getPodPorts();
         return ports.stream()
                 .map(NetworkElementImpl::new)
