@@ -36,7 +36,7 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
@@ -100,7 +100,7 @@ public class DeletePortGroupTaskTest {
 	public void testExecute_WhenDeleteNetworkElementFails_ThrowsTheUnhandledException() throws Exception {
 		// Arrange.
 		SecurityGroup sg = registerSecurityGroup("SG", 1L, null);
-		PortGroup portGroup = createPortGroup(sg.getNetworkElementId(), sg.getName());
+		NetworkElementImpl portGroup = createPortGroup(sg.getNetworkElementId(), sg.getName());
 
 		SdnRedirectionApi redirectionApi = mockDeleteNetworkElement(portGroup, new IllegalStateException());
 
@@ -118,7 +118,7 @@ public class DeletePortGroupTaskTest {
 	public void testExecute_WhenDeleteNetworkElementSucceeds_ExecutionFinishes() throws Exception {
 		// Arrange.
 		SecurityGroup sg = registerSecurityGroup("SG", 1L, null);
-		PortGroup portGroup = createPortGroup(sg.getNetworkElementId(), sg.getName());
+		NetworkElementImpl portGroup = createPortGroup(sg.getNetworkElementId(), sg.getName());
 
 		SdnRedirectionApi redirectionApi = mockDeleteNetworkElement(portGroup, null);
 
@@ -153,11 +153,8 @@ public class DeletePortGroupTaskTest {
 		return vc;
 	}
 
-	private static PortGroup createPortGroup(String id, String parentId) {
-		PortGroup portGroup = new PortGroup();
-
-		portGroup.setPortGroupId(id);
-		portGroup.setParentId(parentId);
+	private static NetworkElementImpl createPortGroup(String id, String parentId) {
+		NetworkElementImpl portGroup = new NetworkElementImpl(id, parentId);
 
 		return portGroup;
 	}
@@ -167,7 +164,7 @@ public class DeletePortGroupTaskTest {
 		when(this.apiFactoryServiceMock.createNetworkRedirectionApi(vc)).thenReturn(redirectionApi);
 	}
 
-	private SdnRedirectionApi mockDeleteNetworkElement(PortGroup portGroup, Exception e) throws Exception {
+	private SdnRedirectionApi mockDeleteNetworkElement(NetworkElementImpl portGroup, Exception e) throws Exception {
 		SdnRedirectionApi redirectionApi = mock(SdnRedirectionApi.class);
 		if (e != null) {
 			doThrow(e).when(redirectionApi).deleteNetworkElement(portGroup);

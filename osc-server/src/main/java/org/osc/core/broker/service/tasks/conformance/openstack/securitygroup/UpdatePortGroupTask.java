@@ -27,27 +27,25 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.PodNetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdatePortGroupTask.class)
-public class UpdatePortGroupTask  extends TransactionalTask{
+public class UpdatePortGroupTask extends TransactionalTask {
 
     @Reference
     private ApiFactoryService apiFactoryService;
 
     private SecurityGroup securityGroup;
-    private PortGroup portGroup;
+    private NetworkElementImpl portGroup;
 
-    public UpdatePortGroupTask create(SecurityGroup sg, PortGroup portGroup) {
+    public UpdatePortGroupTask create(SecurityGroup sg, NetworkElementImpl portGroup) {
         UpdatePortGroupTask task = new UpdatePortGroupTask();
         task.securityGroup = sg;
         task.portGroup = portGroup;
@@ -88,8 +86,8 @@ public class UpdatePortGroupTask  extends TransactionalTask{
                     domainId = sgm.getPodPorts().iterator().next().getParentId();
                 }
 
-                List<PodNetworkElementImpl> podPorts = getPodPorts(sgm);
-                for (PodNetworkElementImpl podPort : podPorts) {
+                List<NetworkElementImpl> podPorts = getPodPorts(sgm);
+                for (NetworkElementImpl podPort : podPorts) {
                     podPort.setParentId(domainId);
                 }
 
@@ -116,10 +114,10 @@ public class UpdatePortGroupTask  extends TransactionalTask{
         return String.format("Update Port Group for security group: %s ", this.securityGroup.getName());
     }
 
-    private static List<PodNetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+    private static List<NetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         Set<PodPort> ports = sgm.getPodPorts();
         return ports.stream()
-                .map(PodNetworkElementImpl::new)
+                .map(NetworkElementImpl::new)
                 .collect(Collectors.toList());
     }
 }
