@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 
@@ -45,7 +46,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
     public static SecurityGroup NO_LABEL_SG = createSecurityGroup("NO_LABEL", 0, false);
     public static SecurityGroup SINGLE_LABEL_SG = createSecurityGroup("SINGLE_LABEL", 1, false);
     public static SecurityGroup MULTI_LABEL_SG = createSecurityGroup("MULTI_LABEL", MANY, false);
-    public static SecurityGroup SINGLE_LABEL_MARKED_FOR_DELETION_SG = createSecurityGroup("SINGLE_LABEL", 1, true);
+    public static SecurityGroup SINGLE_LABEL_MARKED_FOR_DELETION_SG = createSecurityGroupWithPod("POPULATED_WITH_POD_SG", true);
 
     public static TaskGraph createK8sGraph(SecurityGroup sg, boolean isDelete) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -66,7 +67,10 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
             expectedGraph.addTask(new CheckK8sSecurityGroupLabelMetaTask().create(sgm, isDelete));
         }
 
-        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, null));
+        SecurityGroupMember sgm = sg.getSecurityGroupMembers().iterator().next();
+        String domainId = sgm.getPodPorts().iterator().next().getParentId();
+
+        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, domainId));
 
         expectedGraph.appendTask(new DeleteSecurityGroupFromDbTask().create(sg));
 
@@ -107,6 +111,30 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
 
         sg.getSecurityGroupMembers();
         em.getTransaction().commit();
+    }
+
+    private static SecurityGroup createSecurityGroupWithPod(String baseName, boolean markedForDeletion) {
+        SecurityGroup sg = createSecurityGroup(baseName, 1, markedForDeletion);
+        Label label = sg.getSecurityGroupMembers().iterator().next().getLabel();
+
+        PodPort podPort = new PodPort(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+
+        Pod pod = new Pod(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+
+        pod.getPorts().add(podPort);
+        podPort.setPod(pod);
+
+        label.getPods().add(pod);
+
+        return sg;
     }
 
     private static SecurityGroup createSecurityGroup(String baseName, int nLabels, boolean isDelete) {
