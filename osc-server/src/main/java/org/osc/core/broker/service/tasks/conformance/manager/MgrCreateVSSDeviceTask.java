@@ -20,23 +20,24 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * Creates the VSS device and updates the VS entity.
  */
 @Component(service = MgrCreateVSSDeviceTask.class)
 public class MgrCreateVSSDeviceTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(MgrCreateVSSDeviceTask.class);
+    private static final Logger log = LogProvider.getLogger(MgrCreateVSSDeviceTask.class);
 
     private VirtualSystem vs;
 

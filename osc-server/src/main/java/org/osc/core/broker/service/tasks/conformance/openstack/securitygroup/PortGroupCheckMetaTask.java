@@ -28,7 +28,7 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service=PortGroupCheckMetaTask.class)
+@Component(service = PortGroupCheckMetaTask.class)
 public class PortGroupCheckMetaTask extends TransactionalMetaTask {
     @Reference
     CreatePortGroupTask createPortGroupTask;

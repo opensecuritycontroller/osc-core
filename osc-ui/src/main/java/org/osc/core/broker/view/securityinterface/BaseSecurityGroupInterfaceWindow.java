@@ -18,13 +18,14 @@ package org.osc.core.broker.view.securityinterface;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.util.BeanItemContainer;
@@ -39,7 +40,7 @@ public abstract class BaseSecurityGroupInterfaceWindow extends CRUDBaseWindow<Ok
      *
      */
     private static final long serialVersionUID = 1L;
-    private static Logger log = Logger.getLogger(BaseSecurityGroupInterfaceWindow.class);
+    private static Logger log = LogProvider.getLogger(BaseSecurityGroupInterfaceWindow.class);
 
     protected TextField name;
     protected ComboBox policy;

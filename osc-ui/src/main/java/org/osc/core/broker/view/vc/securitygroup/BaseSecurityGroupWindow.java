@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
@@ -43,6 +42,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.LoadingIndicatorCRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 import org.tepi.filtertable.FilterDecorator;
 import org.tepi.filtertable.FilterTable;
 import org.tepi.filtertable.numberfilter.NumberFilterPopupConfig;
@@ -189,7 +190,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     }
 
     private static final long serialVersionUID = 1L;
-    private static Logger log = Logger.getLogger(BaseSecurityGroupWindow.class);
+    private static Logger log = LogProvider.getLogger(BaseSecurityGroupWindow.class);
 
     protected SecurityGroupDto currentSecurityGroup = null;
 

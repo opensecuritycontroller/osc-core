@@ -31,8 +31,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ApiUtil;
+import org.osc.core.broker.rest.server.LogProvider;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
@@ -66,6 +66,7 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -82,7 +83,7 @@ import io.swagger.annotations.Authorization;
 @OscAuth
 public class VirtualSystemApis {
 
-    private static final Logger logger = Logger.getLogger(VirtualSystemApis.class);
+    private static final Logger logger = LogProvider.getLogger(VirtualSystemApis.class);
 
     @Reference
     private ConformServiceApi conformService;

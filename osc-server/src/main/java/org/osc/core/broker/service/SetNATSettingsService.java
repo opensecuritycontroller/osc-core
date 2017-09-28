@@ -19,7 +19,6 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
@@ -28,15 +27,17 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.NATSettingsDtoValidator;
 import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSettingsDto>, BaseJobResponse>
         implements SetNATSettingsServiceApi {
 
-    private static final Logger log = Logger.getLogger(SetNATSettingsService.class);
+    private static final Logger log = LogProvider.getLogger(SetNATSettingsService.class);
 
     @Reference
     private ServerApi server;

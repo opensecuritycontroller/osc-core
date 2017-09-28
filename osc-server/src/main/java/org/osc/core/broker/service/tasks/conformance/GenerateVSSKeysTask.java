@@ -20,17 +20,18 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.crypto.PKIUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = GenerateVSSKeysTask.class)
 public class GenerateVSSKeysTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(GenerateVSSKeysTask.class);
+    private static final Logger log = LogProvider.getLogger(GenerateVSSKeysTask.class);
 
     private VirtualSystem vs;
 

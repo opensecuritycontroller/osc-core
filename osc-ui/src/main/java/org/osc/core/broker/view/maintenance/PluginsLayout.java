@@ -22,7 +22,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportPluginServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginApi;
 import org.osc.core.broker.service.api.plugin.PluginApi.State;
@@ -38,8 +37,10 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ExternalResource;
@@ -64,7 +65,7 @@ public class PluginsLayout extends FormLayout {
 
     private static final long serialVersionUID = 1L;
 
-    Logger log = Logger.getLogger(PluginsLayout.class);
+    Logger log = LogProvider.getLogger(PluginsLayout.class);
 
     private Table plugins;
     private Panel pluginsPanel;

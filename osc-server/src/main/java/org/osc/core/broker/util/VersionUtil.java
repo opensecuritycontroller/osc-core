@@ -22,12 +22,13 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
 
-import org.apache.log4j.Logger;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class VersionUtil {
-    private static final Logger log = Logger.getLogger(VersionUtil.class);
+    private static final Logger log = LogProvider.getLogger(VersionUtil.class);
 
     public static final String DEBUG_VERSION_STRING = "DEBUG";
 

@@ -23,14 +23,15 @@ import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupFileServiceApi;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.crypto.KeyStoreProvider;
 import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.server.Server;
+import org.slf4j.Logger;
 
 abstract class BackupFileService<I extends Request, O extends Response> extends ServiceDispatcher<I, O>
     implements BackupFileServiceApi<I, O> {
@@ -43,7 +44,7 @@ abstract class BackupFileService<I extends Request, O extends Response> extends 
 
     protected static final int DB_PASSWORD_MAX_LENGTH = 160;
 
-    protected static final Logger log = Logger.getLogger(BackupService.class);
+    protected static final Logger log = LogProvider.getLogger(BackupService.class);
 
     @Override
     public boolean isValidBackupFilename(String filename) {

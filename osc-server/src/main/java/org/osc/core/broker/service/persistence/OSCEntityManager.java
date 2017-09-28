@@ -29,7 +29,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.IscEntity;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -41,6 +40,8 @@ import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 /**
  * EntityManager: a generic entity manager that handles all common CRUD
@@ -49,7 +50,7 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class OSCEntityManager<T extends IscEntity> {
 
-    private static final Logger log = Logger.getLogger(OSCEntityManager.class);
+    private static final Logger log = LogProvider.getLogger(OSCEntityManager.class);
 
     protected EntityManager em;
     private Class<T> clazz;

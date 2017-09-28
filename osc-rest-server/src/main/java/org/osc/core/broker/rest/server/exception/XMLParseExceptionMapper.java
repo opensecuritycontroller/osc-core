@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.exception;
 
+import java.util.Arrays;
+
 import javax.management.modelmbean.XMLParseException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -25,8 +27,6 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
-
-import java.util.Arrays;
 
 /**
  * Exception handler for invalid xml deserialization

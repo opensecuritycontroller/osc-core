@@ -18,7 +18,6 @@ package org.osc.core.broker.window.delete;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
@@ -45,6 +44,8 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.button.OkCancelForceDeleteModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -52,7 +53,7 @@ import com.vaadin.ui.Notification;
 
 public class DeleteWindowUtil {
 
-    private static final Logger log = Logger.getLogger(DeleteWindowUtil.class);
+    private static final Logger log = LogProvider.getLogger(DeleteWindowUtil.class);
 
     public static void deleteDeploymentSpec(final DeleteDeploymentSpecServiceApi deleteDeploymentSpecService,
             final DeploymentSpecDto dto, ServerApi server) {

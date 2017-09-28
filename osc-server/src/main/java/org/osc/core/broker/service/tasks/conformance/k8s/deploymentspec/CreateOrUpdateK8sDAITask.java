@@ -21,7 +21,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -31,17 +30,19 @@ import org.osc.core.broker.rest.client.k8s.KubernetesPod;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for persisting a DAI in the OSC database for a newly found pod VNF.
  */
 @Component(service = CreateOrUpdateK8sDAITask.class)
 public class CreateOrUpdateK8sDAITask extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(CreateOrUpdateK8sDAITask.class);
+    private static final Logger LOG = LogProvider.getLogger(CreateOrUpdateK8sDAITask.class);
 
     private DeploymentSpec ds;
 

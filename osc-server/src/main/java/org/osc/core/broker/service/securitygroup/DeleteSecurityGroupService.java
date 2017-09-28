@@ -18,7 +18,6 @@ package org.osc.core.broker.service.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -37,15 +36,17 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ForceDeleteSecurityGroupTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
 implements DeleteSecurityGroupServiceApi {
 
-    private static final Logger log = Logger.getLogger(DeleteSecurityGroupService.class);
+    private static final Logger log = LogProvider.getLogger(DeleteSecurityGroupService.class);
 
     @Reference
     private ConformService conformService;

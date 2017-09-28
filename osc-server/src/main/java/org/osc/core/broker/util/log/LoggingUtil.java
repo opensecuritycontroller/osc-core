@@ -25,10 +25,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.annotations.VmidcLogHidden;
 import org.osc.core.broker.service.api.server.LoggingApi;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -44,7 +44,7 @@ import com.google.gson.JsonSerializer;
 @Component
 public final class LoggingUtil implements LoggingApi {
 
-    private static Logger log = Logger.getLogger(LoggingUtil.class);
+    private static Logger log = LogProvider.getLogger(LoggingUtil.class);
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(byte[].class, new ByteArrayTypeAdapter()).create();

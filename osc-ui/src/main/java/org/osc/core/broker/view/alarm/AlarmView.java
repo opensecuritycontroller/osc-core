@@ -19,7 +19,6 @@ package org.osc.core.broker.view.alarm;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
 import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
@@ -33,10 +32,12 @@ import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osc.core.ui.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -53,7 +54,7 @@ public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(AlarmView.class);
+    private static final Logger log = LogProvider.getLogger(AlarmView.class);
 
     @Reference
     private AddAlarmServiceApi addAlarmService;

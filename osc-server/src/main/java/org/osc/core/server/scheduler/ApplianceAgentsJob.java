@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -32,16 +31,18 @@ import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElem
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
 
 public class ApplianceAgentsJob implements Job {
 
-    private static final Logger log = Logger.getLogger(ApplianceAgentsJob.class);
+    private static final Logger log = LogProvider.getLogger(ApplianceAgentsJob.class);
 
     public ApplianceAgentsJob() {
 

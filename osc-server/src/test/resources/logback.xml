@@ -1,0 +1,15 @@
+<configuration>
+ 
+  <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <!-- <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>-->
+      <Pattern>%d [%-5p| %t| %c{1}]: %m%n</Pattern>
+    </layout>
+  </appender>
+  
+  <logger name="org.hibernate" level="ERROR"/>
+   
+  <root level="warn">
+    <appender-ref ref="consoleAppender" />
+  </root>
+</configuration>

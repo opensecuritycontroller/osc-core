@@ -18,13 +18,14 @@ package org.osc.core.broker.window.status;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
 import org.osc.core.broker.service.response.AgentStatusResponse;
 import org.osc.core.broker.service.response.GetAgentStatusResponse;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Alignment;
@@ -40,7 +41,7 @@ import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.ValoTheme;
 
 public class AgentStatusWindow extends Window {
-    private static final Logger log = Logger.getLogger(AgentStatusWindow.class);
+    private static final Logger log = LogProvider.getLogger(AgentStatusWindow.class);
     private final List<DistributedApplianceInstanceDto> daiList;
 
     /**

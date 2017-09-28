@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service = DeleteMgrSecurityGroupInterfaceTask.class)
 public class DeleteMgrSecurityGroupInterfaceTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(DeleteMgrSecurityGroupInterfaceTask.class);
+    //private static final Logger log = LogProvider.getLogger(DeleteMgrSecurityGroupInterfaceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

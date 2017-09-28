@@ -22,7 +22,6 @@ import java.util.UUID;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -32,9 +31,11 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * Creates an SVA on openstack
@@ -42,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = OsSvaCreateMetaTask.class)
 public class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
-    final Logger log = Logger.getLogger(OsSvaCreateMetaTask.class);
+    final Logger log = LogProvider.getLogger(OsSvaCreateMetaTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

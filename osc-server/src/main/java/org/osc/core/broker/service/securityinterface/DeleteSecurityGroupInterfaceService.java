@@ -18,7 +18,6 @@ package org.osc.core.broker.service.securityinterface;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
@@ -30,14 +29,16 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
         implements DeleteSecurityGroupInterfaceServiceApi {
 
-    private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceService.class);
+    private static final Logger log = LogProvider.getLogger(DeleteSecurityGroupInterfaceService.class);
     private SecurityGroupInterface sgi = null;
 
     @Reference

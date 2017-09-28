@@ -16,12 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc.securitygroup;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
-import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -29,6 +28,8 @@ import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 
@@ -41,7 +42,7 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     final String CAPTION = "Add Security Group";
 
-    private static final Logger log = Logger.getLogger(AddSecurityGroupWindow.class);
+    private static final Logger log = LogProvider.getLogger(AddSecurityGroupWindow.class);
 
     private final AddSecurityGroupServiceApi addSecurityGroupService;
 

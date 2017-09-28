@@ -32,7 +32,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -40,6 +39,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.AgentRegisterServiceRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class AgentRegisterServiceRequestValidatorTest {
 

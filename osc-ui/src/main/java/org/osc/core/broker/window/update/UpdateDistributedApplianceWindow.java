@@ -18,7 +18,6 @@ package org.osc.core.broker.window.update;
 
 import java.util.HashSet;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
@@ -42,7 +41,9 @@ import org.osc.core.broker.window.BaseDAWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
 import org.osc.sdk.controller.TagEncapsulationType;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -57,7 +58,7 @@ import com.vaadin.ui.VerticalLayout;
 @SuppressWarnings("serial")
 public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
-    private static final Logger log = Logger.getLogger(UpdateDistributedApplianceWindow.class);
+    private static final Logger log = LogProvider.getLogger(UpdateDistributedApplianceWindow.class);
     final String CAPTION = "Edit Distributed Appliance";
 
     private final DistributedApplianceView daView;

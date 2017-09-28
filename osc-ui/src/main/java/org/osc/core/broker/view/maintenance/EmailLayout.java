@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.api.SetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
@@ -25,6 +24,8 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.update.SetEmailSettingsWindow;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -37,7 +38,7 @@ import com.vaadin.ui.VerticalLayout;
 public class EmailLayout extends FormLayout {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(EmailLayout.class);
+    private static final Logger log = LogProvider.getLogger(EmailLayout.class);
 
     public Table emailTable = null;
     private VerticalLayout container = null;

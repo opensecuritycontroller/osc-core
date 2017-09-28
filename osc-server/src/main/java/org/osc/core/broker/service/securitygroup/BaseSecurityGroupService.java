@@ -26,7 +26,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.model.entities.virtualization.ProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -61,10 +60,12 @@ import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPa
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 public abstract class BaseSecurityGroupService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
-    private static final Logger log = Logger.getLogger(BaseSecurityGroupService.class);
+    private static final Logger log = LogProvider.getLogger(BaseSecurityGroupService.class);
 
     /**
      * Validates Virtualization connector and Project exists

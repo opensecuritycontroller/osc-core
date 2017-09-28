@@ -26,8 +26,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ApiUtil;
+import org.osc.core.broker.rest.server.LogProvider;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
@@ -38,6 +38,7 @@ import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = NsmMgrApis.class)
 @Path(ServerRestConstants.MGR_NSM_API_PATH_PREFIX)
@@ -46,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 @OscAuth
 public class NsmMgrApis {
 
-    private static final Logger log = Logger.getLogger(NsmMgrApis.class);
+    private static final Logger log = LogProvider.getLogger(NsmMgrApis.class);
 
     @Reference
     private ManagerApis managerApis;

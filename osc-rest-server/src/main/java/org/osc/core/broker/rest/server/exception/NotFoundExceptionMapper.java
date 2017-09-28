@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.exception;
 
+import java.util.Arrays;
+
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -26,8 +28,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
 import org.osc.core.broker.service.exceptions.OscNotFoundException;
-
-import java.util.Arrays;
 
 @Provider
 public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException>, BaseExceptionMapperUtil {

@@ -18,7 +18,6 @@ package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -36,15 +35,17 @@ import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateM
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
 import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse>
         implements UpdateUserServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateUserService.class);
+    private static final Logger log = LogProvider.getLogger(UpdateUserService.class);
     private DtoValidator<UserDto, User> validator;
 
     @Reference

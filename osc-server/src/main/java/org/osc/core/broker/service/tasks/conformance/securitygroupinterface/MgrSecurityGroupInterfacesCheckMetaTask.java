@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -38,19 +37,21 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.DowngradeLockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
 import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 
 @Component(service = MgrSecurityGroupInterfacesCheckMetaTask.class)
 public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger log = Logger.getLogger(MgrSecurityGroupInterfacesCheckMetaTask.class);
+    private static final Logger log = LogProvider.getLogger(MgrSecurityGroupInterfacesCheckMetaTask.class);
 
     @Reference
     ApiFactoryService apiFactoryService;
@@ -295,5 +296,4 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
                     .getObjectReferences(this.vs.getDistributedAppliance().getApplianceManagerConnector());
         }
     }
-
 }

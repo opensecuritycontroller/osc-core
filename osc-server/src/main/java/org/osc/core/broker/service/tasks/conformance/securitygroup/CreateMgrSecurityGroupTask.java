@@ -42,6 +42,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 @Component(service=CreateMgrSecurityGroupTask.class)
 public class CreateMgrSecurityGroupTask extends TransactionalTask {
+
     @Reference
     private ApiFactoryService apiFactoryService;
 

@@ -18,7 +18,6 @@ package org.osc.core.broker.window.add;
 
 import java.util.HashSet;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
@@ -37,7 +36,9 @@ import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.view.DistributedApplianceView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.BaseDAWindow;
+import org.osc.core.ui.LogProvider;
 import org.osc.sdk.controller.TagEncapsulationType;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.Notification;
@@ -49,7 +50,7 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
 
     final String CAPTION = "Add Distributed Appliance";
 
-    private static final Logger log = Logger.getLogger(DistributedApplianceView.class);
+    private static final Logger log = LogProvider.getLogger(DistributedApplianceView.class);
     // current view reference
     private final DistributedApplianceView daView;
 

@@ -21,7 +21,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -34,6 +33,7 @@ import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -43,6 +43,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
 
 /**
  *
@@ -53,7 +54,7 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 service=RabbitMQRunner.class)
 public class RabbitMQRunner implements BroadcastListener {
 
-    private static final Logger log = Logger.getLogger(RabbitMQRunner.class);
+    private static final Logger log = LogProvider.getLogger(RabbitMQRunner.class);
     private static HashMap<Long, Thread> vcToRabbitMQRunnerThreadMap = new HashMap<>();
     private static HashMap<Long, OsRabbitMQClient> vcToRabbitMQClientMap = new HashMap<>();
 

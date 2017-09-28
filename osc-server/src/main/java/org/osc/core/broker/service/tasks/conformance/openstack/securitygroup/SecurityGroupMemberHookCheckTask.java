@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
@@ -29,9 +28,11 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for checking the conformance of the inspection appliances
@@ -44,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=SecurityGroupMemberHookCheckTask.class)
 public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
 
-    private final Logger log = Logger.getLogger(SecurityGroupMemberHookCheckTask.class);
+    private final Logger log = LogProvider.getLogger(SecurityGroupMemberHookCheckTask.class);
 
     @Reference
     VmPortAllHooksRemoveTask vmPortAllHooksRemoveTask;

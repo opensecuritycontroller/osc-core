@@ -18,7 +18,6 @@ package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -30,10 +29,12 @@ import org.osc.core.broker.service.tasks.network.IpChangePropagateMetaTask;
 import org.osc.core.broker.service.validator.NetworkSettingsDtoValidator;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This component exposes both the API and the implementation so that the
@@ -45,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
 public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse>
         implements SetNetworkSettingsServiceApi {
 
-    private static final Logger log = Logger.getLogger(SetNetworkSettingsService.class);
+    private static final Logger log = LogProvider.getLogger(SetNetworkSettingsService.class);
 
     @Reference
     private Server server;

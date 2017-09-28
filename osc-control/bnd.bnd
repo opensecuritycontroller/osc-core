@@ -20,7 +20,7 @@
     com.google.gson.*
 
 -includeresource: \
-    @${log4j.dep},\
+    @${slf4j-api.dep},\
     @${osc-service-api.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\

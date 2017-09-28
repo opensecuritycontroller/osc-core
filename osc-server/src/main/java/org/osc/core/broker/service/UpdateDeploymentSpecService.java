@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -42,15 +41,17 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class UpdateDeploymentSpecService
 extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
 implements UpdateDeploymentSpecServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateDeploymentSpecService.class);
+    private static final Logger log = LogProvider.getLogger(UpdateDeploymentSpecService.class);
 
     @Reference
     private ConformService conformService;

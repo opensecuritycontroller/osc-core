@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
@@ -32,7 +31,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 /**
  *
@@ -41,7 +42,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service=ForceDeleteSecurityGroupTask.class)
 public class ForceDeleteSecurityGroupTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(ForceDeleteSecurityGroupTask.class);
+    private static final Logger log = LogProvider.getLogger(ForceDeleteSecurityGroupTask.class);
 
     private SecurityGroup securityGroup;
 

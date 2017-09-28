@@ -18,7 +18,6 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
@@ -27,12 +26,14 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = VmPortDeleteFromDbTask.class)
 public class VmPortDeleteFromDbTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(VmPortDeleteFromDbTask.class);
+    private final Logger log = LogProvider.getLogger(VmPortDeleteFromDbTask.class);
 
     private SecurityGroupMember sgm;
     private VMPort vmPort;

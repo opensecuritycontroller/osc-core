@@ -18,7 +18,6 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
@@ -30,14 +29,16 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service=MCDeleteMetaTask.class)
 public class MCDeleteMetaTask extends TransactionalMetaTask {
-    private static final Logger log = Logger.getLogger(MCDeleteMetaTask.class);
+    private static final Logger log = LogProvider.getLogger(MCDeleteMetaTask.class);
 
     private ApplianceManagerConnector mc;
     private TaskGraph tg;

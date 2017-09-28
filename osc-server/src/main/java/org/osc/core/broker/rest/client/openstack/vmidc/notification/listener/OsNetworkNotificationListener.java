@@ -18,7 +18,6 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -31,11 +30,13 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.transaction.control.TransactionControl;
+import org.slf4j.Logger;
 
 public class OsNetworkNotificationListener extends OsNotificationListener {
 
-    private static final Logger log = Logger.getLogger(OsNetworkNotificationListener.class);
+    private static final Logger log = LogProvider.getLogger(OsNetworkNotificationListener.class);
 
     private final ConformService conformService;
 

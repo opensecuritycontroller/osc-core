@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -50,16 +49,18 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.util.crypto.PKIUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class UpdateDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse>
         implements UpdateDistributedApplianceServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateDistributedApplianceService.class);
+    private static final Logger log = LogProvider.getLogger(UpdateDistributedApplianceService.class);
 
     private UnlockObjectMetaTask ult = null;
 
