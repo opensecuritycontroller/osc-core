@@ -48,9 +48,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionE
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -97,7 +96,7 @@ public class UpdatePortGroupTaskTest {
     private ArgumentCaptor<List<NetworkElement>> domainIdNetworkElementCaptor;
 
     @Captor
-    private ArgumentCaptor<PortGroup> portGroupCaptor;
+    private ArgumentCaptor<NetworkElementImpl> portGroupCaptor;
 
     private List<VMPort> vmProtectedPorts;
 
@@ -121,7 +120,7 @@ public class UpdatePortGroupTaskTest {
         // Arrange.
         SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
         sg.addSecurityGroupMember(newSGMWithPort(1L, OPENSTACK_ID));
-        PortGroup portGroup = createPortGroup(OPENSTACK_ID);
+        NetworkElementImpl portGroup = createPortGroup(OPENSTACK_ID);
 
         ostRegisterPorts(sg);
 
@@ -147,7 +146,7 @@ public class UpdatePortGroupTaskTest {
         // Arrange.
         SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
         sg.addSecurityGroupMember(newSGMWithPort(1L, OPENSTACK_ID));
-        PortGroup portGroup = createPortGroup("different_openstackId");
+        NetworkElementImpl portGroup = createPortGroup("different_openstackId");
 
         List<NetworkElement> neList = ostRegisterPorts(sg);
 
@@ -176,7 +175,7 @@ public class UpdatePortGroupTaskTest {
         // Arrange.
         SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
         sg.addSecurityGroupMember(newSGMWithPort(1L, OPENSTACK_ID));
-        PortGroup portGroup = createPortGroup(OPENSTACK_ID);
+        NetworkElementImpl portGroup = createPortGroup(OPENSTACK_ID);
 
         ostRegisterPorts(sg);
 
@@ -203,7 +202,7 @@ public class UpdatePortGroupTaskTest {
         // Arrange.
         SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
         sg.addSecurityGroupMember(newSGMWithPort(1L, ""));
-        PortGroup portGroup = createPortGroup(OPENSTACK_ID);
+        NetworkElementImpl portGroup = createPortGroup(OPENSTACK_ID);
 
         ostRegisterPorts(sg);
 
@@ -276,7 +275,7 @@ public class UpdatePortGroupTaskTest {
         when(this.apiFactoryServiceMock.createNetworkRedirectionApi(vc)).thenReturn(redirectionApi);
     }
 
-    private SdnRedirectionApi registerNetworkElement(PortGroup portGroup, NetworkElement ne) throws Exception {
+    private SdnRedirectionApi registerNetworkElement(NetworkElementImpl portGroup, NetworkElement ne) throws Exception {
         SdnRedirectionApi redirectionApi = mock(SdnRedirectionApi.class);
         when(redirectionApi.updateNetworkElement(this.portGroupCaptor.capture(), this.networkElementCaptor.capture()))
         .thenReturn(ne);
@@ -300,9 +299,8 @@ public class UpdatePortGroupTaskTest {
         return ne;
     }
 
-    private static PortGroup createPortGroup(String id) {
-        PortGroup portGroup = new PortGroup();
-        portGroup.setPortGroupId(id);
+    private static NetworkElementImpl createPortGroup(String id) {
+        NetworkElementImpl portGroup = new NetworkElementImpl(id, null);
 
         return portGroup;
     }

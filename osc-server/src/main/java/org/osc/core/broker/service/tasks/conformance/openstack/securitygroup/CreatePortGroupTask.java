@@ -28,8 +28,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.PodNetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
@@ -83,8 +82,8 @@ public class CreatePortGroupTask extends TransactionalTask {
                     domainId = sgm.getPodPorts().iterator().next().getParentId();
                 }
 
-                List<PodNetworkElementImpl> podPorts = getPodPorts(sgm);
-                for (PodNetworkElementImpl podPort : podPorts) {
+                List<NetworkElementImpl> podPorts = getPodPorts(sgm);
+                for (NetworkElementImpl podPort : podPorts) {
                     podPort.setParentId(domainId);
                 }
 
@@ -110,10 +109,10 @@ public class CreatePortGroupTask extends TransactionalTask {
         return String.format("Create Port Group for security group: %s ", this.securityGroup.getName());
     }
 
-    private static List<PodNetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+    private static List<NetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         Set<PodPort> ports = sgm.getPodPorts();
         return ports.stream()
-                .map(PodNetworkElementImpl::new)
+                .map(NetworkElementImpl::new)
                 .collect(Collectors.toList());
     }
 }
