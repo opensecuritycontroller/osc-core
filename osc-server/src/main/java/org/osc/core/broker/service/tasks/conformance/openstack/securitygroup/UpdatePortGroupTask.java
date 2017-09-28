@@ -27,7 +27,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.PodNetworkElementImpl;
 import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -118,7 +117,7 @@ public class UpdatePortGroupTask  extends TransactionalTask{
     private static List<PodNetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         Set<PodPort> ports = sgm.getPodPorts();
         return ports.stream()
-                .map(PodNetworkElementImpl::new)
+                .map(NetworkElementImpl::new)
                 .collect(Collectors.toList());
     }
 }
