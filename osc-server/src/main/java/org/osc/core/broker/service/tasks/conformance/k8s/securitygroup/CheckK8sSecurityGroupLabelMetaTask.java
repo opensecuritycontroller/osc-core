@@ -63,7 +63,9 @@ public class CheckK8sSecurityGroupLabelMetaTask extends TransactionalMetaTask {
         OSCEntityManager<SecurityGroupMember> sgmEmgr = new OSCEntityManager<SecurityGroupMember>(SecurityGroupMember.class, em, this.txBroadcastUtil);
         this.sgm = sgmEmgr.findByPrimaryKey(this.sgm.getId());
 
-        if (!this.isDelete) {
+        boolean markedForDeletion = this.sgm.getMarkedForDeletion() == null ? false : this.sgm.getMarkedForDeletion();
+
+        if (!this.isDelete && !markedForDeletion) {
             this.tg.addTask(this.updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm, null));
         } else {
             this.tg.addTask(this.markSecurityGroupMemberDeleteTask.create(this.sgm));

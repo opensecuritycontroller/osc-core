@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,24 +33,44 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.rest.client.k8s.KubernetesPod;
 import org.osc.core.common.virtualization.VirtualizationType;
+import org.osc.sdk.controller.DefaultNetworkPort;
 
 public class CreateK8sLabelPodTaskTestData {
     public static boolean DB_POPULATED = false;
-    private static final String ALREADY_PROTECTED_POD_ID = UUID.randomUUID().toString();
 
-    public static final KubernetesPod ALREADY_PROTECTED_K8S_POD = createKubernetesPod(ALREADY_PROTECTED_POD_ID);
+    public static final DefaultNetworkPort SAME_SG_ALREADY_PROTECTED_POD_NETWORK_ELEMENT = createNetworkElement();
+
+    public static final KubernetesPod ALREADY_PROTECTED_K8S_POD = createKubernetesPod(UUID.randomUUID().toString());
+    public static final KubernetesPod SAME_SG_ALREADY_PROTECTED_K8S_POD = createKubernetesPod(UUID.randomUUID().toString());
     public static final KubernetesPod NETWORK_ELEMENT_NOT_FOUND_K8S_POD = createKubernetesPod();
     public static final KubernetesPod VALID_K8S_POD = createKubernetesPod();
 
-    public static final Label EXISTING_PROTECTED_POD_SGM_LABEL = createSGMWithPod("EXISTING_PROTECTED_POD_SGM_LABEL");
+    private static final SecurityGroup EXISTING_SG = createSG("EXISTING_SG");
+
+    public static final Label EXISTING_PROTECTED_POD_SGM_LABEL = createSGMWithPod(
+            "EXISTING_PROTECTED_POD_SGM_LABEL",
+            null,
+            ALREADY_PROTECTED_K8S_POD,
+            null);
+
+    public static final Label EXISTING_PROTECTED_POD_SAME_SG_LABEL = createSGMWithPod(
+            "EXISTING_PROTECTED_POD_SAME_SG_LABEL", EXISTING_SG,
+            SAME_SG_ALREADY_PROTECTED_K8S_POD,
+            SAME_SG_ALREADY_PROTECTED_POD_NETWORK_ELEMENT);
+
+    public static final Label VALID_EXISTING_POD_SGM_LABEL = createSGM("VALID_EXISTING_POD_SGM_LABEL", EXISTING_SG);
     public static final Label VALID_POD_SGM_LABEL = createSGM("VALID_POD_SGM");
     public static final Label ALREADY_PROTECTED_POD_SGM_LABEL = createSGM("ALREADY_PROTECTED_POD_SGM_LABEL");
     public static final Label NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL = createSGM("NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL");
 
-    public static void persist(Label label, EntityManager em) {
+    static void persist(Label label, EntityManager em) {
         for (Pod pod : label.getPods()) {
+            for (PodPort podPort : pod.getPorts()) {
+                em.persist(podPort);
+            }
             em.persist(pod);
         }
         em.persist(label);
@@ -57,31 +78,30 @@ public class CreateK8sLabelPodTaskTestData {
 
     }
 
-    public static void cleanUp(Label label) {
-        for (Pod pod : label.getPods()) {
-            pod.setId(null);
-        }
-        label.setId(null);
+    static  DefaultNetworkPort createNetworkElement() {
+        DefaultNetworkPort networkPort = new DefaultNetworkPort(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        networkPort.setPortIPs(Arrays.asList(UUID.randomUUID().toString()));
+        networkPort.setParentId(UUID.randomUUID().toString());
+        return networkPort;
     }
 
     private static void persist(SecurityGroupMember sgm, EntityManager em) {
         SecurityGroup sg = sgm.getSecurityGroup();
         VirtualizationConnector vc = sg.getVirtualizationConnector();
         Set<VirtualSystem> virtualSystems = vc.getVirtualSystems();
-        em.persist(vc);
-        em.persist(sg);
+        // If the SG already has an id it already has been persisted.
+        if (sg.getId() == null) {
+            em.persist(vc);
+            em.persist(sg);
 
-        for (VirtualSystem vs : virtualSystems) {
-            em.persist(vs.getDomain().getApplianceManagerConnector());
-            em.persist(vs.getApplianceSoftwareVersion().getAppliance());
-            em.persist(vs.getApplianceSoftwareVersion());
-            em.persist(vs.getDistributedAppliance());
-            em.persist(vs.getDomain());
-            em.persist(vs);
-        }
-
-        for (Pod pod : sgm.getLabel().getPods()) {
-            em.persist(pod);
+            for (VirtualSystem vs : virtualSystems) {
+                em.persist(vs.getDomain().getApplianceManagerConnector());
+                em.persist(vs.getApplianceSoftwareVersion().getAppliance());
+                em.persist(vs.getApplianceSoftwareVersion());
+                em.persist(vs.getDistributedAppliance());
+                em.persist(vs.getDomain());
+                em.persist(vs);
+            }
         }
 
         em.persist(sgm.getLabel());
@@ -99,10 +119,16 @@ public class CreateK8sLabelPodTaskTestData {
     }
 
     private static Label createSGM(String baseName) {
+        return createSGM(baseName, null);
+    }
+
+    private static Label createSGM(String baseName, SecurityGroup sg) {
         VirtualSystem vs = createVirtualSystem(baseName, "NSM");
 
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
-        sg.setName(baseName + "_sg ");
+        if (sg == null) {
+            sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
+            sg.setName(baseName + "_sg ");
+        }
 
         Label label = new Label(UUID.randomUUID().toString(),UUID.randomUUID().toString());
 
@@ -112,11 +138,36 @@ public class CreateK8sLabelPodTaskTestData {
         return label;
     }
 
-    private static Label createSGMWithPod(String baseName) {
-        Label newLabel = createSGM(baseName);
-        Pod existingPod = new Pod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), ALREADY_PROTECTED_POD_ID);
+    private static SecurityGroup createSG(String baseName) {
+        VirtualSystem vs = createVirtualSystem(baseName, "NSM");
+
+        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
+        sg.setName(baseName + "_sg ");
+
+        return sg;
+    }
+
+    private static Label createSGMWithPod(String baseName, SecurityGroup sg, KubernetesPod k8sPod, DefaultNetworkPort netElement) {
+        Label newLabel = createSGM(baseName, sg);
+        Pod existingPod = new Pod(k8sPod.getName(), k8sPod.getNamespace(), k8sPod.getNode(), k8sPod.getUid());
         newLabel.getPods().add(existingPod);
         existingPod.getLabels().add(newLabel);
+        PodPort podPort = null;
+        if (netElement != null) {
+            podPort = new PodPort(
+                    netElement.getElementId(),
+                    netElement.getMacAddresses().get(0),
+                    netElement.getPortIPs().get(0),
+                    netElement.getParentId());
+        } else {
+            podPort = new PodPort(
+                    UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString());
+        }
+        existingPod.getPorts().add(podPort);
+        podPort.setPod(existingPod);
         return newLabel;
     }
 
