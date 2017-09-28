@@ -23,9 +23,9 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultNetworkPort;
 
 /**
@@ -40,7 +40,7 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
     private DistributedApplianceInstance dai;
     private DefaultNetworkPort ingressPort;
     private DefaultNetworkPort egressPort;
-    private PortGroup portGroup;
+    private NetworkElementImpl portGroup;
 
     public BasePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
         this.sgi = sgi;
@@ -60,8 +60,7 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
                             this.sgi.getSecurityGroup().getName()));
         }
 
-        this.portGroup = new PortGroup();
-        this.portGroup.setPortGroupId(portGroupId);
+        this.portGroup = new NetworkElementImpl(portGroupId);
 
         this.ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                 this.dai.getInspectionIngressMacAddress());
@@ -90,7 +89,7 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
         return this.egressPort;
     }
 
-    protected PortGroup getPortGroup() {
+    protected NetworkElementImpl getPortGroup() {
         return this.portGroup;
     }
 

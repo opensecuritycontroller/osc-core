@@ -14,32 +14,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.openstack.sfc;
+
+import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = DeletePortGroupTask.class)
-public class DeletePortGroupTask extends TransactionalTask {
+@Component(service = UpdateServiceFunctionChainTask.class)
+public class UpdateServiceFunctionChainTask extends TransactionalTask {
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    private ApiFactoryService apiFactory;
 
-    private NetworkElementImpl portGroup;
+    private ServiceFunctionChain sfc;
     private SecurityGroup securityGroup;
+    private List<NetworkElement> updatedPortPairGroups;
 
-    public DeletePortGroupTask create(SecurityGroup securityGroup, NetworkElementImpl portGroup){
-        DeletePortGroupTask task = new DeletePortGroupTask();
+    public UpdateServiceFunctionChainTask create(ServiceFunctionChain sfc, SecurityGroup securityGroup,
+            List<NetworkElement> updatedPortPairGroups) {
+        UpdateServiceFunctionChainTask task = new UpdateServiceFunctionChainTask();
+
+        task.sfc = sfc;
         task.securityGroup = securityGroup;
-        task.portGroup = portGroup;
-        task.apiFactoryService = this.apiFactoryService;
+        task.updatedPortPairGroups = updatedPortPairGroups;
+        task.apiFactory = this.apiFactory;
+        task.name = task.getName();
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -47,16 +56,23 @@ public class DeletePortGroupTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(EntityManager em) throws Exception {
-        this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
-
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        controller.deleteNetworkElement(this.portGroup);
+    public String getName() {
+        return String.format("Updating Service Function Chain '%s' for Security Group '%s' under Project '%s'",
+                this.sfc.getName(), this.securityGroup.getName(), this.securityGroup.getProjectName());
     }
 
     @Override
-    public String getName() {
-        return String.format("Delete Port Group ID : %s", this.portGroup.getElementId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sfc = em.find(ServiceFunctionChain.class, this.sfc.getId());
+        this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
+        this.updatedPortPairGroups.size();
+        //TODO: arvind implement this
+
     }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.sfc, this.securityGroup);
+    }
+
 }

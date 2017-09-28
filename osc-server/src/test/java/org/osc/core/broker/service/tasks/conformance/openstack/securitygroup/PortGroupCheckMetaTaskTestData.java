@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class PortGroupCheckMetaTaskTestData {
@@ -69,15 +69,15 @@ public class PortGroupCheckMetaTaskTestData {
         return vc;
     }
 
-    private static PortGroup createPortGroup(String id, String parentId) {
-        PortGroup portGroup = new PortGroup() {
+    private static NetworkElementImpl createPortGroup(String id, String parentId) {
+        NetworkElementImpl portGroup = new NetworkElementImpl(id, parentId) {
             @Override
             public boolean equals(Object obj) {
-                if (obj == null || !(obj instanceof PortGroup)) {
+                if (obj == null || !(obj instanceof NetworkElementImpl)) {
                     return false;
                 }
 
-                PortGroup portGroup = (PortGroup) obj;
+                NetworkElementImpl portGroup = (NetworkElementImpl) obj;
 
                 return portGroup.getElementId().equals(getElementId()) && portGroup.getParentId().equals(getParentId());
             }
@@ -87,9 +87,6 @@ public class PortGroupCheckMetaTaskTestData {
                 return new HashCodeBuilder().append(getElementId()).append(getParentId()).toHashCode();
             }
         };
-
-        portGroup.setPortGroupId(id);
-        portGroup.setParentId(parentId);
 
         return portGroup;
     }
