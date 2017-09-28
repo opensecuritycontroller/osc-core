@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service = DeleteSecurityGroupInterfaceTask.class)
 public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
-    // private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceTask.class);
+    // private static final Logger log = LoggerFactory.getLogger(DeleteSecurityGroupInterfaceTask.class);
 
     private SecurityGroupInterface securityGroupInterface;
 

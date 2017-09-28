@@ -21,7 +21,6 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.LoginServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -32,12 +31,14 @@ import org.osc.core.broker.service.response.LoginResponse;
 import org.osc.core.broker.view.alarm.AlarmView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.view.vc.VirtualizationConnectorView;
+import org.slf4j.LoggerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -108,7 +109,7 @@ public class MainUI extends UI implements BroadcastListener {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(MainUI.class);
+    private static final Logger log = LoggerFactory.getLogger(MainUI.class);
 
     private CRUDBaseView<?, ?> currentView;
 

@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 
 @Component(service=AddSecurityGroupMemberTask.class)
 public class AddSecurityGroupMemberTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(AddSecurityGroupTask.class);
+    //private static final Logger log = LoggerFactory.getLogger(AddSecurityGroupTask.class);
 
     private SecurityGroup securityGroup;
     private SecurityGroupMemberType type;

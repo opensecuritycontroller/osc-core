@@ -18,7 +18,6 @@ package org.osc.core.broker.view.vc.securitygroup;
 
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.dto.PortDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -29,6 +28,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.button.CloseButtonModel;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Component;
@@ -56,7 +57,7 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
     private static final String PROPERTY_ID_MEMBER_IP = "ip";
     private static final String PROPERTY_ID_MEMBER_MAC = "mac";
 
-    private static final Logger log = Logger.getLogger(SecurityGroupMembershipInfoWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(SecurityGroupMembershipInfoWindow.class);
 
     private final SecurityGroupDto currentSecurityGroup;
     private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;

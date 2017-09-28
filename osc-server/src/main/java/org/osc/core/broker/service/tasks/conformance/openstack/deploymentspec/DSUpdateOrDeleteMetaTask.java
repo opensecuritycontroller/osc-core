@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -50,17 +49,19 @@ import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 @Component(service = DSUpdateOrDeleteMetaTask.class)
 public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
-    private static final Logger log = Logger.getLogger(DSUpdateOrDeleteMetaTask.class);
+    private static final Logger log = LoggerFactory.getLogger(DSUpdateOrDeleteMetaTask.class);
 
     @Reference
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;

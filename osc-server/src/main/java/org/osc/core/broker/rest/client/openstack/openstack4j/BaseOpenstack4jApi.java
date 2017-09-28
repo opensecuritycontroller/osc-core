@@ -16,10 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import org.openstack4j.api.OSClient;
-
 import java.io.Closeable;
 import java.io.IOException;
+
+import org.openstack4j.api.OSClient;
 
 /**
  * Designed to be a base class for all openstack4j API wrappers in the code.

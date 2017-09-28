@@ -68,8 +68,6 @@ import com.vaadin.ui.themes.ValoTheme;
  */
 public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends VerticalLayout implements View {
 
-    //private static final Logger log = Logger.getLogger(CRUDBaseView.class);
-
     public static final long NULL_SELECTION_ITEM_ID = -1L;
 
     private static final long serialVersionUID = 1L;

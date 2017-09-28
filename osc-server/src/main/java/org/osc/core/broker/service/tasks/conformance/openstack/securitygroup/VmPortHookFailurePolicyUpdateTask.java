@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=VmPortHookFailurePolicyUpdateTask.class)
 public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
 
-    //private final Logger log = Logger.getLogger(SecurityGroupMemberVmHookFailurePolicyUpdateTask.class);
+    //private final Logger log = LoggerFactory.getLogger(SecurityGroupMemberVmHookFailurePolicyUpdateTask.class);
 
     private String vmName;
     private String serviceName;

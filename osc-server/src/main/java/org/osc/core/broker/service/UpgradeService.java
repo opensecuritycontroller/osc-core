@@ -20,19 +20,20 @@ import java.io.File;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.ServerUtil;
+import org.slf4j.LoggerFactory;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySuccessResponse> implements UpgradeServiceApi {
-    private static final Logger log = Logger.getLogger(UpgradeService.class);
+    private static final Logger log = LoggerFactory.getLogger(UpgradeService.class);
 
     @Reference
     private Server server;

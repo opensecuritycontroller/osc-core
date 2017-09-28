@@ -16,11 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualPort;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for detaching the provided DAI
@@ -31,7 +32,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service = DeallocateDAIOfSGIMembersTask.class)
 public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
-    private static final Logger LOG = Logger.getLogger(AllocateDAIWithSGIMembersTask.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AllocateDAIWithSGIMembersTask.class);
 
     public DeallocateDAIOfSGIMembersTask() {
         super(null, null);

@@ -18,7 +18,8 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification;
 
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -31,7 +32,7 @@ import com.rabbitmq.client.Envelope;
 public abstract class RabbitMQClient {
     private static final int CLOSE_CONNECTION_TIMEOUT = 1000 * 2; // 2sec timeout
 
-    private static final Logger log = Logger.getLogger(RabbitMQClient.class);
+    private static final Logger log = LoggerFactory.getLogger(RabbitMQClient.class);
 
     private static final int RECONNECT_DELAY = 60 * 1000;
 

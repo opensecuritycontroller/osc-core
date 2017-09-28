@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -40,6 +39,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -52,6 +52,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -60,7 +61,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 @Component(service = OsDAIConformanceCheckMetaTask.class)
 public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
-    private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
+    private static final Logger log = LoggerFactory.getLogger(OsDAIConformanceCheckMetaTask.class);
 
     @Reference
     DeleteSvaServerTask deleteSvaServerTask;

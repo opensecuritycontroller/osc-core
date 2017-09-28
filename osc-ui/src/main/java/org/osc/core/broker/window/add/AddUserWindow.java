@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.window.add;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddUserServiceApi;
 import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
@@ -25,6 +24,8 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.update.UpdateUserWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.ui.ComboBox;
@@ -41,7 +42,7 @@ public class AddUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     final String CAPTION = "Add User";
 
-    private static final Logger log = Logger.getLogger(AddUserWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(AddUserWindow.class);
 
     // form fields
     private TextField firstName = null;

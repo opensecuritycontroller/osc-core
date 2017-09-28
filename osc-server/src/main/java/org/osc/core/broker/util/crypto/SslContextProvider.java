@@ -23,11 +23,12 @@ import java.security.SecureRandom;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public final class SslContextProvider {
 
-    private static final Logger LOG = Logger.getLogger(SslContextProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SslContextProvider.class);
 
     private SSLContext sslContext;
 

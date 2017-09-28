@@ -37,7 +37,8 @@ import javax.crypto.spec.PBEKeySpec;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
 
@@ -139,7 +140,7 @@ public final class KeyStoreProvider {
     }
 
     // MEMBERS
-    private static final Logger LOG = Logger.getLogger(KeyStoreProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KeyStoreProvider.class);
     private KeyStore keystore = null;
 
     // INNER TYPES

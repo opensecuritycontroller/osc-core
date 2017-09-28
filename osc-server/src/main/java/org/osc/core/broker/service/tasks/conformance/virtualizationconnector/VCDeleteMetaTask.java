@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import org.apache.log4j.Logger;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -26,13 +27,13 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
+import org.slf4j.Logger;
 
 @Component(service = VCDeleteMetaTask.class)
 public class VCDeleteMetaTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(VCDeleteMetaTask.class);
+    private static final Logger log = LoggerFactory.getLogger(VCDeleteMetaTask.class);
 
     private VirtualizationConnector vc;
 

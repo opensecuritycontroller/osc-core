@@ -20,16 +20,17 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for removing all the inspection appliances
@@ -40,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = SecurityGroupMemberAllHooksRemoveTask.class)
 public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(SecurityGroupMemberAllHooksRemoveTask.class);
+    private final Logger log = LoggerFactory.getLogger(SecurityGroupMemberAllHooksRemoveTask.class);
 
     private SecurityGroupMember sgm;
 

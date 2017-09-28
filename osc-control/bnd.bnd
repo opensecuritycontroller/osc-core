@@ -20,7 +20,9 @@
     com.google.gson.*
 
 -includeresource: \
-    @${log4j.dep},\
+    @${slf4j-api.dep},\
+    @${logback-core.dep},\
+    @${logback-classic.dep},\
     @${osc-service-api.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\
@@ -45,6 +47,6 @@
     @${hk2-utils.dep},\
     @${hk2-api.dep},\
     @${h2.dep},\
-	@${gson.dep}
+    @${gson.dep}
 
 #

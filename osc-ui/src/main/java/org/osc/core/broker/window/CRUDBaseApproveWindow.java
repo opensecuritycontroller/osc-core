@@ -16,9 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.window;
 
-import com.vaadin.ui.Button.ClickListener;
 import org.osc.core.broker.window.button.ApproveCancelButtonModel;
 import org.osc.core.broker.window.button.ComponentModel;
+
+import com.vaadin.ui.Button.ClickListener;
 
 @SuppressWarnings("serial")
 public abstract class CRUDBaseApproveWindow extends CRUDBaseWindow<ApproveCancelButtonModel> {

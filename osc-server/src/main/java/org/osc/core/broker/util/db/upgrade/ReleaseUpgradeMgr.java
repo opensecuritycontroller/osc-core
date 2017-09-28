@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
@@ -36,8 +35,10 @@ import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.FreqType;
 import org.osc.core.common.job.ThresholdType;
+import org.slf4j.Logger;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -51,7 +52,7 @@ public class ReleaseUpgradeMgr {
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
-    private static final Logger log = Logger.getLogger(ReleaseUpgradeMgr.class);
+    private static final Logger log = LoggerFactory.getLogger(ReleaseUpgradeMgr.class);
 
     public static void initDb(EncryptionApi encrypter, DBConnectionParameters params,
             DBConnectionManager dbMgr) throws Exception {

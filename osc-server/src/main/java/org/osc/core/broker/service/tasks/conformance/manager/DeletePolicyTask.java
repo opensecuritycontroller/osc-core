@@ -20,17 +20,18 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service=DeletePolicyTask.class)
 public class DeletePolicyTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(DeletePolicyTask.class);
+    private static final Logger log = LoggerFactory.getLogger(DeletePolicyTask.class);
 
     private Policy policy;
 

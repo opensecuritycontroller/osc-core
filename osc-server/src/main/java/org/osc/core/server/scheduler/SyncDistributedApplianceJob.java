@@ -20,7 +20,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -30,14 +29,16 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
 
 public class SyncDistributedApplianceJob implements Job {
 
-    private static final Logger log = Logger.getLogger(SyncDistributedApplianceJob.class);
+    private static final Logger log = LoggerFactory.getLogger(SyncDistributedApplianceJob.class);
 
     public SyncDistributedApplianceJob() {
 

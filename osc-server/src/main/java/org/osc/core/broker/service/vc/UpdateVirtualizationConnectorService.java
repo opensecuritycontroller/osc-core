@@ -24,7 +24,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -62,15 +61,17 @@ import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class UpdateVirtualizationConnectorService
 extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
 implements UpdateVirtualizationConnectorServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateVirtualizationConnectorService.class);
 
     @Reference
     private VirtualizationConnectorUtil util;

@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
 import java.util.List;

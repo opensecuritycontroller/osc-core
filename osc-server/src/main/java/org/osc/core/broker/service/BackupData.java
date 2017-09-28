@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.osc.core.broker.service.api.server.EncryptionException;
-import org.osc.core.broker.util.crypto.AESCTREncryption;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,6 +24,11 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.util.crypto.AESCTREncryption;
 
 public final class BackupData implements Serializable {
     private static final long serialVersionUID = 4948762505615010097L;

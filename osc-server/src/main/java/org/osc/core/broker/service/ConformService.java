@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.JobEngine;
@@ -59,6 +58,7 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrS
 import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -70,6 +70,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
+import org.slf4j.Logger;
 
 /**
  * This component exposes both the API and the implementation so that various
@@ -79,7 +80,7 @@ import org.osgi.service.transaction.control.TransactionControl;
  */
 @Component(service = {ConformServiceApi.class, ConformService.class})
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
-    private static final Logger log = Logger.getLogger(ConformService.class);
+    private static final Logger log = LoggerFactory.getLogger(ConformService.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

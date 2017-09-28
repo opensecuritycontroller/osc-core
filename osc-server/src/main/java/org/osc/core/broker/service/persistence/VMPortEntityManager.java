@@ -25,17 +25,18 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class VMPortEntityManager {
 
-    private static final Logger log = Logger.getLogger(VMPortEntityManager.class);
+    private static final Logger log = LoggerFactory.getLogger(VMPortEntityManager.class);
 
     public static VMPort findByOpenstackId(EntityManager em, String id) {
 

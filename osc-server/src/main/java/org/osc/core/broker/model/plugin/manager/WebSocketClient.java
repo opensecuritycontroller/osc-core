@@ -24,7 +24,6 @@ import javax.websocket.ClientEndpointConfig;
 import javax.websocket.CloseReason;
 import javax.websocket.Session;
 
-import org.apache.log4j.Logger;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.glassfish.tyrus.client.ClientManager;
@@ -40,7 +39,9 @@ import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.crypto.SslContextProvider;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
+import org.slf4j.Logger;
 
 public class WebSocketClient {
 
@@ -66,7 +67,7 @@ public class WebSocketClient {
         return this.mc;
     }
 
-    private final static Logger log = Logger.getLogger(WebSocketClient.class);
+    private final static Logger log = LoggerFactory.getLogger(WebSocketClient.class);
     private final ManagerApi managerApis;
     private final ApiFactoryService apiFactoryService;
 

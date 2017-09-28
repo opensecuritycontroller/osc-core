@@ -23,11 +23,12 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.Scanner;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.ServerUtil;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 
@@ -44,7 +45,7 @@ public class NetworkSettingsApi {
     final String NETWORK_RESOLV = "/etc/resolv.conf";
     final String BASH_SCRIPT = "./scripts/networkSettings.sh";
 
-    private static final Logger log = Logger.getLogger(NetworkSettingsApi.class);
+    private static final Logger log = LoggerFactory.getLogger(NetworkSettingsApi.class);
 
     public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
 

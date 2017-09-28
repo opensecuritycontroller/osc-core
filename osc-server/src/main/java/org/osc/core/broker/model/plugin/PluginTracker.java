@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.osc.core.server.installer.InstallableListener;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.server.installer.InstallableUnit;
@@ -39,6 +39,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -59,7 +60,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class PluginTracker<T> {
 
-    private final Logger LOGGER = Logger.getLogger(PluginTracker.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(PluginTracker.class);
 
     /**
      * Marker property on Plugin services indicating the plugin name.

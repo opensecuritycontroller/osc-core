@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -46,6 +45,8 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.common.virtualization.VirtualizationType;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -77,7 +78,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(BaseVCWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(BaseVCWindow.class);
 
     public static final String DEFAULT_HTTPS = "false";
     public static final String DEFAULT_RABBITMQ_USER = "guest";

@@ -20,7 +20,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -36,11 +35,13 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
 
 public class OsProjectNotificationListener extends OsNotificationListener {
 
-    private static final Logger log = Logger.getLogger(OsProjectNotificationListener.class);
+    private static final Logger log = LoggerFactory.getLogger(OsProjectNotificationListener.class);
 
     private final ConformService conformService;
 

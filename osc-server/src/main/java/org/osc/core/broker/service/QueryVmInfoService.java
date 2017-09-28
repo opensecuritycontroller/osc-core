@@ -21,7 +21,6 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -40,18 +39,20 @@ import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.VmInfo;
 import org.osc.core.broker.util.ValidateUtil;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
         implements QueryVmInfoServiceApi {
 
     private static final Logger log =
-            Logger.getLogger(QueryVmInfoService.class);
+            LoggerFactory.getLogger(QueryVmInfoService.class);
 
     @Reference
     EncryptionApi encryption;

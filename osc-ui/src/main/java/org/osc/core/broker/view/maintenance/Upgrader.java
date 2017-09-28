@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
@@ -34,6 +33,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
 import org.osc.core.broker.window.UploadInfoWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -52,7 +53,7 @@ import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
 public class Upgrader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
-    private static final Logger log = Logger.getLogger(Upgrader.class);
+    private static final Logger log = LoggerFactory.getLogger(Upgrader.class);
 
     public static final String UPLOAD_DIR = "/tmp/";
     private static final long serialVersionUID = 1L;
@@ -173,7 +174,7 @@ public class Upgrader extends CustomComponent implements Receiver, FailedListene
 
     @Override
     public void uploadFailed(FailedEvent event) {
-        log.error(new Label(new Date() + ": Upload failed."));
+        log.error(new Label(new Date() + ": Upload failed.").getValue());
         if (event.getFilename() == null || event.getFilename().isEmpty()) {
             log.error("No upload file specified");
             ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_UPGRADE_NOFILE),

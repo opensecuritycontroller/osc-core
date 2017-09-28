@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=VmPortHookOrderUpdateTask.class)
 public class VmPortHookOrderUpdateTask extends TransactionalTask {
 
-    //private final Logger log = Logger.getLogger(VmPortHookOrderUpdateTask.class);
+    //private final Logger log = LoggerFactory.getLogger(VmPortHookOrderUpdateTask.class);
 
     private String vmName;
     private String serviceName;

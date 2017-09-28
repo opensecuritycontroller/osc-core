@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
@@ -45,9 +44,9 @@ import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
-import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
@@ -75,10 +74,12 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddDistributedApplianceWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.broker.window.update.UpdateDistributedApplianceWindow;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -93,7 +94,7 @@ import com.vaadin.ui.Notification;
 public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceDto, VirtualSystemDto> {
 
     private static final String DA_HELP_GUID = "GUID-3FB92C5B-7F20-4B6A-B368-CA37C3E67007.html";
-    private static final Logger log = Logger.getLogger(DistributedApplianceView.class);
+    private static final Logger log = LoggerFactory.getLogger(DistributedApplianceView.class);
 
     // objects of all the sub views this View supports
     private DeploymentSpecSubView dsSubView = null;

@@ -16,21 +16,23 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.server.EncryptionException;
-
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.lang.StringUtils;
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
 public class PBKDF2Derivation {
-    private static final Logger LOG = Logger.getLogger(AESCTREncryption.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AESCTREncryption.class);
     private static final int PBKDF2_ITERATIONS = 4000;
     private static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1";
     private static final int PBKDF2_KEY_LENGTH = 24 * 8;

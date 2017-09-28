@@ -18,7 +18,6 @@ package org.osc.core.broker.view.maintenance;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
@@ -28,6 +27,8 @@ import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.PasswordWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.server.FileResource;
 import com.vaadin.ui.Button;
@@ -46,7 +47,7 @@ public class ManageLayout extends FormLayout {
      */
     private static final long serialVersionUID = 1L;
 
-    private static Logger log = Logger.getLogger(ManageLayout.class);
+    private static Logger log = LoggerFactory.getLogger(ManageLayout.class);
 
     private Button backupButton = null;
     private Link downloadBackup = null;

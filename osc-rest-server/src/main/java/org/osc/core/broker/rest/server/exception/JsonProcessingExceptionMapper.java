@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.exception;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import java.util.Arrays;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -28,7 +27,8 @@ import javax.ws.rs.ext.Provider;
 
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
 
-import java.util.Arrays;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 @Provider
 public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException>, BaseExceptionMapperUtil {

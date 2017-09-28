@@ -29,7 +29,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
@@ -39,6 +38,8 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.window.LoadingIndicatorCRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.tepi.filtertable.FilterGenerator;
 import org.tepi.filtertable.FilterTable;
 import org.tepi.filtertable.datefilter.DateInterval;
@@ -77,7 +78,7 @@ public class ViewUtil {
     private static final String HELP_WINDOW_NAME_2 = "ISC_help_2";
     private static boolean useFirstName = true;
 
-    private static final Logger log = Logger.getLogger(ViewUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(ViewUtil.class);
 
     private static final String PARAM_ITEM_VALUE_SEPARATOR = "=";
     private static final String PARAM_SEPARATOR = "/";

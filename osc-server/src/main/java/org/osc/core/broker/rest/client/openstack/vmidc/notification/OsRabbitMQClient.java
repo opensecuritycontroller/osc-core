@@ -19,7 +19,6 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -28,6 +27,8 @@ import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.StaticRegistry;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -41,7 +42,7 @@ import com.google.common.collect.ListMultimap;
 
 public class OsRabbitMQClient extends RabbitMQClient {
 
-    private static final Logger log = Logger.getLogger(OsRabbitMQClient.class);
+    private static final Logger log = LoggerFactory.getLogger(OsRabbitMQClient.class);
 
     private VirtualizationConnector vc;
 

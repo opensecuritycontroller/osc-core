@@ -16,13 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.window.delete;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.view.ApplianceView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -34,7 +35,7 @@ public class DeleteApplianceWindow extends CRUDBaseWindow<OkCancelButtonModel> {
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(DeleteApplianceWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(DeleteApplianceWindow.class);
 
     // current view reference
     private final ApplianceView applianceView;
