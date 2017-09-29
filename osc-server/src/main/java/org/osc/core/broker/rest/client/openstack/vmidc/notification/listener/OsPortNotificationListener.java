@@ -125,6 +125,8 @@ public class OsPortNotificationListener extends OsNotificationListener {
             if (keyValue == null) {
                 keyValue = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                         OsNotificationKeyType.SUBNET_ID.toString());
+                // Add subnet notification snippet back when the OpenStack device_owner issue is fixed.
+                // Related OSC issue: https://github.com/opensecuritycontroller/osc-core/issues/462
             }
         }
 
