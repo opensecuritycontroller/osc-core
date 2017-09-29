@@ -17,10 +17,10 @@
 package org.osc.core.broker.rest.client.openstack.vmidc.notification;
 
 /**
- * 
+ *
  * This enum provides list of Keys we can parser Incoming Notification message on (i.e. "instance_id", "device_id"
  * etc..) those objects
- * 
+ *
  */
 
 public enum OsNotificationKeyType {
@@ -34,8 +34,7 @@ public enum OsNotificationKeyType {
     PROJECT_ID("tenant_id"),
     PORT_ID("port_id"),
     SUBNET_ID("subnet_id"),
-    FIXED_IPS("fixed_ips"),
-    DEVICE_OWNER("device_owner");
+    FIXED_IPS("fixed_ips");
 
     private final String text;
 

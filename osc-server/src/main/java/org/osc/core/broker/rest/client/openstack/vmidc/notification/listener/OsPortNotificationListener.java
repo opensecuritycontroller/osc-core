@@ -26,7 +26,6 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
@@ -35,7 +34,6 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
-import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -127,18 +125,8 @@ public class OsPortNotificationListener extends OsNotificationListener {
             if (keyValue == null) {
                 keyValue = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                         OsNotificationKeyType.SUBNET_ID.toString());
-
-                // if key value is null by now we assume it is a subnet related notification
-                if (keyValue != null) {
-                    Subnet subnet = SubnetEntityManager.findByOpenstackId(em, keyValue);
-                    String deviceOwner = OsNotificationUtil.getPropertyFromNotificationMessage(message,
-                            OsNotificationKeyType.DEVICE_OWNER.toString());
-                    if ((subnet.isProtectExternal() && deviceOwner.startsWith("compute:"))
-                            || (!subnet.isProtectExternal() && deviceOwner.equals(""))) {
-                        // we ignore message and do not trigger sync...
-                        keyValue = null;
-                    }
-                }
+                // Add subnet notification snippet back when the OpenStack device_owner issue is fixed.
+                // Related OSC issue: https://github.com/opensecuritycontroller/osc-core/issues/462
             }
         }
 
