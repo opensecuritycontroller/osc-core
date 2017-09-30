@@ -23,10 +23,13 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberElementImpl;
@@ -87,26 +90,21 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
             SecurityGroupMemberElementImpl sgmElement = new SecurityGroupMemberElementImpl(sgm.getId().toString(),
                     sgm.getMemberName());
-            for (VMPort port : getPorts(sgm)) {
-                sgmElement.addMacAddresses(port.getMacAddresses());
-                sgmElement.addIpAddress(port.getPortIPs());
+            boolean isLabel = sgm.getType().equals(SecurityGroupMemberType.LABEL);
+            Set<? extends BaseEntity> ports = isLabel ? sgm.getPodPorts() : sgm.getVmPorts();
+            for (BaseEntity port : ports) {
+                if (isLabel) {
+                    sgmElement.addMacAddress(((PodPort)port).getMacAddress());
+                    sgmElement.addIpAddress(((PodPort)port).getIpAddresses());
+                } else {
+                    sgmElement.addMacAddresses(((VMPort)port).getMacAddresses());
+                    sgmElement.addIpAddress(((VMPort)port).getPortIPs());
+                }
             }
+
             sgmElements.add(sgmElement);
         }
         return new SecurityGroupMemberListElementImpl(sgmElements);
-    }
-
-    private static Set<VMPort> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
-        switch (sgm.getType()) {
-        case VM:
-            return sgm.getVm().getPorts();
-        case NETWORK:
-            return sgm.getNetwork().getPorts();
-        case SUBNET:
-            return sgm.getSubnet().getPorts();
-        default:
-            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
-        }
     }
 
     @Override
