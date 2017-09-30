@@ -16,18 +16,25 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.CheckPortGroupHookMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberMapPropagateMetaTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MarkSecurityGroupInterfaceDeleteTask;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,6 +50,18 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
     @Reference
     DeleteSecurityGroupFromDbTask deleteSecurityGroupFromDbTask;
 
+    @Reference
+    MarkSecurityGroupInterfaceDeleteTask markSecurityGroupInterfaceDeleteTask;
+
+    @Reference
+    SecurityGroupMemberMapPropagateMetaTask securityGroupMemberMapPropagateMetaTask;
+
+    @Reference
+    CheckPortGroupHookMetaTask checkPortGroupHookMetaTask;
+
+    @Reference
+    DeleteSecurityGroupInterfaceTask deleteSecurityGroupInterfaceTask;
+
     private SecurityGroup sg;
 
     private TaskGraph tg;
@@ -53,6 +72,11 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
         task.checkK8sSecurityGroupLabelMetaTask = this.checkK8sSecurityGroupLabelMetaTask;
         task.portGroupCheckMetaTask = this.portGroupCheckMetaTask;
         task.deleteSecurityGroupFromDbTask = this.deleteSecurityGroupFromDbTask;
+        task.markSecurityGroupInterfaceDeleteTask = this.markSecurityGroupInterfaceDeleteTask;
+        task.securityGroupMemberMapPropagateMetaTask = this.securityGroupMemberMapPropagateMetaTask;
+        task.checkPortGroupHookMetaTask = this.checkPortGroupHookMetaTask;
+        task.deleteSecurityGroupInterfaceTask = this.deleteSecurityGroupInterfaceTask;
+
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -79,11 +103,11 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
 
         final boolean isDelete = this.sg.getMarkedForDeletion() == null ? false : this.sg.getMarkedForDeletion();
 
-
         this.sg.getSecurityGroupMembers().forEach(sgm -> {
             this.tg.addTask(this.checkK8sSecurityGroupLabelMetaTask.create(sgm, isDelete));
         });
 
+        List<Task> tasksToPreceedDeleteSGI = new ArrayList<>();
 
         if (isDelete) {
             String domainId = null;
@@ -95,13 +119,43 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
             }
 
             // If this is delete we must provide the domain id as it is expected by the delete port group task.
-            this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
-                    isDelete, domainId), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg, isDelete, domainId), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+
+            this.sg.getSecurityGroupInterfaces().forEach(sgi -> this.tg.addTask(this.markSecurityGroupInterfaceDeleteTask.create(sgi)));
+
+            SecurityGroupMemberMapPropagateMetaTask securityGroupMemberMapPropagateMetaTask = this.securityGroupMemberMapPropagateMetaTask.create(this.sg);
+            tasksToPreceedDeleteSGI.add(securityGroupMemberMapPropagateMetaTask);
+            this.tg.appendTask(securityGroupMemberMapPropagateMetaTask);
+
+            this.sg.getSecurityGroupInterfaces().forEach(sgi -> {
+                CheckPortGroupHookMetaTask checkPortGroupHookMetaTask = this.checkPortGroupHookMetaTask.create(sgi, true);
+                tasksToPreceedDeleteSGI.add(checkPortGroupHookMetaTask);
+                this.tg.appendTask(checkPortGroupHookMetaTask);
+            });
+
+            this.sg.getSecurityGroupInterfaces().forEach(sgi -> this.tg.addTask(this.deleteSecurityGroupInterfaceTask.create(sgi), tasksToPreceedDeleteSGI.toArray(new Task[0])));
 
             this.tg.appendTask(this.deleteSecurityGroupFromDbTask.create(this.sg));
         } else {
             this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
                     isDelete, null), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+
+            SecurityGroupMemberMapPropagateMetaTask securityGroupMemberMapPropagateMetaTask = this.securityGroupMemberMapPropagateMetaTask.create(this.sg);
+            tasksToPreceedDeleteSGI.add(securityGroupMemberMapPropagateMetaTask);
+            this.tg.appendTask(securityGroupMemberMapPropagateMetaTask);
+
+            this.sg.getSecurityGroupInterfaces().forEach(sgi -> {
+                boolean isSGIDelete = sgi.getMarkedForDeletion() == null ? false : sgi.getMarkedForDeletion();
+                CheckPortGroupHookMetaTask checkPortGroupHookMetaTask = this.checkPortGroupHookMetaTask.create(sgi, isSGIDelete);
+                tasksToPreceedDeleteSGI.add(checkPortGroupHookMetaTask);
+                this.tg.appendTask(checkPortGroupHookMetaTask);
+            });
+
+            this.sg.getSecurityGroupInterfaces().forEach(sgi -> {
+                if (sgi.getMarkedForDeletion() != null && sgi.getMarkedForDeletion()) {
+                    this.tg.addTask(this.deleteSecurityGroupInterfaceTask.create(sgi), tasksToPreceedDeleteSGI.toArray(new Task[0]));
+                }
+            });
         }
     }
 

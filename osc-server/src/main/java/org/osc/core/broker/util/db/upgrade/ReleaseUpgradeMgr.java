@@ -253,6 +253,8 @@ public class ReleaseUpgradeMgr {
             	upgrade91to92(stmt);
             case 92:
             	upgrade92to93(stmt);
+            case 93:
+            	upgrade93to94(stm
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -262,6 +264,23 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+    
+    private static void upgrade93to94(Statement stmt) throws SQLException {
+        execSql(stmt, "create table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT (" +
+                    "dai_fk bigint not null, " +
+                    "pod_port_fk bigint not null," +
+                    "primary key (dai_fk, pod_port_fk));");
+                
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT " +
+                    "add constraint FK_DAI_PODP_DAI " +
+                    "foreign key (dai_fk) " +
+                    "references DISTRIBUTED_APPLIANCE_INSTANCE;");
+                    
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT " +
+                "add constraint FK_DAI_PODP_PODP " +
+                "foreign key (pod_port_fk) " +
+                "references POD_PORT;");
     }
     
     private static void upgrade92to93(Statement stmt) throws SQLException {

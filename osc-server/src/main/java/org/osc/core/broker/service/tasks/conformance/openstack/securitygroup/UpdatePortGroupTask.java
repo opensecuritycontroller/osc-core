@@ -92,6 +92,7 @@ public class UpdatePortGroupTask extends TransactionalTask {
                 }
 
                 protectedPorts.addAll(podPorts);
+                this.portGroup.setParentId(domainId);
             }
         }
 

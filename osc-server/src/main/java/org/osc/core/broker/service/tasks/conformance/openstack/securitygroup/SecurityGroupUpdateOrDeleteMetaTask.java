@@ -322,7 +322,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 Set<VMPort> ports = sgm.getVmPorts();
                 for (VMPort port : ports) {
                     DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
-                            .findByVirtualSystemAndPort(em, vs, port);
+                            .findByVirtualSystemAndPort(em, vs, port.getId());
                     VmPortHookRemoveTask hookRemoveTask = this.vmPortHookRemoveTask.create(sgm, port,
                             assignedRedirectedDai, vs.getDistributedAppliance().getName());
                     this.tg.appendTask(hookRemoveTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);

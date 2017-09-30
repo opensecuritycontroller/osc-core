@@ -19,7 +19,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -52,12 +52,12 @@ public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
 
     /**
      * This method detaches the provided port from the {@link #getDai()}
-     * 
+     *
      * @param protectedPort
      *            the port to be detached from the DAI.
      */
     @Override
-    public void updatePortProtection(VMPort protectedPort) {
+    public void updatePortProtection(VirtualPort protectedPort) {
         protectedPort.removeDai(getDai());
         getDai().removeProtectedPort(protectedPort);
         LOG.info(String.format("The DAI %s was unassigned from the port %s.", getDai().getName(),

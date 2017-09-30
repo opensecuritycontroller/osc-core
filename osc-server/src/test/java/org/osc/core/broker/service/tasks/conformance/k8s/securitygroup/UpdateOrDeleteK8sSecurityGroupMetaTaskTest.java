@@ -36,8 +36,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.CheckPortGroupHookMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberMapPropagateMetaTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MarkSecurityGroupInterfaceDeleteTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -97,6 +101,11 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
         this.factoryTask.checkK8sSecurityGroupLabelMetaTask = new CheckK8sSecurityGroupLabelMetaTask();
         this.factoryTask.portGroupCheckMetaTask = new PortGroupCheckMetaTask();
         this.factoryTask.deleteSecurityGroupFromDbTask = new DeleteSecurityGroupFromDbTask();
+        this.factoryTask.markSecurityGroupInterfaceDeleteTask = new MarkSecurityGroupInterfaceDeleteTask();
+        this.factoryTask.securityGroupMemberMapPropagateMetaTask = new SecurityGroupMemberMapPropagateMetaTask();
+        this.factoryTask.checkPortGroupHookMetaTask = new CheckPortGroupHookMetaTask();
+        this.factoryTask.deleteSecurityGroupInterfaceTask = new DeleteSecurityGroupInterfaceTask();
+
         UpdateOrDeleteK8sSecurityGroupMetaTask task = this.factoryTask.create(this.sg);
 
         // Act.
@@ -112,7 +121,9 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
             { NO_LABEL_SG, createK8sGraph(NO_LABEL_SG, false) },
             { SINGLE_LABEL_SG, createK8sGraph(SINGLE_LABEL_SG, false) },
             { MULTI_LABEL_SG, createK8sGraph(MULTI_LABEL_SG, false) },
-            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, deleteSGK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) }
+            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, deleteSGK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) },
+            { WTIH_SGIS_SG, createK8sGraph(WTIH_SGIS_SG, false) },
+            { WITH_SGIS_MARKED_FOR_DELETION_SG, deleteSGK8sGraph(WITH_SGIS_MARKED_FOR_DELETION_SG, true) },
         });
     }
 

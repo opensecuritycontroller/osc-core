@@ -26,6 +26,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -57,19 +60,28 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
             return;
         }
 
-        Set<VMPort> ports = new HashSet<>();
+        Set<VirtualPort> ports = new HashSet<>();
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member from D.
             if (!sgm.getMarkedForDeletion()) {
-                ports.addAll(sgm.getVmPorts());
+                if (sgm.getType().equals(SecurityGroupMemberType.LABEL)) {
+                    ports.addAll(sgm.getPodPorts());
+                } else {
+                    ports.addAll(sgm.getVmPorts());
+                }
             }
         }
 
         LOG.info(String.format("Retrieved %s ports in the SGI %s", ports.size(), this.sgi.getName()));
 
-        for (VMPort port : ports) {
+        for (VirtualPort port : ports) {
             updatePortProtection(port);
-            OSCEntityManager.update(em, port, this.txBroadcastUtil);
+            if (port instanceof VMPort) {
+                OSCEntityManager.update(em, (VMPort)port, this.txBroadcastUtil);
+            } else {
+                OSCEntityManager.update(em, (PodPort)port, this.txBroadcastUtil);
+            }
+
             OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         }
     }
@@ -88,7 +100,7 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
      * @param protectedPort
      *            the port to be updated.
      */
-    public abstract void updatePortProtection(VMPort protectedPort);
+    public abstract void updatePortProtection(VirtualPort protectedPort);
 
     public abstract UpdateDAIToSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai);
 }

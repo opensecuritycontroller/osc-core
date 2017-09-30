@@ -16,11 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -28,14 +31,20 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
+import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.CheckPortGroupHookMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberMapPropagateMetaTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MarkSecurityGroupInterfaceDeleteTask;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.virtualization.VirtualizationType;
 
@@ -44,10 +53,12 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
     public final static String MGR_TYPE = "SMC";
     private final static int MANY = 4;
 
-    public static SecurityGroup NO_LABEL_SG = createSecurityGroup("NO_LABEL", 0, false);
-    public static SecurityGroup SINGLE_LABEL_SG = createSecurityGroup("SINGLE_LABEL", 1, false);
-    public static SecurityGroup MULTI_LABEL_SG = createSecurityGroup("MULTI_LABEL", MANY, false);
-    public static SecurityGroup SINGLE_LABEL_MARKED_FOR_DELETION_SG = createSecurityGroupWithPod("POPULATED_WITH_POD_SG", true);
+    public static SecurityGroup NO_LABEL_SG = createSecurityGroup("NO_LABEL", 0, 0, false);
+    public static SecurityGroup SINGLE_LABEL_SG = createSecurityGroup("SINGLE_LABEL", 1, 0, false);
+    public static SecurityGroup MULTI_LABEL_SG = createSecurityGroup("MULTI_LABEL", MANY, 0, false);
+    public static SecurityGroup WTIH_SGIS_SG = createSecurityGroup("WTIH_SGIS_SG", MANY, MANY, false);
+    public static SecurityGroup SINGLE_LABEL_MARKED_FOR_DELETION_SG = createSecurityGroupWithPod("POPULATED_WITH_POD_SG", 0, true);
+    public static SecurityGroup WITH_SGIS_MARKED_FOR_DELETION_SG = createSecurityGroupWithPod("WITH_SGIS_MARKED_FOR_DELETION_SG", MANY, true);
 
     public static TaskGraph createK8sGraph(SecurityGroup sg, boolean isDelete) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -58,11 +69,17 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
 
         expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, null), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
+        expectedGraph.appendTask(new SecurityGroupMemberMapPropagateMetaTask().create(sg));
+
+        sg.getSecurityGroupInterfaces().forEach(sgi -> expectedGraph.appendTask(new CheckPortGroupHookMetaTask().create(sgi, false)));
+
         return expectedGraph;
     }
 
     public static TaskGraph deleteSGK8sGraph(SecurityGroup sg, boolean isDelete) {
         TaskGraph expectedGraph = new TaskGraph();
+
+        List<Task> tasksToPreceedDeleteSGI = new ArrayList<>();
 
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
             expectedGraph.addTask(new CheckK8sSecurityGroupLabelMetaTask().create(sgm, isDelete));
@@ -72,6 +89,20 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
         String domainId = sgm.getPodPorts().iterator().next().getParentId();
 
         expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, domainId), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+
+        sg.getSecurityGroupInterfaces().forEach(sgi -> expectedGraph.addTask(new MarkSecurityGroupInterfaceDeleteTask().create(sgi)));
+
+        SecurityGroupMemberMapPropagateMetaTask securityGroupMemberMapPropagateMetaTask = new SecurityGroupMemberMapPropagateMetaTask().create(sg);
+        tasksToPreceedDeleteSGI.add(securityGroupMemberMapPropagateMetaTask);
+        expectedGraph.appendTask(securityGroupMemberMapPropagateMetaTask);
+
+        sg.getSecurityGroupInterfaces().forEach(sgi -> {
+            CheckPortGroupHookMetaTask checkPortGroupHookMetaTask = new CheckPortGroupHookMetaTask().create(sgi, true);
+            tasksToPreceedDeleteSGI.add(checkPortGroupHookMetaTask);
+            expectedGraph.appendTask(checkPortGroupHookMetaTask);
+        });
+
+        sg.getSecurityGroupInterfaces().forEach(sgi -> expectedGraph.addTask(new DeleteSecurityGroupInterfaceTask().create(sgi), tasksToPreceedDeleteSGI.toArray(new Task[0])));
 
         expectedGraph.appendTask(new DeleteSecurityGroupFromDbTask().create(sg));
 
@@ -110,12 +141,13 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
             em.persist(sgm);
         }
 
-        sg.getSecurityGroupMembers();
+        sg.getSecurityGroupInterfaces().forEach(sgi -> em.persist(sgi));
+
         em.getTransaction().commit();
     }
 
-    private static SecurityGroup createSecurityGroupWithPod(String baseName, boolean markedForDeletion) {
-        SecurityGroup sg = createSecurityGroup(baseName, 1, markedForDeletion);
+    private static SecurityGroup createSecurityGroupWithPod(String baseName, int sgiCount, boolean markedForDeletion) {
+        SecurityGroup sg = createSecurityGroup(baseName, 1, sgiCount, markedForDeletion);
         Label label = sg.getSecurityGroupMembers().iterator().next().getLabel();
 
         PodPort podPort = new PodPort(
@@ -138,17 +170,24 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
         return sg;
     }
 
-    private static SecurityGroup createSecurityGroup(String baseName, int nLabels, boolean isDelete) {
+    private static SecurityGroup createSecurityGroup(String baseName, int labelsCount, int sgiCount, boolean isDelete) {
         VirtualSystem vs = createVirtualSystem(baseName, MGR_TYPE);
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
         sg.setMarkedForDeletion(isDelete);
 
-        for (int i = 0; i < nLabels; i++) {
+        for (int i = 0; i < labelsCount; i++) {
             Label label = new Label("LABEL_NAME" + i + sg.getName(), "LABEL_VALUE" + i + sg.getName());
             SecurityGroupMember sgm = new SecurityGroupMember(sg, label);
             sg.addSecurityGroupMember(sgm);
+        }
+
+        for (int i = 0; i < sgiCount; i++) {
+            SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, "1", FailurePolicyType.FAIL_CLOSE, 1L);
+            sgi.setName(baseName + i + "_SGI");
+            sgi.setSecurityGroup(sg);
+            sg.addSecurityGroupInterface(sgi);
         }
 
         return sg;

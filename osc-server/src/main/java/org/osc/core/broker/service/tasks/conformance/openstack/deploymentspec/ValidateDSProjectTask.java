@@ -82,7 +82,7 @@ public class ValidateDSProjectTask extends TransactionalTask {
     public String getName() {
         return String.format("Validating Deployment Specification '%s' for project '%s'", this.ds.getName(),
                 this.ds.getProjectName());
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

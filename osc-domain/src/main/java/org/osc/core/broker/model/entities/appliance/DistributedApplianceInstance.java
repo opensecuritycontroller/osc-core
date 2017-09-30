@@ -34,6 +34,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 
@@ -120,6 +122,15 @@ public class DistributedApplianceInstance extends BaseEntity {
     @JoinColumn(name="vm_port_fk", referencedColumnName="id")
             )
     private Set<VMPort> protectedPorts = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT",
+    joinColumns=
+    @JoinColumn(name="dai_fk", referencedColumnName="id"),
+    inverseJoinColumns=
+    @JoinColumn(name="pod_port_fk", referencedColumnName="id")
+            )
+    private Set<PodPort> protectedPodPorts = new HashSet<>();
 
     @Column(name = "current_console_password")
     private String currentConsolePassword;
@@ -320,16 +331,32 @@ public class DistributedApplianceInstance extends BaseEntity {
         this.floatingIpId = floatingIpId;
     }
 
-    public Set<VMPort> getProtectedPorts() {
-        return this.protectedPorts;
+    public Set<? extends VirtualPort> getProtectedPorts() {
+        if (this.protectedPorts != null && !this.protectedPorts.isEmpty()) {
+            return this.protectedPorts;
+        }
+
+        return this.protectedPodPorts;
     }
 
-    public void addProtectedPort(VMPort protectedPort) {
-        this.protectedPorts.add(protectedPort);
+    public void addProtectedPort(VirtualPort protectedPort) {
+        if (protectedPort instanceof VMPort) {
+            this.protectedPorts.add((VMPort)protectedPort);
+        } else {
+            this.protectedPodPorts.add((PodPort) protectedPort);
+        }
     }
 
-    public void removeProtectedPort(VMPort protectedPort) {
-        this.protectedPorts.remove(protectedPort);
+    public void removeProtectedPort(VirtualPort protectedPort) {
+        if (protectedPort instanceof VMPort) {
+            this.protectedPorts.remove(protectedPort);
+        } else {
+            this.protectedPodPorts.remove(protectedPort);
+        }
+    }
+
+    public void removeProtectedPodPort(PodPort protectedPort) {
+        this.protectedPodPorts.remove(protectedPort);
     }
 
     public String getMgmtIpAddress() {

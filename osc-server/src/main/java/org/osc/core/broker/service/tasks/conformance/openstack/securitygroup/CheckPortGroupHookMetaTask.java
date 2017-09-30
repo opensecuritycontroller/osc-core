@@ -24,10 +24,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -89,11 +91,11 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         this.sgi = em.find(SecurityGroupInterface.class, this.sgi.getId());
-        VMPort protectedPort = getAnyProtectedPort(this.sgi);
+        BaseEntity protectedPort = getAnyProtectedPort(this.sgi);
         SecurityGroupMember sgm = this.sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next();
 
         DistributedApplianceInstance assignedRedirectedDai = protectedPort == null ? null : DistributedApplianceInstanceEntityMgr
-                .findByVirtualSystemAndPort(em, this.sgi.getVirtualSystem(), protectedPort);
+                .findByVirtualSystemAndPort(em, this.sgi.getVirtualSystem(), protectedPort.getId());
 
         if (assignedRedirectedDai == null) {
             LOG.info("No assigned DAI found for port " + protectedPort.getId());
@@ -145,7 +147,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         }
     }
 
-    private VMPort getAnyProtectedPort(SecurityGroupInterface sgi) {
+    private BaseEntity getAnyProtectedPort(SecurityGroupInterface sgi) {
         // Retrieving the first security group member
         if (this.sgi.getSecurityGroup().getSecurityGroupMembers() == null) {
             return null;
@@ -154,14 +156,26 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member from D.
             if (!sgm.getMarkedForDeletion()) {
-                return sgm.getVmPorts().iterator().next();
+                if (sgm.getType().equals(SecurityGroupMemberType.LABEL) && !sgm.getPodPorts().isEmpty()) {
+                    return sgm.getPodPorts().iterator().next();
+                } else {
+                    return sgm.getVmPorts().iterator().next();
+                }
             }
         }
 
         return null;
     }
 
-    private DistributedApplianceInstance getDeployedDAI(SecurityGroupMember sgm, VMPort protectedPort, EntityManager em) throws Exception {
+    private DistributedApplianceInstance getDeployedDAI(SecurityGroupMember sgm, BaseEntity protectedPort, EntityManager em) throws Exception {
+        if (sgm.getType().equals(SecurityGroupMemberType.LABEL)) {
+            return getK8sDeployedDAI(sgm, em);
+        }
+
+        return getOpenStackDeployedDAI(sgm, (VMPort) protectedPort, em);
+    }
+
+    private DistributedApplianceInstance getOpenStackDeployedDAI(SecurityGroupMember sgm, VMPort protectedPort, EntityManager em) throws Exception {
         String sgmDomainId = OpenstackUtil.extractDomainId(
                 sgm.getSecurityGroup().getProjectId(),
                 sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName(),
@@ -205,6 +219,33 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                 sgmDomainId,
                 protectedPort.getVm().getHost(),
                 this.apiFactoryService.supportsOffboxRedirection(this.sgi.getVirtualSystem()));
+    }
+
+    private DistributedApplianceInstance getK8sDeployedDAI(SecurityGroupMember sgm, EntityManager em) throws Exception {
+        DeploymentSpec selectedDs = null;
+
+        if (!this.sgi.getVirtualSystem().getDeploymentSpecs().isEmpty()) {
+            selectedDs = this.sgi.getVirtualSystem().getDeploymentSpecs().iterator().next();
+        }
+
+        if (selectedDs == null || selectedDs.getDistributedApplianceInstances().isEmpty()) {
+            // We did not find a DS with a host deployment and
+            // the SDN controller does not support off-box traffic redirection.
+            throw new VmidcBrokerValidationException(String.format("No distributed appliance instance was found for the virtual system %s.", this.sgi.getVirtualSystem().getName()));
+        }
+
+        DistributedApplianceInstance selectedDai = null;
+
+        // If no DAI was yet assigned to a security group then return the least loaded one.
+        for (DistributedApplianceInstance dai : selectedDs.getDistributedApplianceInstances()) {
+            if (selectedDai == null) {
+                selectedDai = dai;
+            } else if (dai.getProtectedPorts().size() < selectedDai.getProtectedPorts().size()) {
+                selectedDai = dai;
+            }
+        }
+
+        return selectedDai;
     }
 
     private String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {

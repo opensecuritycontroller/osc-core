@@ -19,7 +19,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -52,12 +52,12 @@ public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTa
 
     /**
      * This method assigns the provided port with the {@link #getDai()}
-     * 
+     *
      * @param protectedPort
      *            the port to be attached to the DAI.
      */
     @Override
-    public void updatePortProtection(VMPort protectedPort) {
+    public void updatePortProtection(VirtualPort protectedPort) {
         protectedPort.addDai(getDai());
         getDai().addProtectedPort(protectedPort);
         LOG.info(String.format("The port %s is protected with the DAI %s", protectedPort.getId(), getDai().getName()));
