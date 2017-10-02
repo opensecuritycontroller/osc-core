@@ -58,7 +58,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
 
     @Override
     public String getName() {
-        return String.format("Update Kubernetes Security Group Member Label %s", this.sgm.getLabel().getName());
+        return String.format("Updating Security Group Member Label %s", this.sgm.getLabel().getName());
     }
 
     @Override
@@ -89,7 +89,9 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
         Set<Pod> dbPodsToDelete = emptyIfNull(label.getPods()).stream()
                 .filter(p -> !existingPodIdsInK8s.contains(p.getExternalId())).collect(Collectors.toSet());
 
-        k8sPodsToCreate.forEach(p -> this.tg.addTask(this.labelPodCreateTask.create(p, this.sgm.getLabel())));
+        // TODO emanoel: Using append instead of adding here because of a transactional issue updating multiple
+        // pods in the same label concurrently. An alternative to this might be locking the label member entity.
+        k8sPodsToCreate.forEach(p -> this.tg.appendTask(this.labelPodCreateTask.create(p, this.sgm.getLabel())));
         dbPodsToDelete.forEach(p -> this.tg.addTask(this.labelPodDeleteTask.create(p, this.sgm.getLabel())));
     }
 

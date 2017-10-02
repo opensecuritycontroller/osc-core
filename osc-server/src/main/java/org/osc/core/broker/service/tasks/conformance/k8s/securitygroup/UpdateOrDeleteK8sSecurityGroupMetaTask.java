@@ -28,6 +28,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
+import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -66,7 +67,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
     @Override
     public String getName() {
         final boolean isDelete = this.sg.getMarkedForDeletion();
-        return String.format("%s Kubernetes Security Group %s", isDelete ? "Delete" : "Update",
+        return String.format("%s Kubernetes Security Group %s", isDelete ? "Deleting" : "Updating",
                 this.sg.getName());
     }
 
@@ -95,12 +96,12 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
 
             // If this is delete we must provide the domain id as it is expected by the delete port group task.
             this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
-                    isDelete, domainId));
+                    isDelete, domainId), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             this.tg.appendTask(this.deleteSecurityGroupFromDbTask.create(this.sg));
         } else {
             this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
-                    isDelete, null));
+                    isDelete, null), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
     }
 

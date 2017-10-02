@@ -67,7 +67,7 @@ public class DeleteK8sLabelPodTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Deleting the pod %s", this.pod.getName());
+        return String.format("Deleting the pod database entity %s", this.pod.getName());
     }
 
     @Override

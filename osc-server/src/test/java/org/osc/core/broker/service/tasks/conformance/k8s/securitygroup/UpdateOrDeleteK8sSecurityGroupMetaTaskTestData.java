@@ -36,6 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
+import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
@@ -55,7 +56,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
             expectedGraph.addTask(new CheckK8sSecurityGroupLabelMetaTask().create(sgm, isDelete));
         }
 
-        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, null));
+        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, null), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
     }
@@ -70,7 +71,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
         SecurityGroupMember sgm = sg.getSecurityGroupMembers().iterator().next();
         String domainId = sgm.getPodPorts().iterator().next().getParentId();
 
-        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, domainId));
+        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, domainId), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         expectedGraph.appendTask(new DeleteSecurityGroupFromDbTask().create(sg));
 
