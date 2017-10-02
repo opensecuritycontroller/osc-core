@@ -50,9 +50,10 @@ public class DeletePortGroupTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        controller.deleteNetworkElement(this.portGroup);
+        try(SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
+                this.securityGroup.getVirtualizationConnector())) {
+            controller.deleteNetworkElement(this.portGroup);
+        }
     }
 
     @Override

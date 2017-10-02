@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
@@ -83,11 +84,23 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
         });
 
 
-        this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
-                isDelete, null));
-
         if (isDelete) {
+            String domainId = null;
+            for (SecurityGroupMember sgm : this.sg.getSecurityGroupMembers()) {
+                if (!sgm.getPodPorts().isEmpty()) {
+                    domainId = sgm.getPodPorts().iterator().next().getParentId();
+                    break;
+                }
+            }
+
+            // If this is delete we must provide the domain id as it is expected by the delete port group task.
+            this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
+                    isDelete, domainId));
+
             this.tg.appendTask(this.deleteSecurityGroupFromDbTask.create(this.sg));
+        } else {
+            this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg,
+                    isDelete, null));
         }
     }
 
