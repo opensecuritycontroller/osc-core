@@ -17,7 +17,6 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.sfc;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -122,11 +121,10 @@ public class UpdateServiceFunctionChainTaskTest {
     public void testExecute_WithSecurityGroupSFCIdSetToNull_ExpectUpdate() throws Exception {
         // Arrange
         UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        this.sg.setNetworkElementId(null);
         Mockito.when(this.sdnApi
                 .updateNetworkElement(argThat(new NetworkElementIdMatcher(this.sg.getNetworkElementId())), any()))
                 .thenReturn(new NetworkElementImpl("UPDATED_SFC_ID"));
-
-        assertNull(this.sg.getNetworkElementId());
 
         // Act.
         updateTask.execute();
