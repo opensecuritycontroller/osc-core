@@ -119,7 +119,7 @@ public class UpdateServiceFunctionChainTaskTest {
     }
 
     @Test
-    public void testExecuteTransaction_WithSecurityGroupSFCIdSetToNull_ExpectUpdate() throws Exception {
+    public void testExecute_WithSecurityGroupSFCIdSetToNull_ExpectUpdate() throws Exception {
         // Arrange
         UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
         Mockito.when(this.sdnApi
@@ -136,7 +136,7 @@ public class UpdateServiceFunctionChainTaskTest {
     }
 
     @Test
-    public void testExecuteTransaction_WithSecurityGroupSFCIdSetToNotEmpty_ExpectUpdate() throws Exception {
+    public void testExecute_WithSecurityGroupSFCIdSetToNotEmpty_ExpectUpdate() throws Exception {
         // Arrange
         this.sg.setNetworkElementId("OLD_SFC_ID");
         UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
@@ -151,7 +151,7 @@ public class UpdateServiceFunctionChainTaskTest {
     }
 
     @Test
-    public void testExecuteTransaction_CallsSDNUpdate_ExpectUpdate() throws Exception {
+    public void testExecute_CallsSDNUpdateWithProvidedParameters_ExpectUpdate() throws Exception {
 
         // Arrange
         this.sg.setNetworkElementId("OLD_SFC_ID");
