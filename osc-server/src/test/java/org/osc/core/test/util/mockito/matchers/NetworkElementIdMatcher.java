@@ -14,26 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.test.util;
+package org.osc.core.test.util.mockito.matchers;
 
 import org.mockito.ArgumentMatcher;
-import org.osc.core.broker.job.TaskGraph;
+import org.osc.sdk.controller.element.NetworkElement;
 
-public class TaskGraphMatcher extends ArgumentMatcher<TaskGraph> {
-    private TaskGraph expectedTg;
+public class NetworkElementIdMatcher extends ArgumentMatcher<NetworkElement> {
+    private String id;
 
-    public TaskGraphMatcher(TaskGraph expectedTg) {
-        this.expectedTg = expectedTg;
+    public NetworkElementIdMatcher(String id) {
+        this.id = id;
     }
 
     @Override
     public boolean matches(Object object) {
-        if (object == null || !(object instanceof TaskGraph)) {
+        if (object == null || !(object instanceof NetworkElement)) {
             return false;
         }
 
-        TaskGraphHelper.validateTaskGraph(this.expectedTg, (TaskGraph)object);
-
-        return true;
+        return (((NetworkElement) object).getElementId() == null && this.id == null)
+                || this.id.equals(((NetworkElement) object).getElementId());
     }
 }

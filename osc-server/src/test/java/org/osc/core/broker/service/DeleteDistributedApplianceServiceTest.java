@@ -53,8 +53,8 @@ import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformance
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.test.util.TestTransactionControl;
+import org.osc.core.test.util.mockito.matchers.TaskGraphMatcher;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;

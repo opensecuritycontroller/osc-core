@@ -14,29 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.test.util;
-
-import java.util.Set;
+package org.osc.core.test.util.mockito.matchers;
 
 import org.mockito.ArgumentMatcher;
-import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.test.util.TaskGraphHelper;
 
-public class SetLockObjectReferenceMatcher extends ArgumentMatcher<Set<LockObjectReference>> {
-    private Set<LockObjectReference> expectedLockObjectReferences;
+public class TaskGraphMatcher extends ArgumentMatcher<TaskGraph> {
+    private TaskGraph expectedTg;
 
-    public SetLockObjectReferenceMatcher(Set<LockObjectReference> expectedLockObjectReferences) {
-        this.expectedLockObjectReferences = expectedLockObjectReferences;
+    public TaskGraphMatcher(TaskGraph expectedTg) {
+        this.expectedTg = expectedTg;
     }
 
     @Override
     public boolean matches(Object object) {
-        if (object == null || !(object instanceof Set<?>)) {
+        if (object == null || !(object instanceof TaskGraph)) {
             return false;
         }
 
-        @SuppressWarnings("unchecked")
-        Set<LockObjectReference> lockObjectReferences = (Set<LockObjectReference>) object;
+        TaskGraphHelper.validateTaskGraph(this.expectedTg, (TaskGraph)object);
 
-        return this.expectedLockObjectReferences.equals(lockObjectReferences);
+        return true;
     }
 }
