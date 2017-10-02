@@ -81,7 +81,7 @@ public class DeploymentSpecEntityMgr {
         dto.setShared(ds.isShared());
         dto.setMarkForDeletion(ds.getMarkedForDeletion());
         if (!ds.getAvailabilityZones().isEmpty()) {
-            Set<AvailabilityZoneDto> azDtoSet = new HashSet<AvailabilityZoneDto>();
+            Set<AvailabilityZoneDto> azDtoSet = new HashSet<>();
             for (AvailabilityZone az : ds.getAvailabilityZones()) {
                 AvailabilityZoneDto azDto = new AvailabilityZoneDto();
                 AvailabilityZoneEntityMgr.fromEntity(az, azDto);
@@ -91,7 +91,7 @@ public class DeploymentSpecEntityMgr {
         } else if (!ds.getHosts().isEmpty()) {
             dto.setHosts(HostEntityMgr.fromEntity(ds.getHosts()));
         } else if (!ds.getHostAggregates().isEmpty()) {
-            Set<HostAggregateDto> hostAggrSet = new HashSet<HostAggregateDto>();
+            Set<HostAggregateDto> hostAggrSet = new HashSet<>();
             for (HostAggregate hostAggr : ds.getHostAggregates()) {
                 HostAggregateDto hostAggrDto = new HostAggregateDto();
                 HostAggregateEntityMgr.fromEntity(hostAggr, hostAggrDto);
@@ -134,6 +134,24 @@ public class DeploymentSpecEntityMgr {
         } catch (NoResultException nre) {
             return null;
         }
+    }
+
+    // TODO Larkins: Remove the hard coded region
+    public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectWithDefaultRegionOne(EntityManager em,
+            VirtualSystem vs, String projectId) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("projectId"), projectId),
+                        cb.equal(root.get("virtualSystem"), vs),
+                        cb.equal(root.get("region"), "RegionOne"));
+
+        return em.createQuery(query).getResultList();
     }
 
     public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectAndRegion(EntityManager em,

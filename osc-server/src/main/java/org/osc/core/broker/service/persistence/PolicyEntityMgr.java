@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -47,6 +48,7 @@ public class PolicyEntityMgr {
 	 * Verifies if the request contains valid policies supported by security manager available on the OSC.
 	 * If the request contains one or more invalid policies, throw an exception.
 	 */
+	// TODO Larkins: Improve the method not to do the validation
 	public static Set<Policy> findPoliciesById(EntityManager em, Set<Long> ids, ApplianceManagerConnector mc)
 			throws VmidcBrokerValidationException, Exception {
 		Set<Policy> policies = new HashSet<>();
@@ -57,16 +59,16 @@ public class PolicyEntityMgr {
 			Root<Policy> root = query.from(Policy.class);
 			query = query.select(root).where(cb.equal(root.get("id"), id),
 					cb.equal(root.join("applianceManagerConnector").get("id"), mc.getId()));
-			Policy policy = em.createQuery(query).getSingleResult();
-			if (policy == null) {
-				invalidPolicies.add(id.toString());
-			} else {
+			try {
+				Policy policy = em.createQuery(query).getSingleResult();
 				policies.add(policy);
+			} catch (NoResultException nre) {
+				invalidPolicies.add(id.toString());
 			}
 		}
 		if (invalidPolicies.size() > 0) {
 			throw new VmidcBrokerValidationException(
-					"Invalid Request. Request contains invalid policies: " + String.join(",", invalidPolicies));
+					"Invalid Request. Request contains invalid policies: " + String.join(", ", invalidPolicies));
 		}
 		return policies;
 	}

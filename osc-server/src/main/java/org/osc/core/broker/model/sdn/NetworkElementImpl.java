@@ -27,9 +27,9 @@ import org.osc.sdk.controller.element.NetworkElement;
 
 public class NetworkElementImpl implements NetworkElement {
 
-    private enum NetworkElementType {
-        VM_PORT, POD_PORT, NETWORK_ELEMENT, GENERIC;
-    }
+	private enum NetworkElementType {
+		VM_PORT, POD_PORT, NETWORK_ELEMENT, GENERIC;
+	}
 
     private final NetworkElementType type;
     private String elementId;

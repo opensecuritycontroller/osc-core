@@ -172,7 +172,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
 					policyNameSet = dto.getPolicies().stream().filter(policy -> policy.getPolicyName() != null)
 							.map(PolicyDto::getPolicyName).collect(Collectors.toSet());
 				}
-				return !policyNameSet.isEmpty() ? String.join(",", policyNameSet)
+				return !policyNameSet.isEmpty() ? String.join(", ", policyNameSet)
 						: VmidcMessages.getString(VmidcMessages_.TEXT_NOTAPPLICABLE);
 			}
 		});

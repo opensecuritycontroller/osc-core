@@ -42,11 +42,11 @@ public class UpdateServiceFunctionChainTask extends TransactionalTask {
     private SecurityGroup securityGroup;
     private List<NetworkElement> updatedPortPairGroups;
 
-    public UpdateServiceFunctionChainTask create(ServiceFunctionChain sfc, SecurityGroup securityGroup,
+    public UpdateServiceFunctionChainTask create(SecurityGroup securityGroup,
             List<NetworkElement> updatedPortPairGroups) {
         UpdateServiceFunctionChainTask task = new UpdateServiceFunctionChainTask();
 
-        task.sfc = sfc;
+        task.sfc = securityGroup.getServiceFunctionChain();
         task.securityGroup = securityGroup;
         task.updatedPortPairGroups = updatedPortPairGroups;
         task.apiFactory = this.apiFactory;

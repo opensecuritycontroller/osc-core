@@ -126,6 +126,34 @@ public class SecurityGroupEntityMgr {
         return dto;
     }
 
+	public static List<SecurityGroup> listOtherSecurityGroupsWithSameSFC(EntityManager em,
+			SecurityGroup sg) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+
+		CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+		Root<SecurityGroup> root = query.from(SecurityGroup.class);
+		query = query.select(root).where(cb.equal(root.join("serviceFunctionChain"), sg.getServiceFunctionChain()),
+				cb.equal(root.get("projectId"), sg.getProjectId()), cb.notEqual(root, sg));
+
+		List<SecurityGroup> list = em.createQuery(query).getResultList();
+		return list;
+	}
+
+	public static List<SecurityGroup> listOtherSecurityGroupsWithSameNetworkElementID(EntityManager em,
+			SecurityGroup sg) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+
+		CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+		Root<SecurityGroup> root = query.from(SecurityGroup.class);
+		query = query.select(root).where(cb.equal(root.get("networkElementId"), sg.getNetworkElementId()),
+				cb.equal(root.get("projectId"), sg.getProjectId()), cb.notEqual(root, sg));
+
+		List<SecurityGroup> list = em.createQuery(query).getResultList();
+		return list;
+	}
+
     public static List<SecurityGroup> listSecurityGroupsByVcId(EntityManager em, Long vcId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
