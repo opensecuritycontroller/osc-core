@@ -58,7 +58,7 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
 	}
 
 	@Test
-	public void testDispatch_WithValidVirtualSystemList_SFCSIsUpdated() throws Exception {
+	public void testDispatch_WhenVirtualSystemListEmpty_SfcIsUpdated() throws Exception {
 
 		// Arrange
 		BaseDto dto = new BaseDto();
@@ -67,23 +67,23 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
 		request.setDto(dto);
 		request.setName(this.sfc.getName());
 		List<Long> vsIds = new ArrayList<Long>();
-
-		vsIds.add(this.vs.getId());
-		vsIds.add(this.vs1.getId());
-		request.setVirtualSystemIds(vsIds);
+		
 		Mockito.when(this.service.validator.validateAndLoad(request)).thenReturn(this.sfc);
 
 		// Act.
 		BaseJobResponse response = this.service.dispatch(request);
+		List<Long> sfcVsIdList = this.em.find(ServiceFunctionChain.class, this.sfc.getId()).getVirtualSystems().stream()
+                .map(vss -> vss.getId()).collect(Collectors.toList());
 
 		// Assert
+		Assert.assertEquals("The list of virtual system ids is not Empty", vsIds, sfcVsIdList);
 		Assert.assertNotNull("The returned response should not be null.", response);
 		Assert.assertEquals("The return Id should be equal to sfc Id", response.getId(), this.sfc.getId());
 	}
 
 
 	@Test
-	public void testDispatch_WithValidUpdate_SFCVirtualSystemListInOrder() throws Exception {
+	public void testDispatch_WhenVirtualSystemListNotEmpty_SfcIsUpdatedAndListInOrder() throws Exception {
 
 		// Arrange
 		BaseDto dto = new BaseDto();
