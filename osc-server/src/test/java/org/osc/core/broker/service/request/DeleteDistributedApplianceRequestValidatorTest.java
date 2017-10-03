@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import java.util.Arrays;
+
 import javax.persistence.EntityManager;
 
 import org.junit.Assert;
@@ -27,6 +29,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 
@@ -57,7 +63,9 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        this.validator = new DeleteDistributedApplianceRequestValidator(this.em);
+        ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
+        this.validator = new DeleteDistributedApplianceRequestValidator(this.em, apiFactoryService);
+        this.validator.apiFactoryService = apiFactoryService;
 
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID))).thenReturn(NOT_MARKED_FOR_DELETION_DA);
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_FOR_DELETION))).thenReturn(MARKED_FOR_DELETION_DA);
@@ -119,6 +127,30 @@ public class DeleteDistributedApplianceRequestValidatorTest {
 
         // Assert
         Assert.assertEquals("The received ID in non force delete case  is different than expected VALID_ID_FOR_DELETION.", VALID_ID_FOR_DELETION, da.getId());
+    }
+    
+    @Test
+    public void testValidateAndLoad_WhenChainedToSfcDeleteRequest_ThrowsValidationException() throws Exception {
+    	// Arrange
+        final Long VALID_ID_WITH_SFC = 4l;
+    	DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
+    	ServiceFunctionChain sfc = new ServiceFunctionChain("sfc-1", null);
+
+    	VirtualSystem vs = new VirtualSystem(null);
+		vs.setEncapsulationType(TagEncapsulationType.VLAN);
+		vs.setServiceFunctionChains(Arrays.asList(sfc));
+        da.addVirtualSystem(vs);
+   
+        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC))).thenReturn(da);
+    	Mockito.when(this.validator.apiFactoryService.supportsNeutronSFC(vs)).thenReturn(true);
+    	this.exception.expect(VmidcBrokerValidationException.class);
+    	this.exception.expectMessage("Distributed Appilance with ID " + VALID_ID_WITH_SFC
+										+ " is binded to a service function chain, unbind to delete");
+    	
+        // Act
+        this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
+
+
     }
 
     private static BaseDeleteRequest createRequest(Long id, boolean forceDelete) {

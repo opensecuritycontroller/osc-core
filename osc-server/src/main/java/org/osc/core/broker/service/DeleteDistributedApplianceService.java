@@ -120,7 +120,7 @@ implements DeleteDistributedApplianceServiceApi {
     @Override
     public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new DeleteDistributedApplianceRequestValidator(em);
+            this.validator = new DeleteDistributedApplianceRequestValidator(em, apiFactoryService);
         }
 
         UnlockObjectMetaTask ult = null;

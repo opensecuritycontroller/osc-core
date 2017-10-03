@@ -19,15 +19,22 @@ package org.osc.core.broker.service.validator;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
+import org.osgi.service.component.annotations.Reference;
 
 public class DeleteDistributedApplianceRequestValidator implements RequestValidator<BaseDeleteRequest,DistributedAppliance> {
 
     private EntityManager em;
+    
+    @Reference
+	public ApiFactoryService apiFactoryService;
 
-    public DeleteDistributedApplianceRequestValidator(EntityManager em) {
+    public DeleteDistributedApplianceRequestValidator(EntityManager em, ApiFactoryService apiFactoryService) {
         this.em = em;
+        this.apiFactoryService = apiFactoryService;
     }
 
     @Override
@@ -50,6 +57,18 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
                             + request.getId()
                             + " is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
         }
+        
+        for (VirtualSystem vs : da.getVirtualSystems()) {
+            if (!this.apiFactoryService.supportsNeutronSFC(vs)) {
+             // if first virtual system is not neutronSFC break...
+                break; 
+            }
+            if (vs.getServiceFunctionChains().size() > 0) {
+                throw new VmidcBrokerValidationException("Distributed Appilance with ID " + request.getId()
+                        + " is binded to a service function chain, unbind to delete");
+            }
+        }
+        
         return da;
     }
 }
