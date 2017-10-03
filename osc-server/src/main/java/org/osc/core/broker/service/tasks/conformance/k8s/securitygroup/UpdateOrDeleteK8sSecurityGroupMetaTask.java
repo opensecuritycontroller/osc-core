@@ -67,7 +67,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
     @Override
     public String getName() {
         final boolean isDelete = this.sg.getMarkedForDeletion();
-        return String.format("%s Kubernetes Security Group %s", isDelete ? "Deleting" : "Updating",
+        return String.format("%s Security Group '%s'", isDelete ? "Deleting" : "Updating",
                 this.sg.getName());
     }
 

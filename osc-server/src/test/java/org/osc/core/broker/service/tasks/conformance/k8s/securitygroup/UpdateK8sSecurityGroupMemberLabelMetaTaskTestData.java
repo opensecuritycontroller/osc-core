@@ -112,7 +112,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
     }
 
     private static KubernetesPod createKubernetesPod(String podId) {
-        KubernetesPod k8sPod = new KubernetesPod(UUID.randomUUID().toString(), "namespace",
+        KubernetesPod k8sPod = new KubernetesPod("name", "namespace",
                 podId == null ? UUID.randomUUID().toString() : podId, "node");
         return k8sPod;
     }

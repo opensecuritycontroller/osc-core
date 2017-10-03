@@ -125,7 +125,7 @@ public class CreateK8sLabelPodTask extends TransactionalTask{
 
     @Override
     public String getName() {
-        return String.format("Persisting the pod name %s, id %s under the member %s", this.k8sPod.getName(), this.k8sPod.getUid(), this.label.getValue());
+        return String.format("Persisting the pod name '%s', id '%s' under the member '%s'", this.k8sPod.getName(), this.k8sPod.getUid(), this.label.getValue());
     }
 
     @Override

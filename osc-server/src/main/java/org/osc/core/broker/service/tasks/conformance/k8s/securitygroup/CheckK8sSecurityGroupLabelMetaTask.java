@@ -53,7 +53,7 @@ public class CheckK8sSecurityGroupLabelMetaTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("%s Kubernetes Security Group Member Label %s",
+        return String.format("%s Security Group Member Label '%s'",
                 this.isDelete ? "Deleting" : "Checking", this.sgm.getLabel().getName());
     }
 
