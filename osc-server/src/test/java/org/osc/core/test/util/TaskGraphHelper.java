@@ -56,7 +56,7 @@ public class TaskGraphHelper {
             try {
                 TaskNodeComparer.compare(etn, tn);
             } catch (Exception e) {
-                Assert.fail(e.getMessage() + "\nReturned Graph:\n" + providedTaskGraph);
+                Assert.fail(String.format("Error:\n%s \nExpected Graph:\n%s \nReturned Graph:\n%s", e.getMessage(), expectedTaskGraph, providedTaskGraph));
             }
         }
     }

@@ -70,7 +70,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
         Collection<String> podIdsInDB = label.getPods().stream().map(Pod::getExternalId).collect(Collectors.toList());
         for (KubernetesPod kp : MATCHING_PODS) {
             if (!podIdsInDB.contains(kp.getUid())) {
-                expectedGraph.addTask(new CreateK8sLabelPodTask().create(kp, label));
+                expectedGraph.appendTask(new CreateK8sLabelPodTask().create(kp, label));
             }
         }
 

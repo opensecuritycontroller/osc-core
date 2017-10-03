@@ -19,6 +19,7 @@ package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +59,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
 
     @Override
     public String getName() {
-        return String.format("Update Kubernetes Security Group Member Label %s", this.sgm.getLabel().getName());
+        return String.format("Updating Security Group Member Label '%s'", this.sgm.getLabel().getName());
     }
 
     @Override
@@ -84,12 +85,14 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
                 .collect(Collectors.toSet());
 
         Set<KubernetesPod> k8sPodsToCreate = emptyIfNull(k8sPods).stream()
-                .filter(p -> !existingPodIdsInOSC.contains(p.getUid())).collect(Collectors.toSet());
+                .filter(p -> !existingPodIdsInOSC.contains(p.getUid())).collect(Collectors.toCollection(LinkedHashSet::new));
 
         Set<Pod> dbPodsToDelete = emptyIfNull(label.getPods()).stream()
-                .filter(p -> !existingPodIdsInK8s.contains(p.getExternalId())).collect(Collectors.toSet());
+                .filter(p -> !existingPodIdsInK8s.contains(p.getExternalId())).collect(Collectors.toCollection(LinkedHashSet::new));
 
-        k8sPodsToCreate.forEach(p -> this.tg.addTask(this.labelPodCreateTask.create(p, this.sgm.getLabel())));
+        // TODO emanoel: Using append instead of adding here because of a transactional issue updating multiple
+        // pods in the same label concurrently. An alternative to this might be locking the label member entity.
+        k8sPodsToCreate.forEach(p -> this.tg.appendTask(this.labelPodCreateTask.create(p, this.sgm.getLabel())));
         dbPodsToDelete.forEach(p -> this.tg.addTask(this.labelPodDeleteTask.create(p, this.sgm.getLabel())));
     }
 
