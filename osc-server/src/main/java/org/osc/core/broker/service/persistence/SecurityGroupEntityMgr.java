@@ -31,10 +31,12 @@ import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -52,6 +54,8 @@ public class SecurityGroupEntityMgr {
      *
      */
     public static void fromEntity(SecurityGroup entity, SecurityGroupDto dto) {
+        ServiceFunctionChain sfc = entity.getServiceFunctionChain();
+
         dto.setId(entity.getId());
         dto.setParentId(entity.getVirtualizationConnector().getId());
         dto.setName(entity.getName());
@@ -60,10 +64,12 @@ public class SecurityGroupEntityMgr {
         dto.setVirtualizationConnectorName(entity.getVirtualizationConnector().getName());
         dto.setProjectId(entity.getProjectId());
         dto.setProjectName(entity.getProjectName());
-        if (entity.getLastJob() != null) {
-            dto.setLastJobStatus(entity.getLastJob().getStatus().name());
-            dto.setLastJobState(entity.getLastJob().getState().name());
-            dto.setLastJobId(entity.getLastJob().getId());
+        dto.setServiceFunctionChainId(sfc == null ? null : sfc.getId());
+        JobRecord lastJob = entity.getLastJob();
+        if (lastJob != null) {
+            dto.setLastJobStatus(lastJob.getStatus().name());
+            dto.setLastJobState(lastJob.getState().name());
+            dto.setLastJobId(lastJob.getId());
         }
     }
 

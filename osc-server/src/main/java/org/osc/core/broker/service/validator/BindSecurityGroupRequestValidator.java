@@ -34,6 +34,7 @@ public class BindSecurityGroupRequestValidator {
 		Map<String, Object> map = new HashMap<>();
 
 		map.put("Security Group Id", request.getSecurityGroupId());
+		map.put("Virtualization Connector Id", request.getVcId());
 		List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
 		if (services != null && !services.isEmpty()) {
 			for (VirtualSystemPolicyBindingDto service : services) {
@@ -41,13 +42,14 @@ public class BindSecurityGroupRequestValidator {
 					map.put("Virtual System Id", service.getVirtualSystemId());
 					map.put("Service Name", service.getName());
 					break;
-				} else if(request.getSfcId() == null && service.getOrder() == null) {
+                } else if (request.getSfcId() == null && service.getOrder() == null) {
+				    // In non-sfc case, service order is a required field.
 					map.put("Service Order", service.getOrder());
 					break;
 				}
 			}
 		}
-		
+
 		ValidateUtil.checkForNullFields(map);
 	}
 }

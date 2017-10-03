@@ -119,10 +119,10 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 				BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
 
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
+				bindRequest.setSfcId(this.currentSecurityGroup.getServiceFunctionChainId());
 
 				List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
 						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getMemberList();
-
 
 				for (Long selectedVsId : getSelectedServicesId()) {
 					VirtualSystemPolicyBindingDto previousBinding = null;
@@ -156,19 +156,21 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 						// specified in the combobox
 						failurePolicyType = (FailurePolicyType) failurePolicyComboBox.getValue();
 					}
-					long order = (Long) selectedService.getItemProperty(PROPERTY_ID_CHAIN_ORDER).getValue();
+
+                    Long order = null;
+                    if (this.currentSecurityGroup.getServiceFunctionChainId() != null) {
+                        order = (Long) selectedService.getItemProperty(PROPERTY_ID_CHAIN_ORDER).getValue();
+                    }
 
 					// send null if user did not modify this set
 					bindRequest.addServiceToBindTo(new VirtualSystemPolicyBindingDto(selectedVsId, serviceName,
 							policyIdSet, failurePolicyType, order));
-
 				}
 
 				BaseJobResponse response = this.bindSecurityGroupService.dispatch(bindRequest);
 
 				close();
 				ViewUtil.showJobNotification(response.getJobId(), this.server);
-
 			}
 
 		} catch (Exception e) {

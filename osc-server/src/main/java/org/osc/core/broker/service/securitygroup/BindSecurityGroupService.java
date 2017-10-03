@@ -81,18 +81,18 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 		BaseJobResponse response = null;
 		boolean sfcBind = this.apiFactoryService.supportsNeutronSFC(this.securityGroup);
 		ServiceFunctionChain sfc = null;
-		if(sfcBind){
-			sfc = validateAndLoadSfcBind(em, request);
-		} else {
-			validateAndLoad(em, request);
-		}
+        if (sfcBind) {
+            sfc = validateAndLoadSfcBind(em, request);
+        } else {
+            validateAndLoad(em, request);
+        }
 
 		try {
 			unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup,
 					this.securityGroup.getVirtualizationConnector());
-			
+
 			List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
-			
+
 			if (sfcBind) {
 				//no order just bind the virtual system policies
 				if(sfc == null){
@@ -114,7 +114,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 			// For all services selected, create or update the security group interfaces
 			for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
 				Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-				VirtualSystem vs = getAndCheckVirtualSystemById(em, virtualSystemId);
+				VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
 
 				if (vs.getMarkedForDeletion()) {
 					throw new VmidcBrokerValidationException(String.format(
@@ -240,31 +240,32 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 
 	private void validateRequest(EntityManager em, BindSecurityGroupRequest request) throws Exception {
 		BindSecurityGroupRequestValidator.checkForNullFields(request);
-	
+
 		this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getSecurityGroupId());
-	
+
 		if (this.securityGroup == null) {
 			throw new VmidcBrokerValidationException(
 					"Security Group with Id: " + request.getSecurityGroupId() + "  is not found.");
 		}
-		
+
+
 		Long vcId = request.getVcId();
-		if (vcId != null && !vcId.equals(this.securityGroup.getVirtualizationConnector().getId())) {
+		if (!vcId.equals(this.securityGroup.getVirtualizationConnector().getId())) {
 			throw new VmidcBrokerValidationException(
 					String.format("The Security Group '%s' does not belong to the Parent Object with ID %d",
 							this.securityGroup.getName(), vcId));
 		}
-	
+
 		ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
-		
+
 		List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
-		
+
 		if (services == null) {
 			services = new ArrayList<>();
 			request.setServicesToBindTo(services);
 		}
 	}
-	
+
 	private void validateAndLoad(EntityManager em, BindSecurityGroupRequest request) throws Exception {
 
 		List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
@@ -283,7 +284,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 				}
 
 				for (VirtualSystemPolicyBindingDto otherService : services) {
-					
+
 					if (!serviceBinding.equals(otherService)
 							&& otherService.getVirtualSystemId().equals(serviceBinding.getVirtualSystemId())) {
 						throw new VmidcBrokerValidationException(String.format(
@@ -294,7 +295,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 					}
 				}
 			}
-			
+
 			// Adding elements to the tree set using the order comparator
 			// ensures any services with duplicate order
 			// are pruned out of the set.
@@ -306,9 +307,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 					// We are always expected to find the other service
 					VirtualSystemPolicyBindingDto otherService = findDuplicateServiceByOrder(services, serviceToBindTo);
 					Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-					VirtualSystem vs = getAndCheckVirtualSystemById(em, virtualSystemId);
+					VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
 					Long otherVirtualSystemId = otherService.getVirtualSystemId();
-					VirtualSystem otherVs = getAndCheckVirtualSystemById(em, otherVirtualSystemId);
+					VirtualSystem otherVs = validateAndLoadVirtualSystem(em, otherVirtualSystemId);
 
 					SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
 							.findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
@@ -349,78 +350,76 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 		}
 		return null;
 	}
-	
-	private VirtualSystem getAndCheckVirtualSystemById(EntityManager em, Long vsId) throws Exception {
+
+	private VirtualSystem validateAndLoadVirtualSystem(EntityManager em, Long vsId) throws Exception {
 		VirtualSystem vs = VirtualSystemEntityMgr.findById(em, vsId);
 			if (vs == null) {
 				throw new VmidcBrokerValidationException(
 						"Virtual System with Id: " + vsId + "  is not found.");
 				}
-		return vs;	
+		return vs;
 	}
-	
+
 	private ServiceFunctionChain validateAndLoadSfcBind(EntityManager em, BindSecurityGroupRequest request) throws Exception {
-		  
+
     	ServiceFunctionChain sfc = null;
 		if(request.getSfcId() == null) {
 			//user wants to unbind serviceFunctonChain with Security Group
 			return null;
 		}
-		
+
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getVcId());
 		sfc = em.find(ServiceFunctionChain.class, request.getSfcId());
 		if (sfc == null) {
-
 			throw new VmidcBrokerValidationException(
 					"Service Function Chain entry with Id: " + request.getSfcId() + " is not found.");
 		}
-		
+
 		 ValidateUtil.checkMarkedForDeletion(sfc, sfc.getName());
-		 	    		
+
 		//sfc parent and vcid check
-		if(!sfc.getVirtualizationConnector().getId().equals(vc.getId())){
-			throw new VmidcBrokerValidationException(
-					"Service Function Chain Virutalization Connector Id " + sfc.getVirtualizationConnector().getId() + 
-								" do not match with  given Virutalization Connector Id " 
-								+ vc.getId() + " ");
+        if (!sfc.getVirtualizationConnector().getId().equals(vc.getId())) {
+            throw new VmidcBrokerValidationException(
+                    String.format("The Service Function Chain '%s' does not belong to the Parent Object with ID %d",
+                            sfc.getName(), vc.getId()));
 		}
-		
-		List<Long> sfcVsIdList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
-		
+
+		 List<Long> sfcVsIdList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
+
 		List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
 
          // For all services selected, create or update the security group interfaces
          for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
              Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-             if(sfcVsIdList.size() == 0 || virtualSystemId == null ||
-            		 												!sfcVsIdList.contains(virtualSystemId)) {
+            if (sfcVsIdList.size() == 0 || virtualSystemId == null || !sfcVsIdList.contains(virtualSystemId)) {
             	 throw new VmidcBrokerValidationException(
-     					"Binding request Virutal Systm Id : " + virtualSystemId + 
-     					" do not match with any of the id in Service Function Chain's Virtual System Id list"); 
+     					"Binding request Virutal System Id : " + virtualSystemId +
+     					" do not match with any of the id in Service Function Chain's Virtual System Id list");
              }
              //by removing virtual system id from the list , will help to throw any exception in case of duplication
              sfcVsIdList.remove(virtualSystemId);
+
              //if this Virtual system is pointing to more than one sfc , we need to throw exception while binding.
              //each service function chain VNF(VS) can only be part of one service chain at a given time.
              //Do we need to modify sfc<-->VS map from many to many to one to many (??).
-             VirtualSystem vs = getAndCheckVirtualSystemById(em, virtualSystemId);
+             VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
              //if this virtual system is pointing to more than one SFC throw exception
              if(vs.getServiceFunctionChains().size() > 1) {
             	 SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
 							.findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
  				if (sgi != null && !vs.getMarkedForDeletion()) {
  					throw new VmidcBrokerValidationException(
- 	      					"Virtual system " + virtualSystemId + " should not be part of more than one chain");  
+ 	      					"Virtual system " + virtualSystemId + " should not be part of more than one chain");
  				}
              }
          }
-        
+
          //number of vsIds in sfc should match with number of binding request vsIds
          if(!sfcVsIdList.isEmpty()) {
         	 throw new VmidcBrokerValidationException(
- 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfcVsIdList.size() + 
- 					" and Binding request Virtual System Ids " + servicesToBindTo.size() + " do not match");	 
-         } 
+ 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfcVsIdList.size() +
+ 					" and Binding request Virtual System Ids " + servicesToBindTo.size() + " do not match");
+         }
     	return sfc;
     }
 }

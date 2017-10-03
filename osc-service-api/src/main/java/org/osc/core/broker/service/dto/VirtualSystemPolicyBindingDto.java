@@ -58,15 +58,15 @@ public class VirtualSystemPolicyBindingDto extends BaseVirtualSystemPoliciesDto 
     private boolean isBinded;
 
     public VirtualSystemPolicyBindingDto() {
-    	
+
     }
-    
+
     public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds, List<PolicyDto> policies) {
 		super(virtualSystemId, name, policyIds, policies);
     }
 
 	public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds,
-            FailurePolicyType failurePolicyType, long order) {
+            FailurePolicyType failurePolicyType, Long order) {
 		super(virtualSystemId, name, policyIds);
         this.failurePolicyType = failurePolicyType;
         this.order = order;
@@ -99,9 +99,9 @@ public class VirtualSystemPolicyBindingDto extends BaseVirtualSystemPoliciesDto 
 
     @Override
     public String toString() {
-        return "VirtualSystemPolicyBindingDto [virtualSystemId=" + this.getVirtualSystemId() + ", name=" + this.getName() + ", policyId="
-                + this.getPolicyIds() + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
-                + ", policies=" + this.getPolicies() + ", isBinded=" + this.isBinded + ", markedForDeletion=" + this.isMarkedForDeletion()
+        return "VirtualSystemPolicyBindingDto [virtualSystemId=" + getVirtualSystemId() + ", name=" + getName() + ", policyId="
+                + getPolicyIds() + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
+                + ", policies=" + getPolicies() + ", isBinded=" + this.isBinded + ", markedForDeletion=" + isMarkedForDeletion()
                 + "]";
     }
 

@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "BaseVirtualSystemPolicies")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class BaseVirtualSystemPoliciesDto {
-	
+
 	@ApiModelProperty(required = true)
     private Long virtualSystemId;
 
@@ -39,12 +39,12 @@ public class BaseVirtualSystemPoliciesDto {
 
     @ApiModelProperty(required = true)
     private Set<Long> policyIds;
-    
+
     /**
      * List of Policies owned by the Virtual System
      */
     private List<PolicyDto> policies = new ArrayList<>();
-    
+
     @ApiModelProperty(readOnly = true,
 			value = "Determines whether the appliance manager supports multiple policy mapping.")
     @XmlElement(name = "multiplePoliciesSupported")
@@ -53,11 +53,10 @@ public class BaseVirtualSystemPoliciesDto {
     @ApiModelProperty(readOnly = true)
     private boolean markedForDeletion;
 
-    
 	public BaseVirtualSystemPoliciesDto() {
 		super();
 	}
-	
+
 	public BaseVirtualSystemPoliciesDto(Long virtualSystemId, String name, Set<Long> policyIds, List<PolicyDto> policies) {
 		super();
 		this.virtualSystemId = virtualSystemId;
@@ -74,7 +73,7 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public Long getVirtualSystemId() {
-		return virtualSystemId;
+		return this.virtualSystemId;
 	}
 
 	public void setVirtualSystemId(Long virtualSystemId) {
@@ -82,7 +81,7 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(String name) {
@@ -90,7 +89,7 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public Set<Long> getPolicyIds() {
-		return policyIds;
+		return this.policyIds;
 	}
 
 	public void setPolicyIds(Set<Long> policyIds) {
@@ -98,7 +97,7 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public List<PolicyDto> getPolicies() {
-		return policies;
+		return this.policies;
 	}
 
 	public void setPolicies(List<PolicyDto> policies) {
@@ -106,7 +105,7 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public Boolean isMultiplePoliciesSupported() {
-		return isMultiplePoliciesSupported;
+		return this.isMultiplePoliciesSupported;
 	}
 
 	public void setMultiplePoliciesSupported(Boolean isMultiplePoliciesSupported) {
@@ -114,15 +113,15 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public boolean isMarkedForDeletion() {
-		return markedForDeletion;
+		return this.markedForDeletion;
 	}
 
 	public void setMarkedForDeletion(boolean markedForDeletion) {
 		this.markedForDeletion = markedForDeletion;
 	}
-	
+
 	public void addPolicies(PolicyDto policy) {
         this.policies.add(policy);
     }
-    
+
 }

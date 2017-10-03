@@ -56,11 +56,11 @@ public class ListSecurityGroupBindingsBySgService
 
     @Override
     public BindSecurityGroupResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
-    	
+
     	BindSecurityGroupResponse response = new BindSecurityGroupResponse();
 
         SecurityGroup sg = validate(em, request);
-        
+
         // to do mapping
         List<VirtualSystemPolicyBindingDto> dtoList = new ArrayList<>();
         Set<VirtualSystem> vsSet = sg.getVirtualizationConnector().getVirtualSystems();
@@ -125,8 +125,8 @@ public class ListSecurityGroupBindingsBySgService
         }
 
 		ServiceFunctionChain sfc  = sg.getServiceFunctionChain();
-        if(sfc != null) {
-        	response.setSfcId(sfc.getId());
+        if (sfc != null) {
+            response.setSfcId(sfc.getId());
         }
         response.setMemberList(dtoList);
         return response;
