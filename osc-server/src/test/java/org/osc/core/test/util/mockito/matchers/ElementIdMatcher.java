@@ -17,22 +17,27 @@
 package org.osc.core.test.util.mockito.matchers;
 
 import org.mockito.ArgumentMatcher;
-import org.osc.sdk.controller.element.NetworkElement;
+import org.osc.sdk.controller.element.Element;
 
-public class NetworkElementIdMatcher extends ArgumentMatcher<NetworkElement> {
+/**
+ * Matches the element using the element id.
+ *
+ * @param any subclass of Element
+ */
+public class ElementIdMatcher<T extends Element> extends ArgumentMatcher<T> {
     private String id;
 
-    public NetworkElementIdMatcher(String id) {
+    public ElementIdMatcher(String id) {
         this.id = id;
     }
 
     @Override
     public boolean matches(Object object) {
-        if (object == null || !(object instanceof NetworkElement)) {
+        if (object == null || !(object instanceof Element)) {
             return false;
         }
 
-        return (((NetworkElement) object).getElementId() == null && this.id == null)
-                || this.id.equals(((NetworkElement) object).getElementId());
+        Element element = (Element) object;
+        return (element.getElementId() == null && this.id == null) || this.id.equals(element.getElementId());
     }
 }
