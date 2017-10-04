@@ -20,21 +20,16 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
-import org.osgi.service.component.annotations.Reference;
 
 public class DeleteDistributedApplianceRequestValidator implements RequestValidator<BaseDeleteRequest,DistributedAppliance> {
 
     private EntityManager em;
     
-    @Reference
-	public ApiFactoryService apiFactoryService;
 
-    public DeleteDistributedApplianceRequestValidator(EntityManager em, ApiFactoryService apiFactoryService) {
+    public DeleteDistributedApplianceRequestValidator(EntityManager em) {
         this.em = em;
-        this.apiFactoryService = apiFactoryService;
     }
 
     @Override
@@ -61,7 +56,7 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
         for (VirtualSystem vs : da.getVirtualSystems()) {
             if (vs.getServiceFunctionChains().size() > 0) {
                 throw new VmidcBrokerValidationException("Cannot delete Distributed Appilance with ID " + request.getId()
-                        + " as its associated Virtual System : " + vs.getName() + " is beign referenced by Service Function Chain : " +
+                        + " as its associated Virtual System : " + vs.getName() + " is being referenced by Service Function Chain : " +
                         vs.getServiceFunctionChains().get(0).getName());
             }
         }

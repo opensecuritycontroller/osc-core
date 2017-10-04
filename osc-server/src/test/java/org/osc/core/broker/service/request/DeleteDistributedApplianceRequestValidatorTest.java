@@ -32,7 +32,6 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
-import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 
@@ -63,10 +62,8 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
-        this.validator = new DeleteDistributedApplianceRequestValidator(this.em, apiFactoryService);
-        this.validator.apiFactoryService = apiFactoryService;
-
+        this.validator = new DeleteDistributedApplianceRequestValidator(this.em);
+   
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID))).thenReturn(NOT_MARKED_FOR_DELETION_DA);
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_FOR_DELETION))).thenReturn(MARKED_FOR_DELETION_DA);
     }
@@ -143,11 +140,10 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         da.addVirtualSystem(vs);
    
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC))).thenReturn(da);
-    	Mockito.when(this.validator.apiFactoryService.supportsNeutronSFC(vs)).thenReturn(true);
     	this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Cannot delete Distributed Appilance with ID " + VALID_ID_WITH_SFC
                 + " as its associated Virtual System : " + vs.getName()
-                + " is beign referenced by Service Function Chain : " + vs.getServiceFunctionChains().get(0).getName());
+                + " is being referenced by Service Function Chain : " + vs.getServiceFunctionChains().get(0).getName());
     	
         // Act
         this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
