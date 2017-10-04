@@ -74,6 +74,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 	private final SecurityGroupDto currentSecurityGroup;
 	private Table serviceTable = null;
+	private Long vcId;
 
 	private final BindSecurityGroupServiceApi bindSecurityGroupService;
     private final ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
@@ -82,11 +83,12 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 	public BindSecurityGroupWindow(SecurityGroupDto sgDto,
 	        BindSecurityGroupServiceApi bindSecurityGroupService,
 	        ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService,
-	        ServerApi server) throws Exception {
+	        ServerApi server, Long vcId) throws Exception {
 		this.currentSecurityGroup = sgDto;
         this.bindSecurityGroupService = bindSecurityGroupService;
         this.listSecurityGroupBindingsBySgService = listSecurityGroupBindingsBySgService;
         this.server = server;
+        this.vcId = vcId;
 		createWindow(this.CAPTION + " - " + this.currentSecurityGroup.getName());
 	}
 
@@ -118,6 +120,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
 
+				bindRequest.setVcId(this.vcId);
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
 				bindRequest.setSfcId(this.currentSecurityGroup.getServiceFunctionChainId());
 
@@ -158,7 +161,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 					}
 
                     Long order = null;
-                    if (this.currentSecurityGroup.getServiceFunctionChainId() != null) {
+                    if (this.currentSecurityGroup.getServiceFunctionChainId() == null) {
                         order = (Long) selectedService.getItemProperty(PROPERTY_ID_CHAIN_ORDER).getValue();
                     }
 

@@ -324,7 +324,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                 BindSecurityGroupWindow bindWindow = null;
                 try {
                     bindWindow = new BindSecurityGroupWindow(securityGroup, this.bindSecurityGroupService,
-                            this.listSecurityGroupBindingsBySgService, this.server);
+                            this.listSecurityGroupBindingsBySgService, this.server, getParentItem().getBean().getId());
                     ViewUtil.addWindow(bindWindow);
                 } catch (ActionNotSupportedException actionNotSupportedException) {
                     ViewUtil.iscNotification(actionNotSupportedException.getMessage(), Notification.Type.ERROR_MESSAGE);

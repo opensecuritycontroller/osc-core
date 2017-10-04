@@ -172,6 +172,20 @@ public class SecurityGroupEntityMgr {
 
         return em.createQuery(query).getResultList();
     }
+    
+    public static List<SecurityGroup>  listSecurityGroupsBySfcIdAndProjectId(EntityManager em, Long sfcId, String projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root)
+                .where(cb.equal(root.join("serviceFunctionChain").get("id"), sfcId),
+                        cb.equal(root.get("projectId"), projectId))
+                .orderBy(cb.asc(root.get("name")));
+        
+        return em.createQuery(query).getResultList();
+    }
 
     /**
      * @param em
