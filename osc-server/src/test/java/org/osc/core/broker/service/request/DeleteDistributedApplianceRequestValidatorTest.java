@@ -137,6 +137,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     	ServiceFunctionChain sfc = new ServiceFunctionChain("sfc-1", null);
 
     	VirtualSystem vs = new VirtualSystem(null);
+    	vs.setName("vs-1");
 		vs.setEncapsulationType(TagEncapsulationType.VLAN);
 		vs.setServiceFunctionChains(Arrays.asList(sfc));
         da.addVirtualSystem(vs);
@@ -144,8 +145,9 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC))).thenReturn(da);
     	Mockito.when(this.validator.apiFactoryService.supportsNeutronSFC(vs)).thenReturn(true);
     	this.exception.expect(VmidcBrokerValidationException.class);
-    	this.exception.expectMessage("Distributed Appilance with ID " + VALID_ID_WITH_SFC
-										+ " is binded to a service function chain, unbind to delete");
+        this.exception.expectMessage("Cannot delete Distributed Appilance with ID " + VALID_ID_WITH_SFC
+                + " as its associated Virtual System : " + vs.getName()
+                + " is beign referenced by Service Function Chain : " + vs.getServiceFunctionChains().get(0).getName());
     	
         // Act
         this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));

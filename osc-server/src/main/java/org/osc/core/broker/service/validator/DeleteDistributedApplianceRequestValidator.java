@@ -59,13 +59,10 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
         }
         
         for (VirtualSystem vs : da.getVirtualSystems()) {
-            if (!this.apiFactoryService.supportsNeutronSFC(vs)) {
-             // if first virtual system is not neutronSFC break...
-                break; 
-            }
             if (vs.getServiceFunctionChains().size() > 0) {
-                throw new VmidcBrokerValidationException("Distributed Appilance with ID " + request.getId()
-                        + " is binded to a service function chain, unbind to delete");
+                throw new VmidcBrokerValidationException("Cannot delete Distributed Appilance with ID " + request.getId()
+                        + " as its associated Virtual System : " + vs.getName() + " is beign referenced by Service Function Chain : " +
+                        vs.getServiceFunctionChains().get(0).getName());
             }
         }
         
