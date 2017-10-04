@@ -18,6 +18,7 @@
 package org.osc.core.broker.service.servicefunctionchain;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,18 +36,28 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionChainServiceTest {
-	@InjectMocks
+
+    @InjectMocks
 	private UpdateServiceFunctionChainService service;
 
 	AddOrUpdateServiceFunctionChainRequest request;
 
 	@Override
 	@Before
-	public void testInitialize() throws Exception {
-		super.testInitialize();
-		this.service.validator = this.validatorMock;
-		request = new AddOrUpdateServiceFunctionChainRequest();
-	}
+    public void testInitialize() throws Exception {
+        super.testInitialize();
+        this.service.validator = this.validatorMock;
+
+        this.request = new AddOrUpdateServiceFunctionChainRequest();
+
+        BaseDto dto = new BaseDto();
+        dto.setId(this.sfc.getId());
+        dto.setParentId(this.vc.getId());
+        this.request.setDto(dto);
+        this.request.setName(this.sfc.getName());
+
+        Mockito.when(this.service.validator.validateAndLoad(this.request)).thenReturn(this.sfc);
+    }
 
 	@Test
 	public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
@@ -60,23 +71,13 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
 	@Test
 	public void testDispatch_WhenVirtualSystemListEmpty_SfcIsUpdated() throws Exception {
 
-		// Arrange
-		BaseDto dto = new BaseDto();
-		dto.setId(this.sfc.getId());
-		dto.setParentId(this.vc.getId());
-		request.setDto(dto);
-		request.setName(this.sfc.getName());
-		List<Long> vsIds = new ArrayList<Long>();
-		
-		Mockito.when(this.service.validator.validateAndLoad(request)).thenReturn(this.sfc);
-
 		// Act.
-		BaseJobResponse response = this.service.dispatch(request);
+		BaseJobResponse response = this.service.dispatch(this.request);
 		List<Long> sfcVsIdList = this.em.find(ServiceFunctionChain.class, this.sfc.getId()).getVirtualSystems().stream()
                 .map(vss -> vss.getId()).collect(Collectors.toList());
 
 		// Assert
-		Assert.assertEquals("The list of virtual system ids is not Empty", vsIds, sfcVsIdList);
+		Assert.assertEquals("The list of virtual system ids is not Empty", Collections.EMPTY_LIST, sfcVsIdList);
 		Assert.assertNotNull("The returned response should not be null.", response);
 		Assert.assertEquals("The return Id should be equal to sfc Id", response.getId(), this.sfc.getId());
 	}
@@ -86,21 +87,15 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
 	public void testDispatch_WhenVirtualSystemListNotEmpty_SfcIsUpdatedAndListInOrder() throws Exception {
 
 		// Arrange
-		BaseDto dto = new BaseDto();
-		dto.setId(this.sfc.getId());
-		dto.setParentId(this.vc.getId());
-		request.setDto(dto);
-		request.setName(this.sfc.getName());
-		List<Long> vsIds = new ArrayList<Long>();
+		List<Long> vsIds = new ArrayList<>();
 
 		vsIds.add(this.vs1.getId());
 		vsIds.add(this.vs.getId());
-		request.setVirtualSystemIds(vsIds);
-		Mockito.when(this.service.validator.validateAndLoad(request)).thenReturn(this.sfc);
+		this.request.setVirtualSystemIds(vsIds);
 
 		// Act.
 		// update sfc with virtual system ids list {2,1}
-		BaseJobResponse response = this.service.dispatch(request);
+		BaseJobResponse response = this.service.dispatch(this.request);
 
 		// check Virtual system is as updated
 		List<Long> sfcVsIdList = this.em.find(ServiceFunctionChain.class, this.sfc.getId()).getVirtualSystems().stream()
