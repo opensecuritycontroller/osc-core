@@ -24,9 +24,9 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 public interface VirtualPort {
     Long getId();
 
-    public List<String> getMacAddresses();
+    List<String> getMacAddresses();
 
-    public List<String> getIpAddresses();
+    List<String> getIpAddresses();
 
     Set<DistributedApplianceInstance> getDais();
 
