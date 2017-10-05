@@ -235,16 +235,15 @@ public class VirtualSystem extends BaseEntity {
         this.encapsulationType = encapsulationType;
     }
     
-
     public List<ServiceFunctionChain> getServiceFunctionChains() {
-		return serviceFunctionChains;
-	}
+        return serviceFunctionChains;
+    }
 
-	public void setServiceFunctionChains(List<ServiceFunctionChain> serviceFunctionChains) {
-		this.serviceFunctionChains = serviceFunctionChains;
-	}
-
-	@Override
+    public void setServiceFunctionChains(List<ServiceFunctionChain> serviceFunctionChains) {
+        this.serviceFunctionChains = serviceFunctionChains;
+    }
+	
+    @Override
     public Boolean getMarkedForDeletion() {
         return super.getMarkedForDeletion() || this.distributedAppliance.getMarkedForDeletion();
     }
