@@ -28,7 +28,9 @@ import javax.persistence.criteria.Root;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
@@ -315,17 +317,18 @@ public class DistributedApplianceInstanceEntityMgr {
         return list.get(0);
     }
 
-    public static DistributedApplianceInstance findByVirtualSystemAndPort(EntityManager em, VirtualSystem vs, Long portId) {
+    public static DistributedApplianceInstance findByVirtualSystemAndPort(EntityManager em, VirtualSystem vs, Long portId, Class<? extends VirtualPort> portType) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
 
         Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+        String portFieldName = portType.equals(VMPort.class) ? "protectedPorts" : "protectedPodPorts";
 
         query = query.select(root)
                 .where(cb.equal(root.join("virtualSystem").get("id"), vs.getId()),
-                        cb.equal(root.join("protectedPorts").get("id"), portId));
+                        cb.equal(root.join(portFieldName).get("id"), portId));
 
         try {
             return em.createQuery(query).getSingleResult();
@@ -333,5 +336,4 @@ public class DistributedApplianceInstanceEntityMgr {
             return null;
         }
     }
-
 }
