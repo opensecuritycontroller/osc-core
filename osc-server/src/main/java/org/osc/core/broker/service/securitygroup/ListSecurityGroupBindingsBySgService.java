@@ -27,6 +27,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
@@ -38,7 +39,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.response.BindSecurityGroupResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.FailurePolicyType;
@@ -47,14 +48,16 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ListSecurityGroupBindingsBySgService
-        extends ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>>
+        extends ServiceDispatcher<BaseIdRequest, BindSecurityGroupResponse>
         implements ListSecurityGroupBindingsBySgServiceApi {
 
     @Reference
     private ApiFactoryService apiFactoryService;
 
     @Override
-    public ListResponse<VirtualSystemPolicyBindingDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
+    public BindSecurityGroupResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
+
+    	BindSecurityGroupResponse response = new BindSecurityGroupResponse();
 
         SecurityGroup sg = validate(em, request);
 
@@ -121,7 +124,12 @@ public class ListSecurityGroupBindingsBySgService
             }
         }
 
-        return new ListResponse<>(dtoList);
+		ServiceFunctionChain sfc  = sg.getServiceFunctionChain();
+        if (sfc != null) {
+            response.setSfcId(sfc.getId());
+        }
+        response.setMemberList(dtoList);
+        return response;
     }
 
     protected SecurityGroup validate(EntityManager em, BaseIdRequest request) throws Exception {

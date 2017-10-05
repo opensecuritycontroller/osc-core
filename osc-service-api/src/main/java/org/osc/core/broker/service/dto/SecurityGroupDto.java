@@ -38,6 +38,9 @@ public class SecurityGroupDto extends BaseDto {
     @ApiModelProperty(required = false)
     private String projectName;
 
+    @ApiModelProperty(required = false)
+    private Long serviceFunctionChainId;
+
     @ApiModelProperty(readOnly = true)
     private boolean markForDeletion = false;
 
@@ -82,6 +85,14 @@ public class SecurityGroupDto extends BaseDto {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public Long getServiceFunctionChainId() {
+        return this.serviceFunctionChainId;
+    }
+
+    public void setServiceFunctionChainId(Long serviceFunctionChainId) {
+        this.serviceFunctionChainId = serviceFunctionChainId;
     }
 
     public boolean isMarkForDeletion() {

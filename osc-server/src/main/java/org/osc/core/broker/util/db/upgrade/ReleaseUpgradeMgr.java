@@ -251,6 +251,8 @@ public class ReleaseUpgradeMgr {
             	upgrade90to91(stmt);
             case 91:
             	upgrade91to92(stmt);
+            case 92:
+            	upgrade92to93(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -260,6 +262,17 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+    
+    private static void upgrade92to93(Statement stmt) throws SQLException {
+    	execSql(stmt,
+                "alter table SECURITY_GROUP add column sfc_fk bigint;");
+    	
+    	execSql(stmt,
+					"alter table SECURITY_GROUP " +
+					"add constraint FK_SG_SFC " +
+					"foreign key (sfc_fk) " +
+					"references SERVICE_FUNCTION_CHAIN;");
     }
     
     private static void upgrade91to92(Statement stmt) throws SQLException {

@@ -75,6 +75,11 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
 
     @OneToMany(mappedBy = "securityGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<>();
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sfc_fk",
+            foreignKey = @ForeignKey(name = "FK_SG_SFC"))
+    private ServiceFunctionChain serviceFunctionChain;
 
     public SecurityGroup(VirtualizationConnector virtualizationConnector, String projectId, String projectName) {
         this.virtualizationConnector = virtualizationConnector;
@@ -175,7 +180,15 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
         this.networkElementId = networkElemId;
     }
 
-    @Override
+    public ServiceFunctionChain getServiceFunctionChain() {
+        return serviceFunctionChain;
+    }
+
+    public void setServiceFunctionChain(ServiceFunctionChain serviceFunctionChain) {
+        this.serviceFunctionChain = serviceFunctionChain;
+    }
+
+	@Override
     public String toString() {
         return "SecurityGroup [name=" + this.name + ", virtualizationConnector=" + this.virtualizationConnector + ", projectId="
                 + this.projectId + ", projectName=" + this.projectName + ", protectAll=" + this.protectAll
