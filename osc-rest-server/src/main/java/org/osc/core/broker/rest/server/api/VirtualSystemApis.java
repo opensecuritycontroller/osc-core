@@ -174,7 +174,7 @@ public class VirtualSystemApis {
     }
 
     // DS APIS
-    @ApiOperation(value = "Lists Deployment Specifications (Openstack Only)",
+    @ApiOperation(value = "Lists Deployment Specifications",
             notes = "Lists the Deployment Specifications owned by the Virtual System",
             response = DeploymentSpecDto.class,
             responseContainer = "Set")
@@ -193,7 +193,7 @@ public class VirtualSystemApis {
         return response.getList();
     }
 
-    @ApiOperation(value = "Retrieves the Deployment Specification (Openstack Only)",
+    @ApiOperation(value = "Retrieves the Deployment Specification",
             notes = "Retrieves a Deployment Specification specified by its owning Virtual System and Deployment Spec Id",
             response = ApplianceManagerConnectorDto.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -216,7 +216,7 @@ public class VirtualSystemApis {
         return dto;
     }
 
-    @ApiOperation(value = "Creates a Deployment Specification (Openstack Only)",
+    @ApiOperation(value = "Creates a Deployment Specification",
             notes = "Creates a Deployment Specification Object owned by Virtual System provided",
             response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -250,7 +250,7 @@ public class VirtualSystemApis {
         return this.apiUtil.getResponseForBaseRequest(this.syncDeploymentSpecService, new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
-    @ApiOperation(value = "Updates a Deployment Specification (Openstack Only)",
+    @ApiOperation(value = "Updates a Deployment Specification",
             notes = "Updates a Deployment Specification",
             response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -268,7 +268,7 @@ public class VirtualSystemApis {
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
-    @ApiOperation(value = "Deletes a Deployment Specification (Openstack Only)",
+    @ApiOperation(value = "Deletes a Deployment Specification",
             notes = "Deletes a Deployment Specification",
             response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -284,7 +284,7 @@ public class VirtualSystemApis {
                 new BaseDeleteRequest(dsId, vsId, false));// false as this is not force delete
     }
 
-    @ApiOperation(value = "Force Delete a Deployment Specification (Openstack Only)",
+    @ApiOperation(value = "Force Delete a Deployment Specification",
             notes = "Deletes a Deployment Specification.<br/>"
                     + "Warning: Force delete just deletes the entity from OSC, please make sure to clean the related entities outside of OSC.")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -342,7 +342,7 @@ public class VirtualSystemApis {
         return dto;
     }
 
-    @ApiOperation(value = "Creates a Traffic Policy Mapping (Openstack Only)",
+    @ApiOperation(value = "Creates a Traffic Policy Mapping",
             notes = "Creates a Traffic Policy Mapping owned by Virtual System provided",
             response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -359,7 +359,7 @@ public class VirtualSystemApis {
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
-    @ApiOperation(value = "Updates a Traffic Policy Mapping (Openstack Only)",
+    @ApiOperation(value = "Updates a Traffic Policy Mapping",
             notes = "Updates a Traffic Policy Mapping Object",
             response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -377,7 +377,7 @@ public class VirtualSystemApis {
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
-    @ApiOperation(value = "Deletes a Traffic Policy Mapping (Openstack Only)",
+    @ApiOperation(value = "Deletes a Traffic Policy Mapping",
             notes = "Deletes a Traffic Policy Mapping, Trigger Sync Job and return Job Id",
             response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
