@@ -49,10 +49,10 @@ import org.osc.core.broker.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.impl.SimpleLoggerFactory;
 
 public class ServerControl {
-    private static final Logger log = LoggerFactory.getLogger(ServerControl.class);
+    private static final Logger log = new SimpleLoggerFactory().getLogger(ServerControl.class.getName());
 
     private static final Integer DEFAULT_API_PORT = 8090;
     private static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";

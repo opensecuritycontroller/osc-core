@@ -16,10 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.util.log;
 
+import java.io.PrintStream;
 import java.util.Hashtable;
 
 import org.osgi.framework.BundleContext;
 import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -31,6 +33,7 @@ public class LogUtil {
 
     public static void initLogging(BundleContext context) throws JoranException {
         if (context != null) {
+            StdOutErrLog.tieSystemOutAndErrToLog();
             addFactoryToContext(context);
             return;
         }
@@ -46,5 +49,41 @@ public class LogUtil {
         configurator.doConfigure("./logback.xml");
         context.registerService(ILoggerFactory.class, provider, new Hashtable<>());
         loggerFactory = provider;
+    }
+
+    public static class StdOutErrLog {
+
+        private static final Logger logger = LogProvider.getLogger(StdOutErrLog.class);
+
+        public static void tieSystemOutAndErrToLog() {
+            System.setOut(createLoggingProxy(System.out, false));
+            System.setErr(createLoggingProxy(System.err, true));
+        }
+
+        public static PrintStream createLoggingProxy(final PrintStream realPrintStream, final boolean isError) {
+            return new PrintStream(realPrintStream) {
+                @Override
+                public void print(final String string) {
+                    realPrintStream.print(string);
+                    if (isError) {
+                        logger.error(string);
+                    } else {
+                        logger.info(string);
+                    }
+                }
+
+                @Override
+                public void print(Object obj) {
+                    realPrintStream.print(obj);
+                    if (isError) {
+                        logger.error(String.valueOf(obj));
+                    } else {
+                        logger.info(String.valueOf(obj));
+                    }
+                }
+
+
+            };
+        }
     }
 }

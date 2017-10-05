@@ -19,8 +19,8 @@ package org.osc.core.broker.util.log;
 import static org.osc.core.broker.util.log.LogProvider.getLoggerFactory;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
+import org.slf4j.impl.SimpleLoggerFactory;
 
 /**
  * Wrapper around the properly initialized {@link Logger}, once available from {@link LogProvider}.
@@ -35,7 +35,7 @@ class LoggerProxy implements Logger {
 
     public LoggerProxy(String className) {
         this.className = className;
-        this.FALLBACK_IMPL = LoggerFactory.getLogger(className);
+        this.FALLBACK_IMPL = new SimpleLoggerFactory().getLogger(className);
     }
 
     @Override
