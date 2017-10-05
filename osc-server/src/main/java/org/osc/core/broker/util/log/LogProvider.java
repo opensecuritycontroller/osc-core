@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util.log;
 
-import static org.osgi.service.component.annotations.ReferencePolicyOption.GREEDY;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.ILoggerFactory;
@@ -35,7 +33,7 @@ import org.slf4j.Logger;
 public class LogProvider {
     private static ILoggerFactory loggerFactory;
 
-    @Reference(policyOption=GREEDY)
+    @Reference
     public void setLoggerFactoryInst(ILoggerFactory instance) {
         setLoggerFactory(instance);
     }
