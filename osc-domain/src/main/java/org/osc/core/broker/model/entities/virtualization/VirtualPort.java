@@ -16,11 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
+import java.util.List;
 import java.util.Set;
 
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 
 public interface VirtualPort {
+    Long getId();
+
+    public List<String> getMacAddresses();
+
+    public List<String> getIpAddresses();
+
     Set<DistributedApplianceInstance> getDais();
 
     void addDai(DistributedApplianceInstance dai);
@@ -28,6 +35,4 @@ public interface VirtualPort {
     void removeDai(DistributedApplianceInstance dai);
 
     void removeAllDais();
-
-    Long getId();
 }

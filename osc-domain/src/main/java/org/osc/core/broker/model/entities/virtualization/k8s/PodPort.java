@@ -17,6 +17,7 @@
 package org.osc.core.broker.model.entities.virtualization.k8s;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,6 +85,7 @@ public class PodPort extends BaseEntity implements VirtualPort {
         return this.macAddress;
     }
 
+    @Override
     public List<String> getIpAddresses() {
         return this.ipAddresses;
     }
@@ -122,5 +124,10 @@ public class PodPort extends BaseEntity implements VirtualPort {
             dai.removeProtectedPodPort(this);
         }
         this.dais.clear();
+    }
+
+    @Override
+    public List<String> getMacAddresses() {
+        return Arrays.asList(this.macAddress);
     }
 }

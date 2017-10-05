@@ -23,13 +23,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.model.entities.IscEntity;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.VirtualPort;
-import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
@@ -76,12 +75,7 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
 
         for (VirtualPort port : ports) {
             updatePortProtection(port);
-            if (port instanceof VMPort) {
-                OSCEntityManager.update(em, (VMPort)port, this.txBroadcastUtil);
-            } else {
-                OSCEntityManager.update(em, (PodPort)port, this.txBroadcastUtil);
-            }
-
+            OSCEntityManager.update(em, (IscEntity)port, this.txBroadcastUtil);
             OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         }
     }

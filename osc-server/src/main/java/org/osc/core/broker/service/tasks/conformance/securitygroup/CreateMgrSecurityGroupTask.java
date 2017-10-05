@@ -23,14 +23,12 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberElementImpl;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberListElementImpl;
@@ -44,8 +42,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 @Component(service=CreateMgrSecurityGroupTask.class)
 public class CreateMgrSecurityGroupTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(CreateMgrEndpointGroupTask.class);
-
     @Reference
     private ApiFactoryService apiFactoryService;
 
@@ -82,7 +78,6 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
         } finally {
             mgrApi.close();
         }
-
     }
 
     static SecurityGroupMemberListElement getSecurityGroupMemberListElement(SecurityGroup sg) throws VmidcBrokerValidationException {
@@ -91,19 +86,15 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
             SecurityGroupMemberElementImpl sgmElement = new SecurityGroupMemberElementImpl(sgm.getId().toString(),
                     sgm.getMemberName());
             boolean isLabel = sgm.getType().equals(SecurityGroupMemberType.LABEL);
-            Set<? extends BaseEntity> ports = isLabel ? sgm.getPodPorts() : sgm.getVmPorts();
-            for (BaseEntity port : ports) {
-                if (isLabel) {
-                    sgmElement.addMacAddress(((PodPort)port).getMacAddress());
-                    sgmElement.addIpAddress(((PodPort)port).getIpAddresses());
-                } else {
-                    sgmElement.addMacAddresses(((VMPort)port).getMacAddresses());
-                    sgmElement.addIpAddress(((VMPort)port).getPortIPs());
-                }
+            Set<? extends VirtualPort> ports = isLabel ? sgm.getPodPorts() : sgm.getVmPorts();
+            for (VirtualPort port : ports) {
+                sgmElement.addMacAddresses(port.getMacAddresses());
+                sgmElement.addIpAddress(port.getIpAddresses());
             }
 
             sgmElements.add(sgmElement);
         }
+
         return new SecurityGroupMemberListElementImpl(sgmElements);
     }
 

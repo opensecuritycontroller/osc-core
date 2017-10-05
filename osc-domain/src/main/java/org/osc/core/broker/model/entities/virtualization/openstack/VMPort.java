@@ -120,6 +120,7 @@ public class VMPort extends BaseEntity implements VirtualPort {
         return this.openstackId;
     }
 
+    @Override
     public List<String> getMacAddresses() {
         return Arrays.asList(this.macAddress);
     }
@@ -210,7 +211,8 @@ public class VMPort extends BaseEntity implements VirtualPort {
         this.dais.clear();
     }
 
-    public List<String> getPortIPs() {
+    @Override
+    public List<String> getIpAddresses() {
         return this.ipAddresses;
     }
 
@@ -221,5 +223,4 @@ public class VMPort extends BaseEntity implements VirtualPort {
     public void setParentId(String parentId){
         this.parentId = parentId;
     }
-
 }

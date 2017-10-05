@@ -25,12 +25,12 @@ import org.osgi.service.component.annotations.Component;
 
 @Component(service=MarkSecurityGroupInterfaceDeleteTask.class)
 public class MarkSecurityGroupInterfaceDeleteTask extends TransactionalTask {
+    private SecurityGroupInterface sgi;
+
     @Override
     public String getName() {
         return String.format("Delete Security Group Interface %s", this.sgi.getName());
     }
-
-    private SecurityGroupInterface sgi;
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
