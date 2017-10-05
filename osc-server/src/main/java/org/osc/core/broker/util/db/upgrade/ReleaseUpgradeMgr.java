@@ -254,7 +254,7 @@ public class ReleaseUpgradeMgr {
             case 92:
             	upgrade92to93(stmt);
             case 93:
-            	upgrade93to94(stm
+            	upgrade93to94(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
