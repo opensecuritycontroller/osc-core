@@ -17,10 +17,13 @@
 package org.osc.core.broker.service.validator;
 
 import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
+import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.VALUE_IS_SET_ERROR_MESSAGE;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
@@ -32,6 +35,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.server.Server;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -178,24 +182,43 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
     }
 
     static List<Object[]> getInvalidProjectNameTestData() {
-        String[] invalidNames = new String[] { null, "",
-                StringUtils.rightPad("dtoName", ValidateUtil.DEFAULT_MAX_LEN + 10, 'e') };
+        Map<VirtualizationType, String[]> invalidNames = new HashMap<>();
+        invalidNames.put(VirtualizationType.OPENSTACK,
+                new String[] {
+                        null,
+                        "",
+                        StringUtils.rightPad("dtoName", ValidateUtil.DEFAULT_MAX_LEN + 10, 'e')
+        });
+
+        invalidNames.put(VirtualizationType.KUBERNETES,
+                new String[] {
+                        "NotNullName"
+        });
 
         List<Object[]> result = new ArrayList<>();
+        invalidNames.forEach((k, v) -> {
+            for (String invalidName : v) {
+                String errorMessage = null;
+                VirtualizationConnectorDto vcDto = null;
+                if (k.equals(VirtualizationType.OPENSTACK)) {
+                    vcDto = VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithoutSDN();
+                    errorMessage = invalidName == null || invalidName.equals("")
+                            ? Server.PRODUCT_NAME + ": " + "Admin Project Name " + EMPTY_VALUE_ERROR_MESSAGE
+                                    : Server.PRODUCT_NAME + ": " + "Admin Project Name" + " length should not exceed "
+                                    + ValidateUtil.DEFAULT_MAX_LEN + " characters. The provided field exceeds this limit by "
+                                    + (invalidName.length() - ValidateUtil.DEFAULT_MAX_LEN) + " characters.";
+                } else {
+                    vcDto = VirtualizationConnectorDtoValidatorTestData.generateK8skVCWithSDN();
+                    errorMessage = Server.PRODUCT_NAME + ": " + "Admin Project Name " + VALUE_IS_SET_ERROR_MESSAGE;
+                }
 
-        for (String invalidName : invalidNames) {
-            VirtualizationConnectorDto vcDto = VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithoutSDN();
-            vcDto.setAdminProjectName(invalidName);
-            String errorMessage = invalidName == null || invalidName.equals("")
-                    ? Server.PRODUCT_NAME + ": " + "Admin Project Name " + EMPTY_VALUE_ERROR_MESSAGE
-                            : Server.PRODUCT_NAME + ": " + "Admin Project Name" + " length should not exceed "
-                            + ValidateUtil.DEFAULT_MAX_LEN + " characters. The provided field exceeds this limit by "
-                            + (invalidName.length() - ValidateUtil.DEFAULT_MAX_LEN) + " characters.";
+                vcDto.setAdminProjectName(invalidName);
 
-            Class<?> expectedException = VmidcBrokerInvalidEntryException.class;
+                Class<?> expectedException = VmidcBrokerInvalidEntryException.class;
 
-            result.add(new Object[] { vcDto, expectedException, errorMessage });
-        }
+                result.add(new Object[] { vcDto, expectedException, errorMessage });
+            }
+        });
 
         return result;
     }

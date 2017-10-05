@@ -68,6 +68,11 @@ public class VirtualizationConnectorDtoValidatorTestData {
                 "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111");
     }
 
+    static VirtualizationConnectorDto generateK8skVCWithSDN(){
+        return createOpenStackVCDto(VirtualizationType.KUBERNETES, "Random Openstack name", "NSC", "1.1.1.1", "controller user", "controller password", "2.2.2.2", "provider user",
+                "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111");
+    }
+
     static VirtualizationConnectorDto generateK8sVCWithoSDNNone(){
         return createOpenStackVCDto(VirtualizationType.KUBERNETES, "Random Openstack name", "NONE", null, null, null, "2.2.2.2", "provider user",
                 "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111");
