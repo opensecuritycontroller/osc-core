@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.sfc;
 
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -24,31 +23,33 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
+import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
-import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = UpdateServiceFunctionChainTask.class)
-public class UpdateServiceFunctionChainTask extends TransactionalTask {
+@Component(service = SfcFlowClassifierCreateTask.class)
+public class SfcFlowClassifierCreateTask extends TransactionalTask {
 
     @Reference
     private ApiFactoryService apiFactory;
 
     private ServiceFunctionChain sfc;
     private SecurityGroup securityGroup;
-    private List<NetworkElement> updatedPortPairGroups;
+    private VMPort port;
+    private String vmName;
 
-    public UpdateServiceFunctionChainTask create(ServiceFunctionChain sfc, SecurityGroup securityGroup,
-            List<NetworkElement> updatedPortPairGroups) {
-        UpdateServiceFunctionChainTask task = new UpdateServiceFunctionChainTask();
+    public SfcFlowClassifierCreateTask create(SecurityGroup securityGroup, VMPort port) {
+        SfcFlowClassifierCreateTask task = new SfcFlowClassifierCreateTask();
 
-        task.sfc = sfc;
         task.securityGroup = securityGroup;
-        task.updatedPortPairGroups = updatedPortPairGroups;
+        task.sfc = securityGroup.getServiceFunctionChain();
+        task.port = port;
+        task.vmName = port.getVm() != null ? port.getVm().getName() : port.getSubnet().getName();
         task.apiFactory = this.apiFactory;
         task.name = task.getName();
         task.dbConnectionManager = this.dbConnectionManager;
@@ -59,29 +60,31 @@ public class UpdateServiceFunctionChainTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        this.sfc = em.find(ServiceFunctionChain.class, this.sfc.getId());
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 
-        try (SdnRedirectionApi sdnApi = this.apiFactory
+        String sfcId = this.securityGroup.getNetworkElementId();
+        DefaultInspectionPort inspectionPort = new DefaultInspectionPort();
+        inspectionPort.setElementId(sfcId);
+
+        try (SdnRedirectionApi redirApi = this.apiFactory
                 .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
-            NetworkElement updatedChain = sdnApi.updateNetworkElement(
-                    new NetworkElementImpl(this.securityGroup.getNetworkElementId()), this.updatedPortPairGroups);
-            if (!updatedChain.getElementId().equals(this.securityGroup.getNetworkElementId())) {
-                this.securityGroup.setNetworkElementId(updatedChain.getElementId());
-                em.merge(this.securityGroup);
-            }
+            String fcId = redirApi.installInspectionHook(new NetworkElementImpl(this.port), inspectionPort, null, null,
+                    null, null);
+            this.port.setInspectionHookId(fcId);
+            em.merge(this.port);
         }
     }
 
     @Override
     public String getName() {
-        return String.format("Updating Service Function Chain '%s' for Security Group '%s' under Project '%s'",
-                this.sfc.getName(), this.securityGroup.getName(), this.securityGroup.getProjectName());
+        return String.format(
+                "Creating flow classifier for port '%s' belonging to Security Group Member '%s' using Service Function Chain '%s'",
+                this.port.getOpenstackId(), this.vmName, this.sfc.getName());
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(this.securityGroup, this.sfc);
+        return LockObjectReference.getObjectReferences(this.sfc, this.securityGroup);
     }
 
 }

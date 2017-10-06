@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
+import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.element.InspectionHookElement;
@@ -23,23 +25,18 @@ import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osc.sdk.controller.element.NetworkElement;
 
 public class InspectionHookElementImpl implements InspectionHookElement {
-    String id;
-    Long tag;
-    Long order;
-    TagEncapsulationType encapsulationType;
-    FailurePolicyType failurePolicyType;
-    NetworkElement inspectedPort;
-    InspectionPortElement inspectionPort;
 
-    public InspectionHookElementImpl(
-            String id,
-            NetworkElement inspectedPort,
-            InspectionPortElement inspectionPort,
-            Long tag,
-            TagEncapsulationType encapsulationType,
-            Long order,
-            FailurePolicyType failurePolicyType) {
-        this.id = id;
+    private String hookId;
+    private NetworkElement inspectedPort;
+    private InspectionPortElement inspectionPort;
+    private Long tag;
+    private Long order;
+    private TagEncapsulationType encapsulationType;
+    private FailurePolicyType failurePolicyType;
+
+    public InspectionHookElementImpl(String id, NetworkElement inspectedPort, InspectionPortElement inspectionPort,
+            Long tag, TagEncapsulationType encapsulationType, Long order, FailurePolicyType failurePolicyType) {
+        this.hookId = id;
         this.tag = tag;
         this.order = order;
         this.encapsulationType = encapsulationType;
@@ -48,9 +45,15 @@ public class InspectionHookElementImpl implements InspectionHookElement {
         this.inspectionPort = inspectionPort;
     }
 
+    public InspectionHookElementImpl(String hookId, String inspectedPortId, String inspectionPortId) {
+        this.hookId = hookId;
+        this.inspectedPort = new NetworkElementImpl(inspectedPortId);
+        this.inspectionPort = new DefaultInspectionPort(null, null, inspectionPortId, null);
+    }
+
     @Override
     public String getHookId() {
-        return this.id;
+        return this.hookId;
     }
 
     @Override
@@ -83,4 +86,10 @@ public class InspectionHookElementImpl implements InspectionHookElement {
         return this.inspectionPort;
     }
 
+    @Override
+    public String toString() {
+        return "InspectionHookElementImpl [hookId=" + this.hookId + ", inspectedPort=" + this.inspectedPort + ", inspectionPort="
+                + this.inspectionPort + ", tag=" + this.tag + ", order=" + this.order + ", encapsulationType=" + this.encapsulationType
+                + ", failurePolicyType=" + this.failurePolicyType + "]";
+    }
 }

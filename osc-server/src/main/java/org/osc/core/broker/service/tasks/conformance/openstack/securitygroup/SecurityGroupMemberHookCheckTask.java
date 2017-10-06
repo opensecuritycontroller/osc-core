@@ -29,7 +29,12 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.sfc.SfcFlowClassifierCreateTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.sfc.SfcFlowClassifierDeleteTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.sfc.SfcFlowClassifierUpdateTask;
 import org.osc.core.common.job.TaskGuard;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.InspectionHookElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -56,6 +61,15 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
     VmPortHookCheckTask vmPortHookCheckTask;
 
     @Reference
+    SfcFlowClassifierCreateTask sfcFlowClassifierCreateTask;
+
+    @Reference
+    SfcFlowClassifierUpdateTask sfcFlowClassifierUpdateTask;
+
+    @Reference
+    SfcFlowClassifierDeleteTask sfcFlowClassifierDeleteTask;
+
+    @Reference
     private ApiFactoryService apiFactoryService;
 
     private TaskGraph tg;
@@ -69,6 +83,11 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
         task.vmPortAllHooksRemoveTask = this.vmPortAllHooksRemoveTask;
         task.vmPortDeleteFromDbTask = this.vmPortDeleteFromDbTask;
         task.vmPortHookCheckTask = this.vmPortHookCheckTask;
+
+        task.sfcFlowClassifierCreateTask = this.sfcFlowClassifierCreateTask;
+        task.sfcFlowClassifierUpdateTask = this.sfcFlowClassifierUpdateTask;
+        task.sfcFlowClassifierDeleteTask = this.sfcFlowClassifierDeleteTask;
+
         task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -86,21 +105,52 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
         this.log.info("Checking Inspection Hooks for Security group Member: " + this.sgm.getMemberName());
 
         Set<VMPort> ports = this.sgm.getVmPorts();
+        try (SdnRedirectionApi redirApi = this.apiFactoryService
+                .createNetworkRedirectionApi(sg.getVirtualizationConnector())) {
 
-        boolean supportsNeutronSFC = this.apiFactoryService.supportsNeutronSFC(sg);
-        for (VMPort port : ports) {
-            if (port.getMarkedForDeletion()) {
-                // if all SGI's are marked for deletion and supportsNeutronSFC, remove all hooks else just install hook
-                this.tg.appendTask(this.vmPortAllHooksRemoveTask.create(this.sgm, port));
-                this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
-            } else if (supportsNeutronSFC) {
-                // Install/update inspection hook for each port, using sfc id. Dont need to iterate through SGI.
-            } else {
-                for (SecurityGroupInterface sgi : sg.getSecurityGroupInterfaces()) {
-                    if (!sgi.getMarkedForDeletion()) {
-                        this.tg.appendTask(this.vmPortHookCheckTask.create(this.sgm, sgi, port, this.vdc),
-                                TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            boolean supportsNeutronSFC = this.apiFactoryService.supportsNeutronSFC(sg);
+            for (VMPort port : ports) {
+                if (port.getMarkedForDeletion()) {
+                    handlePortDelete(sg, supportsNeutronSFC, port);
+                } else if (supportsNeutronSFC) {
+                    checkSfcHooks(sg, redirApi, port);
+                } else {
+                    for (SecurityGroupInterface sgi : sg.getSecurityGroupInterfaces()) {
+                        if (!sgi.getMarkedForDeletion()) {
+                            this.tg.appendTask(this.vmPortHookCheckTask.create(this.sgm, sgi, port, this.vdc),
+                                    TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    private void handlePortDelete(SecurityGroup sg, boolean supportsNeutronSFC, VMPort port) {
+        if (supportsNeutronSFC) {
+            this.tg.appendTask(this.sfcFlowClassifierDeleteTask.create(sg, port));
+        } else {
+            this.tg.appendTask(this.vmPortAllHooksRemoveTask.create(this.sgm, port));
+        }
+        this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
+    }
+
+    private void checkSfcHooks(SecurityGroup sg, SdnRedirectionApi redirApi, VMPort port) throws Exception {
+        String sfcId = sg.getNetworkElementId();
+        String flowClassifier = port.getInspectionHookId();
+
+        if (sfcId == null && flowClassifier != null) {
+            // Unbinded sg and inspection hook is present for the port
+            this.tg.appendTask(this.sfcFlowClassifierDeleteTask.create(sg, port));
+        } else if (sfcId != null) {
+            InspectionHookElement hook = redirApi.getInspectionHook(flowClassifier);
+
+            if (flowClassifier == null || hook == null) {
+                this.tg.appendTask(this.sfcFlowClassifierCreateTask.create(sg, port));
+            } else {
+                if (!hook.getInspectionPort().getElementId().equals(sfcId)) {
+                    // If hook needs to be updated, update it
+                    this.tg.appendTask(this.sfcFlowClassifierUpdateTask.create(sg, port));
                 }
             }
         }

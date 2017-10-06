@@ -16,13 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.sfc;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.mock;
-
-import java.util.ArrayList;
-import java.util.List;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -33,8 +28,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -43,17 +36,27 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.core.test.util.mockito.matchers.ElementIdMatcher;
+import org.osc.sdk.controller.FailurePolicyType;
+import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osc.sdk.controller.element.NetworkElement;
 
 @RunWith(MockitoJUnitRunner.class)
-public class UpdateServiceFunctionChainTaskTest {
+public class SfcFlowClassifierCreateTaskTest {
+
+    private static final String OPENSTACK_VMPORT_ID = "openstack-vmport-id";
+
+    private static final String INSPECTION_HOOK_ID = "inspection-hook-id";
+
+    private static final String OPENSTACK_SFC_ID = "openstack-sfc-id";
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -79,15 +82,12 @@ public class UpdateServiceFunctionChainTaskTest {
     @Mock
     private SdnRedirectionApi sdnApi;
 
-    @Captor
-    private ArgumentCaptor<List<NetworkElement>> neListCaptor;
-
     @InjectMocks
-    private UpdateServiceFunctionChainTask task;
+    private SfcFlowClassifierCreateTask task;
 
     private SecurityGroup sg;
     private ServiceFunctionChain sfc;
-    private List<NetworkElement> networkElementList;
+    private VMPort port;
 
     @Before
     public void testInitialize() throws Exception {
@@ -104,6 +104,7 @@ public class UpdateServiceFunctionChainTaskTest {
         this.sg = new SecurityGroup(mockVc, "PROJECT_ID", "PROJECT_NAME");
         this.sg.setId(2L);
         this.sg.setName("A_SECURITY_GROUP");
+        this.sg.setNetworkElementId(OPENSTACK_SFC_ID);
 
         Mockito.when(this.em.find(SecurityGroup.class, this.sg.getId())).thenReturn(this.sg);
 
@@ -111,73 +112,54 @@ public class UpdateServiceFunctionChainTaskTest {
         this.sfc.setId(3L);
         this.sfc.setName("A_SFC_NAME");
 
-        Mockito.when(this.em.find(ServiceFunctionChain.class, this.sfc.getId())).thenReturn(this.sfc);
+        this.sg.setServiceFunctionChain(this.sfc);
+
+        VM mockVm = mock(VM.class);
+        when(mockVm.getName()).thenReturn("vm-name");
+
+        this.port = mock(VMPort.class);
+
+        when(this.port.getOpenstackId()).thenReturn(OPENSTACK_VMPORT_ID);
+        when(this.port.getVm()).thenReturn(mockVm);
 
         Mockito.when(this.apiFactoryServiceMock.createNetworkRedirectionApi(mockVc)).thenReturn(this.sdnApi);
 
     }
 
     @Test
-    public void testExecute_WithSecurityGroupSFCIdSetToNull_ExpectUpdate() throws Exception {
+    public void testExecute_CreateInspectionHook_ExpectUpdate() throws Exception {
         // Arrange
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
-        this.sg.setNetworkElementId(null);
-        Mockito.when(this.sdnApi
-                .updateNetworkElement(argThat(new ElementIdMatcher<NetworkElement>(this.sg.getNetworkElementId())), any()))
-                .thenReturn(new NetworkElementImpl("UPDATED_SFC_ID"));
+        when(this.sdnApi.installInspectionHook(any(), any(), any(), any(), any(), any()))
+                .thenReturn(INSPECTION_HOOK_ID);
+
+        SfcFlowClassifierCreateTask createTask = this.task.create(this.sg, this.port);
 
         // Act.
-        updateTask.execute();
+        createTask.execute();
 
         // Assert
-        assertEquals(this.sg.getNetworkElementId(), "UPDATED_SFC_ID");
+        verify(this.sdnApi, times(1)).installInspectionHook(argThat(new ElementIdMatcher<NetworkElement>(OPENSTACK_VMPORT_ID)),
+                argThat(new ElementIdMatcher<InspectionPortElement>(OPENSTACK_SFC_ID)), (Long) isNull(),
+                (TagEncapsulationType) isNull(), (Long) isNull(), (FailurePolicyType) isNull());
+        verify(this.port).setInspectionHookId(INSPECTION_HOOK_ID);
     }
 
     @Test
-    public void testExecute_WithSecurityGroupSFCIdSetToNotEmpty_ExpectUpdate() throws Exception {
-        // Arrange
-        this.sg.setNetworkElementId("OLD_SFC_ID");
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
-        Mockito.when(this.sdnApi
-                .updateNetworkElement(argThat(new ElementIdMatcher<NetworkElement>(this.sg.getNetworkElementId())), any()))
-                .thenReturn(new NetworkElementImpl("UPDATED_SFC_ID"));
-        // Act.
-        updateTask.execute();
-
-        // Assert
-        assertEquals(this.sg.getNetworkElementId(), "UPDATED_SFC_ID");
-    }
-
-    @Test
-    public void testExecute_CallsSDNUpdateWithProvidedParameters_ExpectUpdate() throws Exception {
+    public void testExecute_CreateInspectionHook_ExpectFailure() throws Exception {
 
         // Arrange
-        this.sg.setNetworkElementId("OLD_SFC_ID");
-        this.networkElementList = new ArrayList<>();
+        doThrow(new Exception()).when(this.sdnApi).installInspectionHook(any(), any(), any(), any(), any(), any());
 
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        this.exception.expect(Exception.class);
 
-        Mockito.when(this.sdnApi.updateNetworkElement(
-                argThat(new ElementIdMatcher<NetworkElement>(this.sg.getNetworkElementId())), this.neListCaptor.capture()))
-                .thenReturn(new NetworkElementImpl("UPDATED_SFC_ID"));
-        // Act.
-        updateTask.execute();
-
-        // Assert
-        assertEquals(this.networkElementList, this.neListCaptor.getValue());
-    }
-
-    @Test
-    public void testGetName_WithSecurityGroupSFCId_ExpectCorrect() {
-        // Arrange
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        SfcFlowClassifierCreateTask createTask = this.task.create(this.sg, this.port);
 
         // Act.
-        String taskName = updateTask.getName();
+        createTask.execute();
 
-        // Assert
-        assertEquals(String.format("Updating Service Function Chain '%s' for Security Group '%s' under Project '%s'",
-                this.sfc.getName(), this.sg.getName(), this.sg.getProjectName()), taskName);
+        //Assert
+        verify(this.port, times(0)).setInspectionHookId(any());
+
     }
 
 }

@@ -58,7 +58,7 @@ public class VMPort extends BaseEntity implements VirtualPort {
     @Column(name = "ip_address")
     @CollectionTable(name = "VM_PORT_IP_ADDRESS", joinColumns = @JoinColumn(name = "vm_port_fk"),
     foreignKey=@ForeignKey(name = "FK_VM_PORT_IP_ADDRESS"))
-    private List<String> ipAddresses = new ArrayList<String>();
+    private List<String> ipAddresses = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vm_fk", foreignKey = @ForeignKey(name = "FK_VMP_VM"))
@@ -80,7 +80,7 @@ public class VMPort extends BaseEntity implements VirtualPort {
     private Subnet subnet;
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "protectedPorts")
-    private Set<DistributedApplianceInstance> dais = new HashSet<DistributedApplianceInstance>();
+    private Set<DistributedApplianceInstance> dais = new HashSet<>();
 
     public VMPort(VM vm, String macAddress, String osNetworkId, String openstackId, List<String> ipAddresses) {
         this.vm = vm;
@@ -173,10 +173,6 @@ public class VMPort extends BaseEntity implements VirtualPort {
         return "VMPort [osNetworkId=" + this.osNetworkId + ", openstackId=" + this.openstackId + ", macAddress=" + this.macAddress
                 + ", ipAddresses=" + this.ipAddresses + ", vm=" + this.vm + ", network=" + this.network + ", subnet=" + this.subnet
                 + ", dais=" + this.dais +  ", parentId=" + this.parentId+"]";
-    }
-
-    public String getElementId() {
-        return getOpenstackId();
     }
 
     @Override

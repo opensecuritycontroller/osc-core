@@ -71,7 +71,7 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
         try {
             for (VMPort port : ports) {
                 this.log.info("Deleting orphan inspection ports from member '" + this.sgm.getMemberName()
-                        + "' And port: '" + port.getElementId() + "'");
+                        + "' And port: '" + port.getOpenstackId() + "'");
 
                 if (this.apiFactoryService.supportsNeutronSFC(this.sgm.getSecurityGroup())) {
                     // In case of SFC, removing the flow classifier(Inspection hook) is effectively removing all
