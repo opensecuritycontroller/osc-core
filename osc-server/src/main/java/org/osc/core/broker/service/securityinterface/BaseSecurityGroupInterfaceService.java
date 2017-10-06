@@ -54,9 +54,9 @@ ServiceDispatcher<I, O> {
             throw new VmidcBrokerValidationException("Security group interfaces cannot be created or updated for appliance manager that does not support policy mapping.");
         }
 
-		// Validate policies
-		Set<Policy> policies = PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
-				vs.getDistributedAppliance().getApplianceManagerConnector());
+        // Validate policies
+        Set<Policy> policies = PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
+                vs.getDistributedAppliance().getApplianceManagerConnector());
 
         return vs;
     }

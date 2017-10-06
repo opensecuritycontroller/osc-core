@@ -124,7 +124,7 @@ implements AddDeploymentSpecServiceApi {
                 throw new VmidcBrokerValidationException("A deployment spec for the targed Kubernetes virtual system already exists.");
             }
         }
-    };
+    }
 
     private Set<AvailabilityZone> createAvailabilityZones(DeploymentSpec ds, DeploymentSpecDto dto, EntityManager em) {
         Set<AvailabilityZone> azSet = new HashSet<AvailabilityZone>();

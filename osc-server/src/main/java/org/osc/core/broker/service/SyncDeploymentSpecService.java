@@ -78,6 +78,5 @@ implements SyncDeploymentSpecServiceApi {
 
         ValidateUtil.checkMarkedForDeletion(this.ds, this.ds.getName());
 
-    };
-
+    }
 }

@@ -377,9 +377,10 @@ public class SecurityGroupEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
+    @SuppressWarnings("unchecked")
     public static Set<SecurityGroup> listByDai(EntityManager em, DistributedApplianceInstance dai) {
         Set<SecurityGroup> sgs = new HashSet<>();
-        for (VMPort port : dai.getProtectedPorts()) {
+        for (VMPort port : (Set<VMPort>) dai.getProtectedPorts()) {
             if (port.getVm() != null) {
                 for (SecurityGroupMember sgm : port.getVm().getSecurityGroupMembers()) {
                     sgs.add(sgm.getSecurityGroup());

@@ -14,16 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.model.entities.virtualization;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.Set;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 94;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 
-    Connection getSQLConnection() throws SQLException;
+public interface VirtualPort {
+    Long getId();
+
+    List<String> getMacAddresses();
+
+    List<String> getIpAddresses();
+
+    Set<DistributedApplianceInstance> getDais();
+
+    void addDai(DistributedApplianceInstance dai);
+
+    void removeDai(DistributedApplianceInstance dai);
+
+    void removeAllDais();
 }

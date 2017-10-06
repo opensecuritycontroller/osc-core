@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.CheckPortGroupHookMetaTaskTestData.*;
 
 import java.util.Arrays;
@@ -84,6 +85,9 @@ public class CheckPortGroupHookMetaTaskTest {
 
     @Mock
     public ApiFactoryService apiFactoryServiceMock;
+
+    @Mock
+    SdnRedirectionApi redirectionApi;
 
     @InjectMocks
     CheckPortGroupHookMetaTask factoryTask;
@@ -180,6 +184,13 @@ public class CheckPortGroupHookMetaTaskTest {
                 false
             },
             {
+                SGI_K8S_WITHOUT_NET_ELEMENT_WITH_ASSIGNED_DAI,
+                DAI_K8S_PROTECTING_PORT,
+                createInspectionHookGraph(SGI_K8S_WITHOUT_NET_ELEMENT_WITH_ASSIGNED_DAI, DAI_K8S_PROTECTING_PORT),
+                null,
+                false
+            },
+            {
                 SGI_WITH_INSPECTION_HOOK_WITHOUT_ASSIGNED_DAI,
                 null,
                 null,
@@ -233,8 +244,8 @@ public class CheckPortGroupHookMetaTaskTest {
     }
 
     private void registerInspectionHook(InspectionHookElement inspectionHook, SecurityGroupInterface sgi) throws Exception {
-        SdnRedirectionApi redirectionApi = registerInspectionHook(inspectionHook, sgi.getNetworkElementId());
-        registerNetworkRedirectionApi(redirectionApi, sgi.getVirtualSystem());
+        when(this.redirectionApi.getInspectionHook(sgi.getNetworkElementId())).thenReturn(inspectionHook);
+        registerNetworkRedirectionApi(this.redirectionApi, sgi.getVirtualSystem());
     }
 
     private void registerDomain(String domainId, SecurityGroupInterface sgi) throws Exception {
@@ -257,13 +268,6 @@ public class CheckPortGroupHookMetaTaskTest {
                 domainId,
                 sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next().getVm().getHost(),
                 false);
-    }
-
-    private SdnRedirectionApi registerInspectionHook(InspectionHookElement inspectionHook, String netElementId) throws Exception {
-        SdnRedirectionApi redirectionApi = mock(SdnRedirectionApi.class);
-        when(redirectionApi.getInspectionHook(netElementId)).thenReturn(inspectionHook);
-
-        return redirectionApi;
     }
 
     private void populateDatabase() {

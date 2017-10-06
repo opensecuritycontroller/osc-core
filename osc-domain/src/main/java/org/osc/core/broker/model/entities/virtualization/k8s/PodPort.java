@@ -17,7 +17,10 @@
 package org.osc.core.broker.model.entities.virtualization.k8s;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -26,15 +29,18 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "POD_PORT")
-public class PodPort extends BaseEntity {
+public class PodPort extends BaseEntity implements VirtualPort {
     public PodPort(String externalId, String macAddress, String ipAddress, String parentId) {
         this.externalId = externalId;
         this.macAddress = macAddress;
@@ -61,6 +67,9 @@ public class PodPort extends BaseEntity {
     @JoinColumn(name = "pod_fk", foreignKey = @ForeignKey(name = "FK_PODP_POD"))
     private Pod pod;
 
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "protectedPodPorts")
+    private Set<DistributedApplianceInstance> dais = new HashSet<DistributedApplianceInstance>();
+
     @Column(name = "parent_id", nullable = true, unique = false)
     private String parentId;
 
@@ -76,6 +85,7 @@ public class PodPort extends BaseEntity {
         return this.macAddress;
     }
 
+    @Override
     public List<String> getIpAddresses() {
         return this.ipAddresses;
     }
@@ -90,5 +100,34 @@ public class PodPort extends BaseEntity {
 
     public void setParentId(String parentId) {
         this.parentId = parentId;
+    }
+
+    @Override
+    public Set<DistributedApplianceInstance> getDais() {
+        return this.dais;
+    }
+
+    @Override
+    public void addDai(DistributedApplianceInstance dai) {
+        this.dais.add(dai);
+    }
+
+    @Override
+    public void removeDai(DistributedApplianceInstance dai) {
+        dai.removeProtectedPodPort(this);
+        this.dais.remove(dai);
+    }
+
+    @Override
+    public void removeAllDais() {
+        for (DistributedApplianceInstance dai : this.dais) {
+            dai.removeProtectedPodPort(this);
+        }
+        this.dais.clear();
+    }
+
+    @Override
+    public List<String> getMacAddresses() {
+        return Arrays.asList(this.macAddress);
     }
 }

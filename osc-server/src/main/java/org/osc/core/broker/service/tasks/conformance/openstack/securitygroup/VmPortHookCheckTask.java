@@ -113,7 +113,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
         this.vs = this.securityGroupInterface.getVirtualSystem();
 
         DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
-                .findByVirtualSystemAndPort(em, this.vs, this.vmPort);
+                .findByVirtualSystemAndPort(em, this.vs, this.vmPort.getId(), VMPort.class);
 
         List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
         String sgmDomainId = OpenstackUtil.extractDomainId(

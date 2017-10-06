@@ -27,7 +27,8 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberElementImpl;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberListElementImpl;
@@ -41,8 +42,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 @Component(service=CreateMgrSecurityGroupTask.class)
 public class CreateMgrSecurityGroupTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(CreateMgrEndpointGroupTask.class);
-
     @Reference
     private ApiFactoryService apiFactoryService;
 
@@ -79,7 +78,6 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
         } finally {
             mgrApi.close();
         }
-
     }
 
     static SecurityGroupMemberListElement getSecurityGroupMemberListElement(SecurityGroup sg) throws VmidcBrokerValidationException {
@@ -87,26 +85,17 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
             SecurityGroupMemberElementImpl sgmElement = new SecurityGroupMemberElementImpl(sgm.getId().toString(),
                     sgm.getMemberName());
-            for (VMPort port : getPorts(sgm)) {
+            boolean isLabel = sgm.getType().equals(SecurityGroupMemberType.LABEL);
+            Set<? extends VirtualPort> ports = isLabel ? sgm.getPodPorts() : sgm.getVmPorts();
+            for (VirtualPort port : ports) {
                 sgmElement.addMacAddresses(port.getMacAddresses());
-                sgmElement.addIpAddress(port.getPortIPs());
+                sgmElement.addIpAddress(port.getIpAddresses());
             }
+
             sgmElements.add(sgmElement);
         }
-        return new SecurityGroupMemberListElementImpl(sgmElements);
-    }
 
-    private static Set<VMPort> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
-        switch (sgm.getType()) {
-        case VM:
-            return sgm.getVm().getPorts();
-        case NETWORK:
-            return sgm.getNetwork().getPorts();
-        case SUBNET:
-            return sgm.getSubnet().getPorts();
-        default:
-            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
-        }
+        return new SecurityGroupMemberListElementImpl(sgmElements);
     }
 
     @Override

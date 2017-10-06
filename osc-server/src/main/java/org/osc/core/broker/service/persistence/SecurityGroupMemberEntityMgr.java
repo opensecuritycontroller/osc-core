@@ -98,7 +98,7 @@ public class SecurityGroupMemberEntityMgr {
             PortDto portDto = new PortDto(portEntity.getId(),
                     portEntity.getOpenstackId(),
                     portEntity.getMacAddresses().get(0),
-                    portEntity.getPortIPs(), portEntity.getInspectionHookId());
+                    portEntity.getIpAddresses(), portEntity.getInspectionHookId());
             portDtos.add(portDto);
         }
 

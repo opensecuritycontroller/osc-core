@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import java.util.Set;
 
@@ -26,38 +26,40 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
+import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.common.virtualization.VirtualizationType;
 
-public class MarkSecurityGroupMemberDeleteTaskTestData {
-    public static final SecurityGroupMember NOT_YET_MARKED_FOR_DELETE_SGM = createSGM("NOT_YET_MARKED", false);
-    public static final SecurityGroupMember ALREADY_MARKED_FOR_DELETE_SGM = createSGM("ALREADY_MARKED", true);
+public class MarkSecurityGroupInterfaceDeleteTaskTestData {
+    public static final SecurityGroupInterface NOT_YET_MARKED_FOR_DELETE_SGI = createSGI("NOT_YET_MARKED_FOR_DELETE_SGI", false);
+    public static final SecurityGroupInterface ALREADY_MARKED_FOR_DELETE_SGI = createSGI("ALREADY_MARKED_FOR_DELETE_SGI", true);
 
     private static final String MGR_TYPE = "SMC";
 
-    private static SecurityGroupMember createSGM(String baseName, boolean isDelete) {
+    private static SecurityGroupInterface createSGI(String baseName, boolean isDelete) {
         VirtualSystem vs = createVirtualSystem(baseName, MGR_TYPE);
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
 
-        SecurityGroupMember sgm = new SecurityGroupMember(sg, new Label("LABEL", "LABEL"));
-        sgm.setMarkedForDeletion(isDelete);
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, "1", FailurePolicyType.FAIL_CLOSE, 1L);
+        sgi.setName(baseName + "_sgi");
+        sgi.setSecurityGroup(sg);
+        sg.addSecurityGroupInterface(sgi);
+        sgi.setMarkedForDeletion(isDelete);
 
-        return sgm;
+        return sgi;
     }
 
-    public static void persist(SecurityGroupMember sgm, EntityManager em) {
+    public static void persist(SecurityGroupInterface sgi, EntityManager em) {
         em.getTransaction().begin();
 
-        SecurityGroup sg = sgm.getSecurityGroup();
+        SecurityGroup sg = sgi.getSecurityGroup();
         VirtualizationConnector vc = sg.getVirtualizationConnector();
         Set<VirtualSystem> virtualSystems = vc.getVirtualSystems();
         em.persist(vc);
-        em.persist(sg);
 
         for (VirtualSystem vs : virtualSystems) {
             em.persist(vs.getDomain().getApplianceManagerConnector());
@@ -68,8 +70,9 @@ public class MarkSecurityGroupMemberDeleteTaskTestData {
             em.persist(vs);
         }
 
-        em.persist(sgm.getLabel());
-        em.persist(sgm);
+        em.persist(sg);
+
+        em.persist(sgi);
 
         em.getTransaction().commit();
     }

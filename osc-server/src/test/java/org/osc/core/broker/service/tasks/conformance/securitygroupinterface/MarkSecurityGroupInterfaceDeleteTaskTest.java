@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import static org.junit.Assert.assertTrue;
-import static org.osc.core.broker.service.tasks.conformance.securitygroup.MarkSecurityGroupMemberDeleteTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MarkSecurityGroupInterfaceDeleteTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -45,7 +45,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-public class MarkSecurityGroupMemberDeleteTaskTest {
+public class MarkSecurityGroupInterfaceDeleteTaskTest {
 
     private EntityManager em;
 
@@ -59,12 +59,12 @@ public class MarkSecurityGroupMemberDeleteTaskTest {
     private TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
-    MarkSecurityGroupMemberDeleteTask factoryTask;
+    MarkSecurityGroupInterfaceDeleteTask factoryTask;
 
-    private SecurityGroupMember sgm;
+    private SecurityGroupInterface sgi;
 
-    public MarkSecurityGroupMemberDeleteTaskTest(SecurityGroupMember sgm) {
-        this.sgm = sgm;
+    public MarkSecurityGroupInterfaceDeleteTaskTest(SecurityGroupInterface sgi) {
+        this.sgi = sgi;
     }
 
     @Before
@@ -75,7 +75,7 @@ public class MarkSecurityGroupMemberDeleteTaskTest {
         this.txControl.setEntityManager(this.em);
         Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
-        persist(this.sgm, this.em);
+        persist(this.sgi, this.em);
     }
 
     @After
@@ -86,21 +86,22 @@ public class MarkSecurityGroupMemberDeleteTaskTest {
     @Test
     public void testExecute_WithVariousSGM_ExpectMarkedInTheEnd() throws Exception {
         // Arrange.
-        MarkSecurityGroupMemberDeleteTask task = this.factoryTask.create(this.sgm);
+        MarkSecurityGroupInterfaceDeleteTask task = this.factoryTask.create(this.sgi);
 
         // Act.
         task.execute();
 
         // Assert.
-        SecurityGroupMember sgm = this.txControl.required(() -> this.em.find(SecurityGroupMember.class, this.sgm.getId()));
-        assertTrue(sgm.getMarkedForDeletion());
+        SecurityGroupInterface sgi = this.txControl.required(() -> this.em.find(SecurityGroupInterface.class, this.sgi.getId()));
+        assertTrue(sgi.getMarkedForDeletion());
     }
 
     @Parameters()
     public static Collection<Object[]> getTestData() {
         return Arrays.asList(new Object[][] {
-            { NOT_YET_MARKED_FOR_DELETE_SGM },
-            { ALREADY_MARKED_FOR_DELETE_SGM }
+            { NOT_YET_MARKED_FOR_DELETE_SGI },
+            { ALREADY_MARKED_FOR_DELETE_SGI }
         });
     }
+
 }

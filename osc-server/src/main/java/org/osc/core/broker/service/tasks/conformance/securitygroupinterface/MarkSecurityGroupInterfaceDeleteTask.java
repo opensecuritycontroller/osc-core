@@ -14,34 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=MarkSecurityGroupMemberDeleteTask.class)
-public class MarkSecurityGroupMemberDeleteTask extends TransactionalTask {
+@Component(service=MarkSecurityGroupInterfaceDeleteTask.class)
+public class MarkSecurityGroupInterfaceDeleteTask extends TransactionalTask {
+    private SecurityGroupInterface sgi;
 
     @Override
     public String getName() {
-        return "Delete Security Group Member " + this.sgm.getMemberName() + "; id:" + this.sgm.getId();
+        return String.format("Delete Security Group Interface %s", this.sgi.getName());
     }
-
-    private SecurityGroupMember sgm;
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
-        OSCEntityManager.markDeleted(em, this.sgm, this.txBroadcastUtil);
+        this.sgi = em.find(SecurityGroupInterface.class, this.sgi.getId());
+        OSCEntityManager.markDeleted(em, this.sgi, this.txBroadcastUtil);
     }
 
-    public MarkSecurityGroupMemberDeleteTask create(SecurityGroupMember sgm) {
-        MarkSecurityGroupMemberDeleteTask task = new MarkSecurityGroupMemberDeleteTask();
-        task.sgm = sgm;
+    public MarkSecurityGroupInterfaceDeleteTask create(SecurityGroupInterface sgi) {
+        MarkSecurityGroupInterfaceDeleteTask task = new MarkSecurityGroupInterfaceDeleteTask();
+        task.sgi = sgi;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 

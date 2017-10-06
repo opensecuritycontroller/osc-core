@@ -35,11 +35,12 @@ import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "VM_PORT")
-public class VMPort extends BaseEntity {
+public class VMPort extends BaseEntity implements VirtualPort {
 
     @Column(name = "os_network_id", nullable = false)
     private String osNetworkId;
@@ -119,6 +120,7 @@ public class VMPort extends BaseEntity {
         return this.openstackId;
     }
 
+    @Override
     public List<String> getMacAddresses() {
         return Arrays.asList(this.macAddress);
     }
@@ -177,10 +179,12 @@ public class VMPort extends BaseEntity {
         return getOpenstackId();
     }
 
+    @Override
     public Set<DistributedApplianceInstance> getDais() {
         return this.dais;
     }
 
+    @Override
     public void addDai(DistributedApplianceInstance dai) {
         this.dais.add(dai);
     }
@@ -190,6 +194,7 @@ public class VMPort extends BaseEntity {
      * of DAI's associated with this port
      *
      */
+    @Override
     public void removeDai(DistributedApplianceInstance dai) {
         dai.removeProtectedPort(this);
         this.dais.remove(dai);
@@ -198,6 +203,7 @@ public class VMPort extends BaseEntity {
     /**
      * Removes all DAI references to this port and empties the DAI's associated with this port
      */
+    @Override
     public void removeAllDais() {
         for (DistributedApplianceInstance dai : this.dais) {
             dai.removeProtectedPort(this);
@@ -205,7 +211,8 @@ public class VMPort extends BaseEntity {
         this.dais.clear();
     }
 
-    public List<String> getPortIPs() {
+    @Override
+    public List<String> getIpAddresses() {
         return this.ipAddresses;
     }
 
@@ -216,5 +223,4 @@ public class VMPort extends BaseEntity {
     public void setParentId(String parentId){
         this.parentId = parentId;
     }
-
 }

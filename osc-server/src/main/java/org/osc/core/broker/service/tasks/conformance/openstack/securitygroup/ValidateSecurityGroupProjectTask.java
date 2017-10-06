@@ -75,8 +75,7 @@ public class ValidateSecurityGroupProjectTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format("Validating Security Group '%s' for project '%s'", this.securityGroup.getName(), this.securityGroup.getProjectName());
-    };
-
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {
