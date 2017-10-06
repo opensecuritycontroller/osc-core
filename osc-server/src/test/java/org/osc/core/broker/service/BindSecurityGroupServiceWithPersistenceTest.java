@@ -70,7 +70,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(LockUtil.class)
-public class BindSecurityGroupServicePersistenDbTest {
+public class BindSecurityGroupServiceWithPersistenceTest {
 
     private static final String DEFAULT_NAME = "test-sg-name";
     private static final Long VALID_ID = 1L;
