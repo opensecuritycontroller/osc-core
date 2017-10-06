@@ -92,7 +92,6 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
         this.sgi = em.find(SecurityGroupInterface.class, this.sgi.getId());
         VirtualPort protectedPort = getAnyProtectedPort(this.sgi);
-        SecurityGroupMember sgm = this.sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next();
 
         DistributedApplianceInstance assignedRedirectedDai = protectedPort == null ? null : DistributedApplianceInstanceEntityMgr
                 .findByVirtualSystemAndPort(em, this.sgi.getVirtualSystem(), protectedPort.getId(), protectedPort.getClass());
@@ -115,6 +114,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         // If not a deletion then create or update.
         if (!this.sgi.getMarkedForDeletion() && !this.isDeleteTaskGraph) {
             if (existingInspHook == null) {
+                SecurityGroupMember sgm = this.sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next();
                 assignedRedirectedDai = assignedRedirectedDai == null ? getDeployedDAI(sgm, protectedPort, em) : assignedRedirectedDai;
                 this.tg.appendTask(this.allocateDai.create(this.sgi, assignedRedirectedDai));
                 this.tg.appendTask(this.createPortGroupHook.create(this.sgi, assignedRedirectedDai));
