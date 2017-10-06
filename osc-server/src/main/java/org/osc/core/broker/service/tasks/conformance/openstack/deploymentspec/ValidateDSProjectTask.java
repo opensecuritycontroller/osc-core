@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -29,7 +28,9 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 /**
  * Validates the DS project exists and syncs the name if needed
@@ -37,7 +38,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(service=ValidateDSProjectTask.class)
 public class ValidateDSProjectTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(ValidateDSProjectTask.class);
+    private final Logger log = LogProvider.getLogger(ValidateDSProjectTask.class);
 
     private DeploymentSpec ds;
 

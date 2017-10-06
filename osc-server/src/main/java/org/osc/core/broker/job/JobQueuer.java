@@ -20,10 +20,11 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 /**
  * Queues the jobs submitted so that they can be submitted in the order of invocation to the job engine.
@@ -33,7 +34,7 @@ public final class JobQueuer {
     private static final BlockingQueue<JobRequest> jobQueue = new LinkedBlockingQueue<>();
     private static JobQueuer queuer = null;
 
-    private static Logger log = Logger.getLogger(JobQueuer.class);
+    private static Logger log = LogProvider.getLogger(JobQueuer.class);
 
     public static class JobRequest {
         private String name;

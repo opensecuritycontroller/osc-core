@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.k8s;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
@@ -30,7 +31,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 public class KubernetesDeploymentApi extends KubernetesApi {
     public final static String OSC_DEPLOYMENT_LABEL_NAME = "osc-deployment";
 
-    private static final Logger LOG = Logger.getLogger(KubernetesDeploymentApi.class);
+    private static final Logger LOG = LogProvider.getLogger(KubernetesDeploymentApi.class);
 
     public KubernetesDeploymentApi(KubernetesClient client) {
         super(client.getClient());

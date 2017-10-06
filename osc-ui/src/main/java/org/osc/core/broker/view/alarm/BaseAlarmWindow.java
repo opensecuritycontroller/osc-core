@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.view.alarm;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
@@ -30,6 +29,8 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.common.alarm.AlarmAction;
 import org.osc.core.common.alarm.EventType;
 import org.osc.core.common.alarm.Severity;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -42,7 +43,7 @@ import com.vaadin.ui.TextField;
 public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(BaseAlarmWindow.class);
+    private static final Logger log = LogProvider.getLogger(BaseAlarmWindow.class);
 
     private ValueChangeListener actionChangedListener;
 

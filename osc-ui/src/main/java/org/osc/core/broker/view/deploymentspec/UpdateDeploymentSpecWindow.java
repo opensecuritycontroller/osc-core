@@ -19,14 +19,13 @@ package org.osc.core.broker.view.deploymentspec;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
-import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListProjectServiceApi;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
@@ -39,6 +38,8 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 
@@ -48,7 +49,7 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
      *
      */
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(UpdateDeploymentSpecWindow.class);
+    private static final Logger log = LogProvider.getLogger(UpdateDeploymentSpecWindow.class);
     final String CAPTION = "Edit Deployment Specification";
 
     private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;

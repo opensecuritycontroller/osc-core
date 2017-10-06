@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.exception;
 
-import org.glassfish.jersey.server.ParamException;
-import org.osc.core.broker.service.exceptions.ErrorCodeDto;
+import java.util.Arrays;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -25,7 +24,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-import java.util.Arrays;
+
+import org.glassfish.jersey.server.ParamException;
+import org.osc.core.broker.service.exceptions.ErrorCodeDto;
 
 @Provider
 public class PathParamExceptionMapper implements  ExceptionMapper<ParamException>, BaseExceptionMapperUtil {

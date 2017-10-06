@@ -16,17 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import org.apache.log4j.Logger;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
+import org.slf4j.Logger;
 
 /**
  * Validates the DS Network exists and syncs the name if needed
@@ -34,7 +36,7 @@ import java.util.Set;
 @Component(service = ValidateDSNetworkTask.class)
 public class ValidateDSNetworkTask extends TransactionalTask {
 
-    final Logger log = Logger.getLogger(ValidateDSNetworkTask.class);
+    final Logger log = LogProvider.getLogger(ValidateDSNetworkTask.class);
 
     enum NetworkType {
         MANAGEMENT("Management"), INSPECTION("Inspection");

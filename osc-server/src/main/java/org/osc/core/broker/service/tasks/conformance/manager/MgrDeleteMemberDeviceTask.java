@@ -18,19 +18,20 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = MgrDeleteMemberDeviceTask.class)
 public class MgrDeleteMemberDeviceTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(MgrDeleteMemberDeviceTask.class);
+    private static final Logger log = LogProvider.getLogger(MgrDeleteMemberDeviceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

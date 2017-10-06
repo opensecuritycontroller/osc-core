@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.k8s.KubernetesClient;
@@ -29,11 +28,13 @@ import org.osc.core.broker.rest.client.k8s.KubernetesDeploymentApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = CheckK8sDeploymentStateTask.class)
 public class CheckK8sDeploymentStateTask extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(CheckK8sDeploymentStateTask.class);
+    private static final Logger LOG = LogProvider.getLogger(CheckK8sDeploymentStateTask.class);
 
     private DeploymentSpec ds;
 

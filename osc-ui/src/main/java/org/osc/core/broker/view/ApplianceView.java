@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
@@ -41,10 +40,12 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.ImportApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceWindow;
+import org.osc.core.ui.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -56,7 +57,7 @@ import com.vaadin.ui.Notification;
 public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareVersionDto> {
 
     private static final String APPLIANCE_HELP_GUID = "GUID-34E04177-4993-4072-B43D-FC70C8B94E04.html";
-    private static final Logger log = Logger.getLogger(ApplianceView.class);
+    private static final Logger log = LogProvider.getLogger(ApplianceView.class);
 
     @Reference
     DeleteApplianceServiceApi deleteApplianceService;

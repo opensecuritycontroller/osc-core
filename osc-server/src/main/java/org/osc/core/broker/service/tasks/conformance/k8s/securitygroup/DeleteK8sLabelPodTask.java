@@ -20,13 +20,14 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for deleting a pod and pod port from the OSC DB and it is
@@ -36,7 +37,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service = DeleteK8sLabelPodTask.class)
 public class DeleteK8sLabelPodTask extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(CreateK8sLabelPodTask.class);
+    private static final Logger LOG = LogProvider.getLogger(CreateK8sLabelPodTask.class);
 
     private Pod pod;
     Label label;

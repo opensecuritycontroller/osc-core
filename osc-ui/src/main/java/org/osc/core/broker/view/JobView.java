@@ -32,7 +32,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
@@ -49,9 +48,11 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.ui.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -94,7 +95,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     private static final String JOB_HELP_GUID = "GUID-005C8EBC-FABB-4F94-B82A-8F760EFDE69F.html";
 
-    private static final Logger log = Logger.getLogger(JobView.class);
+    private static final Logger log = LogProvider.getLogger(JobView.class);
 
     private static final long serialVersionUID = 1L;
 

@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.window.update;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.UserDto;
@@ -26,6 +25,8 @@ import org.osc.core.broker.view.UserView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.validator.EmailValidator;
@@ -41,7 +42,7 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
      */
     private static final long serialVersionUID = 1L;
     final String CAPTION = "Edit User";
-    private static final Logger log = Logger.getLogger(UpdateUserWindow.class);
+    private static final Logger log = LogProvider.getLogger(UpdateUserWindow.class);
 
     public static final String ROLE_ADMIN = "ADMIN";
 

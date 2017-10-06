@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
@@ -53,9 +52,11 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BindSecurityGroupRequestValidator;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 import com.google.common.collect.Sets;
 
@@ -63,7 +64,7 @@ import com.google.common.collect.Sets;
 public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse>
 		implements BindSecurityGroupServiceApi {
 
-	private static final Logger log = Logger.getLogger(BindSecurityGroupService.class);
+	private static final Logger log = LogProvider.getLogger(BindSecurityGroupService.class);
 
 	@Reference
 	private ConformService conformService;

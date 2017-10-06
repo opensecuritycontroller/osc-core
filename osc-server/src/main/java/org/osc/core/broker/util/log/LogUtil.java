@@ -17,25 +17,43 @@
 package org.osc.core.broker.util.log;
 
 import java.io.PrintStream;
+import java.util.Hashtable;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.osgi.framework.BundleContext;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 
 public class LogUtil {
 
-    public static void initLog4j() {
-        try {
-            PropertyConfigurator.configureAndWatch("./log4j.properties");
+    static ILoggerFactory loggerFactory;
+
+    public static void initLogging(BundleContext context) throws JoranException {
+        if (context != null) {
             StdOutErrLog.tieSystemOutAndErrToLog();
-        } catch (Exception ex) {
-            System.out.println("failed to initialize log4j");
-            ex.printStackTrace();
+            addFactoryToContext(context);
+            return;
         }
+
+        throw new IllegalArgumentException("Attempt to init logging with null OSGi context!");
+    }
+
+    private static void addFactoryToContext(BundleContext context) throws JoranException {
+        LoggerContext provider = new LoggerContext();
+        JoranConfigurator configurator = new JoranConfigurator();
+        configurator.setContext(provider);
+        provider.reset();
+        configurator.doConfigure("./logback.xml");
+        context.registerService(ILoggerFactory.class, provider, new Hashtable<>());
+        loggerFactory = provider;
     }
 
     public static class StdOutErrLog {
 
-        private static final Logger logger = Logger.getLogger(StdOutErrLog.class);
+        private static final Logger logger = LogProvider.getLogger(StdOutErrLog.class);
 
         public static void tieSystemOutAndErrToLog() {
             System.setOut(createLoggingProxy(System.out, false));

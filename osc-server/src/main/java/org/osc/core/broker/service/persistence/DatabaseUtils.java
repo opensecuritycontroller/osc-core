@@ -21,7 +21,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
@@ -35,6 +34,7 @@ import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.alarm.AlarmAction;
 import org.osc.core.common.alarm.EventType;
 import org.osc.core.common.alarm.Severity;
@@ -43,9 +43,10 @@ import org.osc.core.common.job.JobStatus;
 import org.osc.core.common.job.TaskState;
 import org.osc.core.common.job.TaskStatus;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
 
 public class DatabaseUtils {
-    private static final Logger log = Logger.getLogger(DatabaseUtils.class);
+    private static final Logger log = LogProvider.getLogger(DatabaseUtils.class);
 
     private static final String DEFAULT_JOB_FAILURE_ALARM_NAME = "Default Job Failure Alarm";
     private static final String DEFAULT_SYSTEM_FAILURE_ALARM_NAME = "Default System Failure Alarm";

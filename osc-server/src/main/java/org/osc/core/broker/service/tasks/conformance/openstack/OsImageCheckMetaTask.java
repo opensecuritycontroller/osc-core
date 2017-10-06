@@ -16,8 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import com.google.common.base.Joiner;
-import org.apache.log4j.Logger;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.openstack4j.model.image.v2.Image;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -27,16 +29,17 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jGlance;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
-import javax.persistence.EntityManager;
-import java.util.Set;
+import com.google.common.base.Joiner;
 
 @Component(service = OsImageCheckMetaTask.class)
 public class OsImageCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger LOG = Logger.getLogger(OsImageCheckMetaTask.class);
+    private static final Logger LOG = LogProvider.getLogger(OsImageCheckMetaTask.class);
 
     @Reference
     DeleteImageReferenceTask deleteImageReferenceTask;

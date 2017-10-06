@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import org.apache.log4j.Logger;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -27,16 +30,15 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
+import org.slf4j.Logger;
 
 @Component(service = DeleteSvaServerTask.class)
 public class DeleteSvaServerTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(DeleteSvaServerTask.class);
+    private final Logger log = LogProvider.getLogger(DeleteSvaServerTask.class);
 
     // target ensures this only binds to active runner published by Server
     @Reference(target = "(active=true)")

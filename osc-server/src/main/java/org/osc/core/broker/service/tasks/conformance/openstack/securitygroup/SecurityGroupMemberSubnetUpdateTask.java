@@ -22,7 +22,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.network.IP;
 import org.openstack4j.model.network.Port;
 import org.osc.core.broker.job.TaskGraph;
@@ -40,14 +39,16 @@ import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = SecurityGroupMemberSubnetUpdateTask.class)
 public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
 
-    private final Logger log = Logger.getLogger(SecurityGroupMemberSubnetUpdateTask.class);
+    private final Logger log = LogProvider.getLogger(SecurityGroupMemberSubnetUpdateTask.class);
     private TaskGraph tg;
 
     @Reference

@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.window;
 
-import org.apache.log4j.Logger;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.server.ErrorHandler;
 import com.vaadin.ui.Button;
@@ -34,7 +35,7 @@ import com.vaadin.ui.Window;
 public class UploadInfoWindow extends Window implements Upload.FailedListener, Upload.SucceededListener,
         Upload.FinishedListener, Upload.StartedListener, Upload.ProgressListener {
 
-    private static final Logger log = Logger.getLogger(UploadInfoWindow.class);
+    private static final Logger log = LogProvider.getLogger(UploadInfoWindow.class);
 
     /**
      *

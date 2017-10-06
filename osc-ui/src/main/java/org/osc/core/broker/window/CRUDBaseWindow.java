@@ -16,15 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.window;
 
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.VerticalLayout;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.view.PageInformationComponent;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
+
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.VerticalLayout;
 
 /**
  * Base Windows which provides default functionality for child class to extend
@@ -33,7 +35,7 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 @SuppressWarnings("serial")
 public abstract class CRUDBaseWindow<T extends OkCancelButtonModel> extends VmidcWindow<T> {
 
-    private static final Logger log = Logger.getLogger(CRUDBaseWindow.class);
+    private static final Logger log = LogProvider.getLogger(CRUDBaseWindow.class);
 
     protected FormLayout form = null;
     protected VerticalLayout content;

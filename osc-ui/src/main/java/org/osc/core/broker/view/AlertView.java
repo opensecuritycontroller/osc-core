@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.ListAlertServiceApi;
@@ -34,10 +33,12 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osc.core.ui.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -62,7 +63,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
     private static final String ALERT_TIME_ACKNOWLEDGED_COLUMN_ID = "timeAcknowledgedTimestamp";
     private static final String ALERT_USER_ACKNOWLEDGED_COLUMN_ID = "acknowledgedUser";
 
-    private static final Logger log = Logger.getLogger(AlertView.class);
+    private static final Logger log = LogProvider.getLogger(AlertView.class);
 
     private static final long serialVersionUID = 1L;
     private static final String ALERT_HELP_GUID = "GUID-977FE812-0813-41D0-A6A4-28A9E18CD8F6.html";

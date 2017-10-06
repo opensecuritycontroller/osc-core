@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -27,6 +26,8 @@ import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Property.ValueChangeListener;
 
@@ -39,7 +40,7 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
     private final ServerApi server;
 
-    private static final Logger log = Logger.getLogger(AddVirtualizationConnectorWindow.class);
+    private static final Logger log = LogProvider.getLogger(AddVirtualizationConnectorWindow.class);
 
     public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView, AddVirtualizationConnectorServiceApi addVirtualizationConnectorService,
             PluginService pluginService, ValidationApi validator, X509TrustManagerApi trustManager, ServerApi server,

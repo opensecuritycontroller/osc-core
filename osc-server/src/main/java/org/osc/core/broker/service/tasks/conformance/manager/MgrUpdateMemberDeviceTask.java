@@ -20,23 +20,24 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * Updates the device member and subsequently updates the respective distributed appliance instance with the identifier of the updated device member.
  */
 @Component(service = MgrUpdateMemberDeviceTask.class)
 public class MgrUpdateMemberDeviceTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(MgrUpdateMemberDeviceTask.class);
+    private static final Logger log = LogProvider.getLogger(MgrUpdateMemberDeviceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

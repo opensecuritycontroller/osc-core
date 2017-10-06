@@ -41,6 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service = UpdateOrDeleteK8sSecurityGroupMetaTask.class)
 public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTask {
+
     @Reference
     CheckK8sSecurityGroupLabelMetaTask checkK8sSecurityGroupLabelMetaTask;
 
@@ -91,14 +92,14 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
     @Override
     public String getName() {
         final boolean isDelete = this.sg.getMarkedForDeletion();
-        return String.format("%s Security Group '%s'", isDelete ? "Deleting" : "Updating",
-                this.sg.getName());
+        return String.format("%s Security Group '%s'", isDelete ? "Deleting" : "Updating", this.sg.getName());
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        OSCEntityManager<SecurityGroup> dsEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
+        OSCEntityManager<SecurityGroup> dsEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em,
+                this.txBroadcastUtil);
         this.sg = dsEmgr.findByPrimaryKey(this.sg.getId());
 
         final boolean isDelete = this.sg.getMarkedForDeletion() == null ? false : this.sg.getMarkedForDeletion();
@@ -108,7 +109,6 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
         });
 
         List<Task> tasksToPreceedDeleteSGI = new ArrayList<>();
-
         if (isDelete) {
             String domainId = null;
             for (SecurityGroupMember sgm : this.sg.getSecurityGroupMembers()) {

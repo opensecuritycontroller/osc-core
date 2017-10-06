@@ -18,8 +18,9 @@ package org.osc.core.broker.rest.client.k8s;
 
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 import io.fabric8.kubernetes.api.model.ComponentCondition;
 import io.fabric8.kubernetes.api.model.ComponentStatus;
@@ -29,7 +30,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
  * This class implements the methods used by OSC to validate the availability of the Kubernetes service endpoint.
  */
 public class KubernetesStatusApi extends KubernetesApi {
-    private static final Logger LOG = Logger.getLogger(KubernetesStatusApi.class);
+    private static final Logger LOG = LogProvider.getLogger(KubernetesStatusApi.class);
 
     // Values documented in the K8s API reference https://kubernetes.io/docs/api-reference/v1.5/#componentcondition-v1
     private static final String K8S_HEALTHY_STATUS_NAME = "Healthy";

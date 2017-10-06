@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
@@ -53,6 +52,7 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
@@ -64,6 +64,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 /**
  * Validates the Security Group members and syncs them if needed
@@ -109,7 +110,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private volatile ServiceReference<AddSecurityGroupService> addSecurityGroupServiceSR;
     AddSecurityGroupService addSecurityGroupService;
 
-    private final Logger log = Logger.getLogger(SecurityGroupUpdateOrDeleteMetaTask.class);
+    private final Logger log = LogProvider.getLogger(SecurityGroupUpdateOrDeleteMetaTask.class);
 
     private SecurityGroup sg;
     private TaskGraph tg;

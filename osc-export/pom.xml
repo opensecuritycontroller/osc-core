@@ -211,7 +211,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.21</version>
+			<version>${slf4j.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -423,7 +423,7 @@
 							<directory>${basedir}/../osc-server-bom/root/opt/vmidc/bin</directory>
 							<excludes>
 								<exclude>plugins</exclude>
-								<exclude>log4j.properties</exclude>
+								<exclude>logback.xml</exclude>
 								<exclude>quartz.properties</exclude>
 								<exclude>vmidcServer.conf</exclude>
 								<exclude>vmidc.sh</exclude>

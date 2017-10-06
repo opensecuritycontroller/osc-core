@@ -42,17 +42,17 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.output.StringBuilderWriter;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.client.VmidcServerRestClient;
 import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.broker.util.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.impl.SimpleLoggerFactory;
 
 public class ServerControl {
-    private static final Logger log = Logger.getLogger(ServerControl.class);
+    private static final Logger log = new SimpleLoggerFactory().getLogger(ServerControl.class.getName());
 
     private static final Integer DEFAULT_API_PORT = 8090;
     private static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
@@ -67,8 +67,6 @@ public class ServerControl {
     public static final String VMIDC_DEFAULT_PASS = "admin123";
 
     public static void main(final String[] args) throws Exception {
-
-        LogUtil.initLog4j();
 
         loadServerProps();
 

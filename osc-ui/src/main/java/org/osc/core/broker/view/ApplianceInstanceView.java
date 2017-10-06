@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -36,10 +35,12 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.status.AgentStatusWindow;
+import org.osc.core.ui.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -56,7 +57,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
 
     private static final long serialVersionUID = 1605215705219327527L;
 
-    private static final Logger LOG = Logger.getLogger(ApplianceInstanceView.class);
+    private static final Logger LOG = LogProvider.getLogger(ApplianceInstanceView.class);
 
     @Reference
     private GetAgentStatusServiceApi getAgentStatusService;

@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(service=MarkSecurityGroupMemberDeleteTask.class)
 public class MarkSecurityGroupMemberDeleteTask extends TransactionalTask {
 
-    @Override
+   @Override
     public String getName() {
         return "Delete Security Group Member " + this.sgm.getMemberName() + "; id:" + this.sgm.getId();
     }

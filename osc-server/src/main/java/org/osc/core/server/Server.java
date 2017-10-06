@@ -32,7 +32,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -54,12 +53,13 @@ import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VersionUtil;
-import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.broker.util.log.LogUtil;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
@@ -86,6 +86,7 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -104,7 +105,7 @@ public class Server implements ServerApi {
     private static final long SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
     private static final long TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
 
-    private static final Logger log = Logger.getLogger(Server.class);
+    private static final Logger log = LogProvider.getLogger(Server.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
     public static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
@@ -193,7 +194,7 @@ public class Server implements ServerApi {
     }
 
     private void startServer() throws Exception {
-        LogUtil.initLog4j();
+        LogUtil.initLogging(this.context);
         loadServerProps();
 
         try {
@@ -257,7 +258,7 @@ public class Server implements ServerApi {
                     try {
                         startScheduler();
                     } catch (SchedulerException se) {
-                        log.fatal("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
+                        log.error("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
                         + ") due to system time change. Will reboot in 15 seconds", se);
                         handleFatalSystemError(se);
                     }
@@ -270,7 +271,7 @@ public class Server implements ServerApi {
                 saveServerProp("server.reboots", "0");
             }
         } catch (Throwable e) {
-            log.fatal("Cannot start Server (pid:" + ServerUtil.getCurrentPid() + "). Will reboot in 15 seconds", e);
+            log.error("Cannot start Server (pid:" + ServerUtil.getCurrentPid() + "). Will reboot in 15 seconds", e);
             handleFatalSystemError(e);
         }
     }
@@ -437,7 +438,7 @@ public class Server implements ServerApi {
         }
     }
 
-    private void addShutdownHook() { 
+    private void addShutdownHook() {
         log.warn(Server.PRODUCT_NAME + " Server: Shutdown Hook...");
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -475,7 +476,7 @@ public class Server implements ServerApi {
         log.warn(Server.PRODUCT_NAME + ": Restarting server component...(pid:" + ServerUtil.getCurrentPid() + ")");
         doStop();
     }
-    
+
 	private void doStop() {
 		// Shutdown Scheduler
         stopScheduler();
@@ -570,12 +571,12 @@ public class Server implements ServerApi {
         if(cso != null) {
         	cso.ungetService(this.rabbitMQRunner.getOsDeploymentSpecNotificationRunner());
         }
-        
+
         ComponentServiceObjects<OsSecurityGroupNotificationRunner> cso2 = this.securityGroupRunnerCSO;
 		if(cso2 != null) {
 			cso2.ungetService(this.rabbitMQRunner.getSecurityGroupRunner());
 		}
-		
+
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;

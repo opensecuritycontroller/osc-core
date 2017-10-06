@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.window.update;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.api.SetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
@@ -27,6 +26,8 @@ import org.osc.core.broker.view.maintenance.EmailLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseValidateWindow;
 import org.osc.core.broker.window.button.OkCancelValidateButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -36,7 +37,7 @@ import com.vaadin.ui.TextField;
 public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(SetEmailSettingsWindow.class);
+    private static final Logger log = LogProvider.getLogger(SetEmailSettingsWindow.class);
 
     final String CAPTION = "Set Email Settings";
 

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.k8s.KubernetesClient;
@@ -39,6 +38,7 @@ import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.util.crypto.SslContextProvider;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
@@ -46,13 +46,14 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 import com.rabbitmq.client.ShutdownSignalException;
 
 @Component(service = VirtualizationConnectorUtil.class)
 public class VirtualizationConnectorUtil {
 
-    private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
+    private static final Logger LOG = LogProvider.getLogger(VirtualizationConnectorUtil.class);
 
     private X509TrustManagerFactory managerFactory = null;
 

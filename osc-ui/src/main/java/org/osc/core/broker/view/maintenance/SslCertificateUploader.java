@@ -23,13 +23,14 @@ import java.io.OutputStream;
 import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -46,7 +47,7 @@ import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
 public class SslCertificateUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
-    private static final Logger log = Logger.getLogger(SslCertificateUploader.class);
+    private static final Logger log = LogProvider.getLogger(SslCertificateUploader.class);
 
     private static final String UPLOAD_DIR = "/tmp/";
     private static final long serialVersionUID = 1L;
@@ -152,7 +153,7 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
 
     @Override
     public void uploadFailed(FailedEvent event) {
-        log.error(new Label(new Date() + ": SSL certificate upload failed."));
+        log.error(new Label(new Date() + ": SSL certificate upload failed.").getValue());
 
         if (event.getFilename() == null || event.getFilename().isEmpty()) {
             log.warn("No upload certificate file specified");

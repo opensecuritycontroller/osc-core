@@ -21,16 +21,17 @@ import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
 
 public class HibernateUtil {
 
-    private static final Logger log = Logger.getLogger(HibernateUtil.class);
+    private static final Logger log = LogProvider.getLogger(HibernateUtil.class);
 
     private static ServiceTracker<DBConnectionManager, DBConnectionManager> tracker;
 

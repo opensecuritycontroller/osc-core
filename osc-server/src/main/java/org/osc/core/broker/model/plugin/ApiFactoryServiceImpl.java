@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -55,6 +54,7 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
@@ -82,12 +82,13 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 @Component(immediate = true)
 public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     private static final String OSC_PLUGIN_NAME = PluginTracker.PROP_PLUGIN_NAME;
-    private final Logger log = Logger.getLogger(ApiFactoryServiceImpl.class);
+    private final Logger log = LogProvider.getLogger(ApiFactoryServiceImpl.class);
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();

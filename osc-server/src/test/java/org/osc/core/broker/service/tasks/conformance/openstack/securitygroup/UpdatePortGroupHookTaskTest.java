@@ -17,9 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

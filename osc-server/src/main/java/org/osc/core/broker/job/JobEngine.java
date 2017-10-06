@@ -28,14 +28,15 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.job.JobState;
+import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -52,7 +53,7 @@ public final class JobEngine {
     private static int jobThreadPoolSize = DEFAULT_JOB_THREAD_POOL_SIZE;
     private static int taskThreadPoolSize = DEFAULT_TASK_THREAD_POOL_SIZE;
 
-    private static Logger logger = Logger.getLogger(JobEngine.class);
+    private static Logger logger = LogProvider.getLogger(JobEngine.class);
 
     private static JobEngine jobEngine = new JobEngine();
     List<Job> activeJobs = new ArrayList<Job>();

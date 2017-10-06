@@ -21,7 +21,6 @@ import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
@@ -30,6 +29,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseApproveWindow;
 import org.osc.core.broker.window.button.ApproveCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
@@ -37,7 +38,7 @@ import com.vaadin.ui.Table;
 @SuppressWarnings("serial")
 public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
 
-    private static final Logger log = Logger.getLogger(AddSSLCertificateWindow.class);
+    private static final Logger log = LogProvider.getLogger(AddSSLCertificateWindow.class);
 
     final String CAPTION = "Add SSL certificate";
 

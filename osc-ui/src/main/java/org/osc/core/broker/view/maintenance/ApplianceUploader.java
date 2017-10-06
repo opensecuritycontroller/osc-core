@@ -23,12 +23,13 @@ import java.io.OutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -44,7 +45,7 @@ import com.vaadin.ui.VerticalLayout;
 
 @SuppressWarnings("serial")
 public class ApplianceUploader extends CustomComponent implements Receiver, FailedListener {
-    private static final Logger log = Logger.getLogger(ApplianceUploader.class);
+    private static final Logger log = LogProvider.getLogger(ApplianceUploader.class);
     private static int TEMP_FOLDER_COUNTER = 0;
     private final Upload upload;
     private File file;

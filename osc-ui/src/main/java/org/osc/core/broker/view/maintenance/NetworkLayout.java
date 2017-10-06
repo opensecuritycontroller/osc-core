@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.GetNetworkSettingsServiceApi;
@@ -39,6 +38,8 @@ import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.update.SetNATSettingsWindow;
 import org.osc.core.broker.window.update.SetNetworkSettingsWindow;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -55,7 +56,7 @@ import com.vaadin.ui.VerticalLayout;
 public class NetworkLayout extends FormLayout {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(NetworkLayout.class);
+    private static final Logger log = LogProvider.getLogger(NetworkLayout.class);
 
     public Table networkTable = null;
     private OptionGroup mode = null;

@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.window.update;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
@@ -27,6 +26,8 @@ import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
@@ -34,7 +35,7 @@ import com.vaadin.ui.TextField;
 public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(SetNetworkSettingsWindow.class);
+    private static final Logger log = LogProvider.getLogger(SetNetworkSettingsWindow.class);
 
     final String CAPTION = "Set Network Settings";
 

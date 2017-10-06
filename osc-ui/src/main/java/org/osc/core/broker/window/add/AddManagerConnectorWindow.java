@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import javax.net.ssl.SSLException;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -52,6 +51,8 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -69,7 +70,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
     final String CAPTION = "Add Manager Connector";
 
-    private static final Logger log = Logger.getLogger(AddManagerConnectorWindow.class);
+    private static final Logger log = LogProvider.getLogger(AddManagerConnectorWindow.class);
 
     // current view reference
     private final ManagerConnectorView mcView;

@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -30,12 +29,14 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = OsSvaDeleteFloatingIpTask.class)
 public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(OsSvaDeleteFloatingIpTask.class);
+    private final Logger log = LogProvider.getLogger(OsSvaDeleteFloatingIpTask.class);
 
     private DistributedApplianceInstance dai;
 

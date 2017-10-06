@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
@@ -65,10 +64,12 @@ import org.osc.core.broker.view.vc.securitygroup.SecurityGroupMembershipInfoWind
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.common.virtualization.VirtualizationType;
+import org.osc.core.ui.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -87,7 +88,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(VirtualizationConnectorView.class);
+    private static final Logger log = LogProvider.getLogger(VirtualizationConnectorView.class);
 
     @Reference
     private DeleteVirtualizationConnectorServiceApi deleteVirtualizationConnectorService;

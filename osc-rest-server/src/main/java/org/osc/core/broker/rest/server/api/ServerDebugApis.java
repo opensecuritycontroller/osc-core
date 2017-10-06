@@ -35,7 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Logger;
+import org.osc.core.broker.rest.server.LogProvider;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
@@ -43,6 +43,7 @@ import org.osc.core.broker.service.api.LockInfoServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = ServerDebugApis.class)
 @Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/serverDebug")
@@ -50,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 @Produces(MediaType.TEXT_PLAIN)
 @LocalHostAuth
 public class ServerDebugApis {
-    private static final Logger logger = Logger.getLogger(ServerDebugApis.class);
+    private static final Logger logger = LogProvider.getLogger(ServerDebugApis.class);
 
     @Reference
     ServerApi server;

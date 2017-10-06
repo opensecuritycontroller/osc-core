@@ -44,21 +44,22 @@ import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 @Component(service = X509TrustManagerApi.class, immediate=true)
 public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
 
-    private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
+    private static final Logger LOG = LogProvider.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
     // vmidctruststore stores public certificates needed to establish SSL connection
     public static final String TRUSTSTORE_FILE = "vmidctruststore.jks";

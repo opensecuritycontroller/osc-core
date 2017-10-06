@@ -23,19 +23,20 @@ import java.security.cert.X509Certificate;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component
 public class AddSslCertificateService extends ServiceDispatcher<AddSslEntryRequest, EmptySuccessResponse>
         implements AddSslCertificateServiceApi {
 
-    private static final Logger log = Logger.getLogger(AddSslCertificateService.class);
+    private static final Logger log = LogProvider.getLogger(AddSslCertificateService.class);
 
     @Override
     protected EmptySuccessResponse exec(AddSslEntryRequest request, EntityManager em) throws Exception {

@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -40,7 +39,9 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
 import org.osc.sdk.controller.FailurePolicyType;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
@@ -70,7 +71,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 	final String CAPTION = "Bind Policy to Security Group";
 
-	private static final Logger log = Logger.getLogger(BindSecurityGroupWindow.class);
+	private static final Logger log = LogProvider.getLogger(BindSecurityGroupWindow.class);
 
 	private final SecurityGroupDto currentSecurityGroup;
 	private Table serviceTable = null;

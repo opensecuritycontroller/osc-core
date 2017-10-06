@@ -19,7 +19,6 @@ package org.osc.core.broker.view.maintenance;
 import java.io.File;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
@@ -27,6 +26,8 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.ui.LogProvider;
+import org.slf4j.Logger;
 
 import com.vaadin.server.FileResource;
 import com.vaadin.ui.Button;
@@ -44,7 +45,7 @@ public class ArchiveLayout extends FormLayout {
      */
     private static final long serialVersionUID = 1L;
 
-    Logger log = Logger.getLogger(ArchiveLayout.class);
+    Logger log = LogProvider.getLogger(ArchiveLayout.class);
 
     private Table archiveTable;
 

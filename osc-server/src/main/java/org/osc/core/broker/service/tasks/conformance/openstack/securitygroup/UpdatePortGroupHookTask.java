@@ -18,17 +18,18 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.InspectionHookElementImpl;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for updating a inspection hook for a given
@@ -40,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = UpdatePortGroupHookTask.class)
 public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
-    private static final Logger LOG = Logger.getLogger(UpdatePortGroupHookTask.class);
+    private static final Logger LOG = LogProvider.getLogger(UpdatePortGroupHookTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

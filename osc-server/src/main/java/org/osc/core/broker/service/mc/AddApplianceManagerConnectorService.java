@@ -24,7 +24,6 @@ import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -50,8 +49,10 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This component exposes both the API and the implementation so that the
@@ -64,7 +65,7 @@ public class AddApplianceManagerConnectorService
 extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>
 implements AddApplianceManagerConnectorServiceApi {
 
-    private static final Logger LOG = Logger.getLogger(AddApplianceManagerConnectorService.class);
+    private static final Logger LOG = LogProvider.getLogger(AddApplianceManagerConnectorService.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

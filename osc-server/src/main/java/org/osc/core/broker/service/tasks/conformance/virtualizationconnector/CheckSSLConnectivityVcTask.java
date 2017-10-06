@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -31,13 +30,15 @@ import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service=CheckSSLConnectivityVcTask.class)
 public class CheckSSLConnectivityVcTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
+    private static final Logger log = LogProvider.getLogger(CheckSSLConnectivityVcTask.class);
 
     private VirtualizationConnector vc;
 

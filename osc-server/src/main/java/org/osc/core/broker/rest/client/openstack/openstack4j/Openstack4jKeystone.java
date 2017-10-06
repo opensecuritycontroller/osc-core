@@ -20,12 +20,13 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
+import org.osc.core.broker.util.log.LogProvider;
+import org.slf4j.Logger;
 
 public class Openstack4jKeystone extends BaseOpenstack4jApi {
 
-    private static final Logger log = Logger.getLogger(Openstack4JNova.class);
+    private static final Logger log = LogProvider.getLogger(Openstack4JNova.class);
 
     public Openstack4jKeystone(Endpoint endPoint) {
         super(endPoint);

@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -44,6 +43,7 @@ import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.broker.util.log.LogProvider;
 import org.osc.core.common.alarm.AlarmAction;
 import org.osc.core.common.alarm.EventType;
 import org.osc.core.common.job.AcknowledgementStatus;
@@ -52,6 +52,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
+import org.slf4j.Logger;
 
 /**
  * Types within the osc-server use the AlertGenerator type to process failures
@@ -59,7 +60,7 @@ import org.osgi.service.transaction.control.TransactionControl;
 @Component(service  = {AlertGenerator.class, AlertGeneratorApi.class})
 public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi {
 
-    private static final Logger log = Logger.getLogger(AlertGenerator.class);
+    private static final Logger log = LogProvider.getLogger(AlertGenerator.class);
 
     @Reference
     private DBConnectionManager dbConnectionManager;
