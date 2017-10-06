@@ -111,13 +111,7 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
             boolean supportsNeutronSFC = this.apiFactoryService.supportsNeutronSFC(sg);
             for (VMPort port : ports) {
                 if (port.getMarkedForDeletion()) {
-                    if (supportsNeutronSFC) {
-                        this.tg.appendTask(this.sfcFlowClassifierDeleteTask.create(sg, port));
-                    } else {
-                        this.tg.appendTask(this.vmPortAllHooksRemoveTask.create(this.sgm, port));
-                    }
-                    this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
-
+                    handlePortDelete(sg, supportsNeutronSFC, port);
                 } else if (supportsNeutronSFC) {
                     checkSfcHooks(sg, redirApi, port);
                 } else {
@@ -130,6 +124,15 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
                 }
             }
         }
+    }
+
+    private void handlePortDelete(SecurityGroup sg, boolean supportsNeutronSFC, VMPort port) {
+        if (supportsNeutronSFC) {
+            this.tg.appendTask(this.sfcFlowClassifierDeleteTask.create(sg, port));
+        } else {
+            this.tg.appendTask(this.vmPortAllHooksRemoveTask.create(this.sgm, port));
+        }
+        this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
     }
 
     private void checkSfcHooks(SecurityGroup sg, SdnRedirectionApi redirApi, VMPort port) throws Exception {
