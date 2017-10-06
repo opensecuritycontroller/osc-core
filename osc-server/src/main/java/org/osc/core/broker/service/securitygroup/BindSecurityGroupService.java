@@ -45,6 +45,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
+import org.osc.core.broker.service.persistence.ServiceFunctionChainEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BindSecurityGroupRequest;
@@ -70,7 +71,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 	private ConformService conformService;
 
 	@Reference
-	private ApiFactoryService apiFactoryService;
+	public ApiFactoryService apiFactoryService;
 
 	private SecurityGroup securityGroup;
 
@@ -406,9 +407,12 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
              VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
              
              //if this virtual system is pointing to more than one SFC and one of the SFC other than given SFC
-             //is already binded to SG and active, throw exception
-            if (vs.getServiceFunctionChains().size() > 1) {
-                for (ServiceFunctionChain serviceFunctionChain : vs.getServiceFunctionChains()) {
+             //is already binded to SG and active, throw exception;
+             //Get All the sfcs having this virutalsystem in the chain
+             List<ServiceFunctionChain> serviceFunctionChainList = ServiceFunctionChainEntityMgr.
+                                                                 listServiceFunctionChainsByVirtualSystem(em, vs);
+            if (serviceFunctionChainList != null && !serviceFunctionChainList.isEmpty()) {
+                for (ServiceFunctionChain serviceFunctionChain : serviceFunctionChainList) {
                     if (!serviceFunctionChain.getId().equals(sfc.getId())) {
                         checkVirtualSystemRedundancyInServiceFunctionChains(em, serviceFunctionChain.getId(), vs);
                     }
@@ -419,7 +423,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
          //number of vsIds in sfc should match with number of binding request vsIds
          if(!sfcVsIdList.isEmpty()) {
         	 throw new VmidcBrokerValidationException(
- 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfcVsIdList.size() +
+ 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfc.getVirtualSystems().size() +
  					" and Binding request Virtual System Ids " + servicesToBindTo.size() + " do not match");
          }
     	return sfc;
@@ -440,7 +444,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
         List<SecurityGroup> sgList = SecurityGroupEntityMgr.listSecurityGroupsBySfcIdAndProjectId(em, sfcId,
                 this.securityGroup.getProjectId());
         for(SecurityGroup sg : sgList){
-            if(sg.getMarkedForDeletion()) {
+            if(!sg.getMarkedForDeletion() && !sg.equals(this.securityGroup)) {
                 SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
                         .findSecurityGroupInterfacesByVsAndSecurityGroup(em, virtualSystem, sg);
                 if(sgi != null && !sgi.getMarkedForDeletion()) {
