@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
@@ -86,6 +87,10 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 for (Pod pod : label.getPods()) {
                     if (pod.getLabels().size() == 1) {
                         for (PodPort podPort : pod.getPorts()) {
+                            for (DistributedApplianceInstance dai : podPort.getDais()) {
+                                dai.removeProtectedPort(podPort);
+                                OSCEntityManager.update(em, dai, this.txBroadcastUtil);
+                            }
                             OSCEntityManager.delete(em, podPort, this.txBroadcastUtil);
                         }
                         OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
