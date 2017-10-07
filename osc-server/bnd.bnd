@@ -20,6 +20,3 @@ import-jta:\
     javax.transaction;version="[1.1,2)",\
     javax.transaction.xa;version="[1.1,2)"
 
-# This bundle initializes and registers an instance of ILoggerFactory
-#for the rest of OSC
-Provide-Capability: osgi.service;objectClass=org.slf4j.ILoggerFactory
