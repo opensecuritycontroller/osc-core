@@ -55,7 +55,7 @@ public class NetworkElementImpl implements NetworkElement {
     }
 
     public NetworkElementImpl(VMPort vmPort) {
-        this.elementId = vmPort.getElementId();
+        this.elementId = vmPort.getOpenstackId();
         this.macAddresses = vmPort.getMacAddresses();
         this.portIPs = vmPort.getIpAddresses();
         this.parentId = vmPort.getParentId();
