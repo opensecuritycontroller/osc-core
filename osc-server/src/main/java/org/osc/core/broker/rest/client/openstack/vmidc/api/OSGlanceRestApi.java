@@ -16,12 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.vmidc.api;
 
+import java.io.IOException;
+
 import org.openstack4j.model.identity.v3.Token;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jAuthentication;
 import org.osc.core.broker.rest.client.openstack.vmidc.OSGlanceClient;
-
-import java.io.IOException;
 
 public class OSGlanceRestApi {
 

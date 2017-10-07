@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdateMgrSecurityGroupTask.class)
 public class UpdateMgrSecurityGroupTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
+    //private static final Logger log = LoggerFactory.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

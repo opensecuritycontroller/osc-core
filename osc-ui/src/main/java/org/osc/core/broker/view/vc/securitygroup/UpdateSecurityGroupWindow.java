@@ -16,11 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc.securitygroup;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
-import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -29,6 +28,8 @@ import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 
@@ -41,7 +42,7 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     final String CAPTION = "Update Security Group";
 
-    private static final Logger log = Logger.getLogger(UpdateSecurityGroupWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateSecurityGroupWindow.class);
 
     private final UpdateSecurityGroupServiceApi updateSecurityGroupService;
 

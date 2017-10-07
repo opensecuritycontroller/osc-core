@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -30,14 +29,16 @@ import org.osc.core.broker.model.plugin.manager.ManagerPolicyElementImpl;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupInterfaceElementImpl;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = CreateMgrSecurityGroupInterfaceTask.class)
 public class CreateMgrSecurityGroupInterfaceTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(CreateMgrSecurityGroupInterfaceTask.class);
+    private static final Logger log = LoggerFactory.getLogger(CreateMgrSecurityGroupInterfaceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

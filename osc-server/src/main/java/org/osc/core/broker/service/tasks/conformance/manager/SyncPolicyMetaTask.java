@@ -21,7 +21,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -29,15 +28,17 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = SyncPolicyMetaTask.class)
 public class SyncPolicyMetaTask extends TransactionalMetaTask {
 
-    private static final Logger log = Logger.getLogger(SyncPolicyMetaTask.class);
+    private static final Logger log = LoggerFactory.getLogger(SyncPolicyMetaTask.class);
 
     @Reference
     CreatePolicyTask createPolicyTask;

@@ -20,23 +20,24 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * Updates the VSS device for the provided VS.
  */
 @Component(service = MgrUpdateVSSDeviceTask.class)
 public class MgrUpdateVSSDeviceTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(MgrUpdateVSSDeviceTask.class);
+    private static final Logger log = LoggerFactory.getLogger(MgrUpdateVSSDeviceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

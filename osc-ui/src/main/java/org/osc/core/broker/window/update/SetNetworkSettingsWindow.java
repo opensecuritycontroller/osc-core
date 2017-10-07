@@ -16,13 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.window.update;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
 import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
@@ -30,7 +31,7 @@ import com.vaadin.ui.TextField;
 public class SetNetworkSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(SetNetworkSettingsWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(SetNetworkSettingsWindow.class);
 
     final String CAPTION = "Set Network Settings";
 

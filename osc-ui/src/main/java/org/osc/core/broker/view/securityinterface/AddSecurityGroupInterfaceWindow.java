@@ -19,14 +19,15 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.FailurePolicyType;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 
@@ -37,7 +38,7 @@ public class AddSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfaceW
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(AddSecurityGroupInterfaceWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(AddSecurityGroupInterfaceWindow.class);
 
     final String CAPTION = "Add Policy Mapping";
 

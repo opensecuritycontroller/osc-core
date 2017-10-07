@@ -45,7 +45,6 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
-import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -54,7 +53,9 @@ import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.crypto.SslContextProvider;
+import org.slf4j.LoggerFactory;
 import org.osc.core.broker.util.log.LoggingUtil;
+import org.slf4j.Logger;
 
 public abstract class RestBaseClient {
 
@@ -67,7 +68,7 @@ public abstract class RestBaseClient {
 
     public static boolean enableDebugLogging = false;
 
-    private static Logger log = Logger.getLogger(RestBaseClient.class);
+    private static Logger log = LoggerFactory.getLogger(RestBaseClient.class);
 
     private Client client;
     private WebTarget webTarget;

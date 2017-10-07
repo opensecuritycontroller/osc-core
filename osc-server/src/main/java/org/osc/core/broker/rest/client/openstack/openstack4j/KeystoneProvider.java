@@ -21,7 +21,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.api.client.IOSClientBuilder;
 import org.openstack4j.api.types.Facing;
@@ -29,10 +28,12 @@ import org.openstack4j.core.transport.Config;
 import org.openstack4j.model.common.Identifier;
 import org.openstack4j.model.identity.v3.Token;
 import org.openstack4j.openstack.OSFactory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public final class KeystoneProvider {
 
-    private static final Logger log = Logger.getLogger(KeystoneProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(KeystoneProvider.class);
 
     private static final String KEYSTONE_VERSION = "v3";
 

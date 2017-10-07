@@ -27,9 +27,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -137,16 +134,16 @@ public class JobEngineTest {
 
     @BeforeClass
     public static void initTests() {
-        Logger hibernateLogger = Logger.getLogger("org.hibernate");
-        hibernateLogger.setLevel(Level.ERROR);
-
-        Logger logger = Logger.getLogger("org.osc.core.broker.job.Job");
-        logger.setLevel(Level.DEBUG);
-        logger = Logger.getLogger("org.osc.core.broker.job.JobEngine");
-        logger.setLevel(Level.DEBUG);
-        logger = Logger.getLogger("org.osc.core.broker.job.TaskNode");
-        logger.setLevel(Level.DEBUG);
-        BasicConfigurator.configure();
+//        Logger hibernateLogger = LoggerFactory.getLogger("org.hibernate");
+//        hibernateLogger.setLevel(Level.ERROR);
+//
+//        Logger logger = LoggerFactory.getLogger("org.osc.core.broker.job.Job");
+//        logger.setLevel(Level.DEBUG);
+//        logger = LoggerFactory.getLogger("org.osc.core.broker.job.JobEngine");
+//        logger.setLevel(Level.DEBUG);
+//        logger = LoggerFactory.getLogger("org.osc.core.broker.job.TaskNode");
+//        logger.setLevel(Level.DEBUG);
+//        BasicConfigurator.configure();
     }
 
     @AfterClass

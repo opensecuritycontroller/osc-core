@@ -25,7 +25,6 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
@@ -49,11 +48,13 @@ import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.ServerUtil;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -62,7 +63,7 @@ import com.google.gson.JsonSyntaxException;
 configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
 implements ImportApplianceSoftwareVersionServiceApi {
-    private static final Logger LOG = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImportApplianceSoftwareVersionService.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

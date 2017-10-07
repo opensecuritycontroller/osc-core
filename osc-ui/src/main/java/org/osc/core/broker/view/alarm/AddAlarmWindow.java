@@ -16,13 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.view.alarm;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 
@@ -32,7 +33,7 @@ public class AddAlarmWindow extends BaseAlarmWindow {
 
     final String CAPTION = "Add Alarm";
 
-    private static final Logger log = Logger.getLogger(AddAlarmWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(AddAlarmWindow.class);
 
     private AddAlarmServiceApi addAlarmService;
 

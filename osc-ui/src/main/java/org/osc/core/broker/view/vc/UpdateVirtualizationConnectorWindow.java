@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -28,12 +27,14 @@ import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateVirtualizationConnectorWindow.class);
 
     final String CAPTION = "Edit Virtualization Connector";
 

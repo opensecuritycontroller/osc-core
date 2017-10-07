@@ -27,12 +27,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.LoggingApi;
 import org.osc.core.broker.util.FileUtil;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component
 public class ArchiveUtil implements ArchiveApi {
@@ -40,7 +41,7 @@ public class ArchiveUtil implements ArchiveApi {
     @Reference
     private LoggingApi logging;
 
-    private static final Logger log = Logger.getLogger(ArchiveUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(ArchiveUtil.class);
     static final int BUFFER_SIZE = 1024;
     static final long FILE_SIZE = 4*1024*1024*1024L;//size 4GB
     static final int FILE_LIMIT = 2048;

@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.api.exceptions.ClientResponseException;
 import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
@@ -44,13 +43,15 @@ import org.openstack4j.model.network.builder.NetSecurityGroupBuilder;
 import org.openstack4j.model.network.options.PortListOptions;
 import org.openstack4j.openstack.networking.domain.NeutronFloatingIP;
 import org.openstack4j.openstack.networking.domain.NeutronSecurityGroup;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
-    private static final Logger log = Logger.getLogger(Openstack4JNeutron.class);
+    private static final Logger log = LoggerFactory.getLogger(Openstack4JNeutron.class);
 
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";
     private static final String QUERY_PARAM_ROUTER_DEVICE_OWNER = "network:router_interface";

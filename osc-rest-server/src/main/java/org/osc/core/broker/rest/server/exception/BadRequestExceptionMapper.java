@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.exception;
 
+import java.util.Arrays;
+
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -26,8 +28,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
 import org.osc.core.broker.service.exceptions.OscBadRequestException;
-
-import java.util.Arrays;
 
 @Provider
 public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestException>, BaseExceptionMapperUtil {

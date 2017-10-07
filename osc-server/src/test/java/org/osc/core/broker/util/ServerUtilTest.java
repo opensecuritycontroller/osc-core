@@ -16,8 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.powermock.api.support.membermodification.MemberMatcher.*;
-import static org.powermock.api.support.membermodification.MemberModifier.*;
+import static org.powermock.api.support.membermodification.MemberMatcher.method;
+import static org.powermock.api.support.membermodification.MemberModifier.replace;
 
 import java.io.File;
 import java.io.IOException;

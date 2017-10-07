@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=SyncDomainMetaTask.class)
 public class SyncDomainMetaTask extends TransactionalMetaTask {
 
-    //private static final Logger log = Logger.getLogger(SyncDomainMetaTask.class);
+    //private static final Logger log = LoggerFactory.getLogger(SyncDomainMetaTask.class);
 
     @Reference
     CreateDomainTask createDomainTask;

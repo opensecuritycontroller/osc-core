@@ -19,8 +19,6 @@ package org.osc.core.broker.window;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
@@ -40,7 +38,10 @@ import org.osc.core.broker.service.request.ListVirtualizationConnectorBySwVersio
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.common.virtualization.VirtualizationType;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.TagEncapsulationType;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
@@ -61,7 +62,7 @@ import com.vaadin.ui.TextField;
 public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(BaseDAWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(BaseDAWindow.class);
     // form fields
     protected TextField name = null;
     protected ComboBox managerConnector = null;

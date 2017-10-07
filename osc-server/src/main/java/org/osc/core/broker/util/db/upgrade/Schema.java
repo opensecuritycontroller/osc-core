@@ -23,12 +23,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.FreqType;
 import org.osc.core.common.job.ThresholdType;
+import org.slf4j.Logger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -38,7 +39,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  */
 public class Schema {
 
-    private static final Logger log = Logger.getLogger(Schema.class);
+    private static final Logger log = LoggerFactory.getLogger(Schema.class);
 
     // @formatter:off
     private final static String[] sqlStatements = {

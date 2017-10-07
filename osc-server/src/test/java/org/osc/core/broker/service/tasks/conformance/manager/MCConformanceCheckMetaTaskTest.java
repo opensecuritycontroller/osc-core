@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.*;
 

@@ -21,7 +21,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -37,8 +36,10 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.slf4j.LoggerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ThemeResource;
@@ -54,7 +55,7 @@ import com.vaadin.ui.themes.Reindeer;
 public class SslConfigurationLayout extends FormLayout implements TruststoreChangedListener {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(SslConfigurationLayout.class);
+    private static final Logger log = LoggerFactory.getLogger(SslConfigurationLayout.class);
     private final int CERT_MONTHLY_THRESHOLD = 3;
     public static final String INTERNAL_CERTIFICATE_ALIAS = "internal";
 

@@ -25,7 +25,6 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.ImportPluginServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
@@ -37,13 +36,15 @@ import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.ServerUtil;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component
 public class ImportPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
         implements ImportPluginServiceApi {
 
-    private static final Logger log = Logger.getLogger(ImportPluginService.class);
+    private static final Logger log = LoggerFactory.getLogger(ImportPluginService.class);
 
     private File barFile = null;
     private String deploymentName;

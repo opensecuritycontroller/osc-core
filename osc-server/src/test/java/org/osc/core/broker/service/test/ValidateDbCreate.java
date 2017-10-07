@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import javax.persistence.EntityManager;
 

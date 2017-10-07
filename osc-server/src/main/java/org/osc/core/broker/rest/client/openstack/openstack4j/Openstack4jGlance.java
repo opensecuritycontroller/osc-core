@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
 import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
@@ -32,11 +31,13 @@ import org.openstack4j.model.image.v2.DiskFormat;
 import org.openstack4j.model.image.v2.Image;
 import org.openstack4j.model.image.v2.builder.ImageBuilder;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 public class Openstack4jGlance extends BaseOpenstack4jApi {
 
-    private static final Logger log = Logger.getLogger(Openstack4jGlance.class);
+    private static final Logger log = LoggerFactory.getLogger(Openstack4jGlance.class);
 
     public Openstack4jGlance(Endpoint endPoint) {
         super(endPoint);

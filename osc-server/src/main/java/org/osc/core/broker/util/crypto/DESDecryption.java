@@ -16,16 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
-import org.apache.commons.lang.StringUtils;
-import org.osc.core.broker.service.api.server.EncryptionException;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.Base64;
+
+import org.apache.commons.lang.StringUtils;
+import org.osc.core.broker.service.api.server.EncryptionException;
 
 /**
  * Class that decrypts DES message

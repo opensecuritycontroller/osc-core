@@ -21,14 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
@@ -52,6 +49,9 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DS
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
 import org.osc.core.broker.util.PasswordUtil;
+import org.slf4j.LoggerFactory;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
@@ -60,10 +60,11 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
 
 @Component(service = VSConformanceCheckMetaTask.class)
 public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger LOG = Logger.getLogger(VSConformanceCheckMetaTask.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VSConformanceCheckMetaTask.class);
 
     @Reference
     ApiFactoryService apiFactoryService;
