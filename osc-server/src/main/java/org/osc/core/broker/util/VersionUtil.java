@@ -82,7 +82,8 @@ public class VersionUtil {
 
         @JsonIgnore
         public Long getBuildNumber() {
-            return Long.parseLong(this.build.split("-")[0]);
+            // The build string can be null for DEBUG builds.
+            return this.build != null ? Long.parseLong(this.build.split("-")[0]) : null;
         }
 
         public void setBuild(String build) {

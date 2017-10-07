@@ -97,7 +97,9 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         DistributedApplianceInstance assignedRedirectedDai = protectedPort == null ? null : DistributedApplianceInstanceEntityMgr
                 .findByVirtualSystemAndPort(em, this.sgi.getVirtualSystem(), protectedPort.getId(), protectedPort.getClass());
 
-        if (assignedRedirectedDai == null) {
+        if (protectedPort == null) {
+            LOG.info("No protected port found for SGI " + this.sgi.getName());
+        } else if (assignedRedirectedDai == null) {
             LOG.info("No assigned DAI found for port " + protectedPort.getId());
         }
 
