@@ -408,10 +408,10 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
              
              //if this virtual system is pointing to more than one SFC and one of the SFC other than given SFC
              //is already binded to SG and active, throw exception;
-             //Get All the sfcs having this virutalsystem in the chain
+             //Get All the sfcs having this virtual system in the chain
              List<ServiceFunctionChain> serviceFunctionChainList = ServiceFunctionChainEntityMgr.
                                                                  listServiceFunctionChainsByVirtualSystem(em, vs);
-            if (serviceFunctionChainList != null && !serviceFunctionChainList.isEmpty()) {
+            if (serviceFunctionChainList != null) {
                 for (ServiceFunctionChain serviceFunctionChain : serviceFunctionChainList) {
                     if (!serviceFunctionChain.getId().equals(sfc.getId())) {
                         checkVirtualSystemRedundancyInServiceFunctionChains(em, serviceFunctionChain.getId(), vs);
