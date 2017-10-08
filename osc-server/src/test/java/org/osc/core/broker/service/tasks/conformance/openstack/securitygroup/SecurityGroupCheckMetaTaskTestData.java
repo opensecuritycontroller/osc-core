@@ -66,25 +66,6 @@ class SecurityGroupCheckMetaTaskTestData {
             this.MC_POLICY_MAPPING_SUPPORTED_VS);
     public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_K8S_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED_K8S,
             this.MC_POLICY_MAPPING_NOT_SUPPORTED_K8S_VS);
-    {
-        VirtualSystem vs = this.MC_POLICY_MAPPING_SUPPORTED_VS_2;
-        String baseName = MULTIPLE_MC_POLICY_MAPPING_SUPPORTED + "2";
-        Policy policy = new Policy(
-                vs.getDistributedAppliance().getApplianceManagerConnector(),
-                vs.getDomain());
-        policy.setName(baseName + "_policy");
-        policy.setMgrPolicyId(baseName + "_mgrPolicy");
-        Set<Policy> policySet = new HashSet<>();
-        policySet.add(policy);
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policySet, baseName + "_tag", FailurePolicyType.NA, 1L);
-        sgi.setName(baseName + "_sgi");
-
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
-        sg.setName(baseName + "_sg");
-        sg.addSecurityGroupInterface(sgi);
-        sgi.setSecurityGroup(sg);
-    }
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = new TaskGraph();
