@@ -35,51 +35,41 @@ public class AddServiceFunctionChainServiceTest extends BaseServiceFunctionChain
 
 	@InjectMocks
 	private AddServiceFunctionChainService service;
-	
+
 	AddOrUpdateServiceFunctionChainRequest request;
-	
+
 	@Override
 	@Before
 	public void testInitialize() throws Exception {
 		super.testInitialize();
 		this.service.validator = this.validatorMock;
-		request = new AddOrUpdateServiceFunctionChainRequest();
-	}
-
-	@Test
-	public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-
-		// Arrange.
-		this.exception.expect(NullPointerException.class);
-
-		// Act.
-		this.service.dispatch(null);
+		this.request = new AddOrUpdateServiceFunctionChainRequest();
 	}
 
 	@Test
 	public void testDispatch_WithNullListOfVsIdsAddValidationSuccessful_ValidationSucceeds() throws Exception {
-		
+
 		BaseDto dto = new BaseDto();
 		dto.setParentId(this.vc.getId());
-		request.setName("sfc-1");
-		request.setDto(dto);
+		this.request.setName("sfc-1");
+		this.request.setDto(dto);
 		// Act.
-		BaseJobResponse response = this.service.dispatch(request);
+		BaseJobResponse response = this.service.dispatch(this.request);
 		Assert.assertNotNull("The returned response should not be null.", response);
 	}
 
 	@Test
 	public void testDispatch_WhenAddValidationSuccessful_ValidationSucceeds() throws Exception {
-		
+
 		BaseDto dto = new BaseDto();
 		dto.setParentId(this.vc.getId());
-		request.setName("sfc-1");
-		request.setDto(dto);
+		this.request.setName("sfc-1");
+		this.request.setDto(dto);
 		List<Long> vsIds = new ArrayList<Long>();
 		vsIds.add(this.vs.getId());
-		request.setVirtualSystemIds(vsIds);
+		this.request.setVirtualSystemIds(vsIds);
 		// Act.
-		BaseJobResponse response = this.service.dispatch(request);
+		BaseJobResponse response = this.service.dispatch(this.request);
 		Assert.assertNotNull("The returned response should not be null.", response);
 	}
 

@@ -34,58 +34,48 @@ public class ListServiceFunctionChainByVcServiceTest extends BaseServiceFunction
 
 	@InjectMocks
 	private ListServiceFunctionChainByVcService service;
-	
+
 	private BaseIdRequest request;
-	
+
 	@Override
 	@Before
 	public void testInitialize() throws Exception {
 		super.testInitialize();
-		request = new BaseIdRequest();
+		this.request = new BaseIdRequest();
 		this.service.validator = this.validatorMock;
 		Mockito.when(this.service.validator.create(this.em)).thenReturn(this.validatorMock);
 	}
-	
 
 	@Test
-	public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-		// Arrange.	
-		this.exception.expect(NullPointerException.class);
-
-		// Act.
-		this.service.dispatch(null);
-	}
-	
-	@Test
-	public void testDispatch_WithNullVcId_ThrowsIllegalArgumentException() throws Exception {		
+	public void testDispatch_WithNullVcId_ThrowsIllegalArgumentException() throws Exception {
 		// vcid is null value , if nothing is set.
-		Mockito.when(this.service.validator.create(this.em).validateVirtualConnector(em, null)).thenCallRealMethod();
+		Mockito.when(this.service.validator.create(this.em).validateVirtualConnector(this.em, null)).thenCallRealMethod();
 		this.exception.expect(IllegalArgumentException.class);
 		this.exception.expectMessage("id to load is required for loading");
 
 		// Act.
-		this.service.dispatch(request);
+		this.service.dispatch(this.request);
 	}
-	
+
 	@Test
 	public void testDispatch_WithInvalidVcId_ThrowsVmidcBrokerValidationException() throws Exception {
 
-		Mockito.when(this.service.validator.validateVirtualConnector(em, 222L)).thenCallRealMethod();
-		request.setId(222L);
+		Mockito.when(this.service.validator.validateVirtualConnector(this.em, 222L)).thenCallRealMethod();
+		this.request.setId(222L);
 		this.exception.expect(VmidcBrokerValidationException.class);
-		this.exception.expectMessage("Virtualization Connector id " + request.getId() + " is not found.");
+		this.exception.expectMessage("Virtualization Connector id " + this.request.getId() + " is not found.");
 
 		// Act.
-		this.service.dispatch(request);
+		this.service.dispatch(this.request);
 	}
 
 
 	@Test
 	public void testDispatch_WhenRequestIsValid_ValidationSucceeds() throws Exception {
-		Mockito.when(this.service.validator.validateVirtualConnector(em, this.vc.getId())).thenCallRealMethod();
-		request.setId(this.vc.getId());
+		Mockito.when(this.service.validator.validateVirtualConnector(this.em, this.vc.getId())).thenCallRealMethod();
+		this.request.setId(this.vc.getId());
 		// Act.
-		ListResponse<ServiceFunctionChainDto> response = this.service.dispatch(request);
+		ListResponse<ServiceFunctionChainDto> response = this.service.dispatch(this.request);
 		Assert.assertNotNull("The returned response should not be null.", response);
 
 	}
