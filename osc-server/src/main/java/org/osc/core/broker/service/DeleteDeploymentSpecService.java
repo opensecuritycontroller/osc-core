@@ -27,6 +27,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
@@ -105,10 +106,16 @@ implements DeleteDeploymentSpecServiceApi {
 
         this.ds = em.find(DeploymentSpec.class, request.getId());
 
+        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds)) {
+            throw new VmidcBrokerValidationException(
+                    String.format("The deployment spec with name '%s' and '%id' is currently protecting a workload",
+                            this.ds.getName(),
+                            this.ds.getId()));
+        }
+
         // entry must pre-exist in db
         if (this.ds == null) { // note: we cannot use name here in error msg since
             // del req does not have name, only ID
-
             throw new VmidcBrokerValidationException("Deployment Specification entry with ID " + request.getId()
             + " is not found.");
         }

@@ -170,7 +170,7 @@ public class DistributedApplianceEntityMgr {
         return false;
     }
 
-    public static boolean isProtectingWorkload(DistributedAppliance ds) {
-        return CollectionUtils.emptyIfNull(ds.getVirtualSystems()).stream().anyMatch(vs -> !VirtualSystemEntityMgr.isProtectingWorkload(vs));
+    public static boolean isProtectingWorkload(DistributedAppliance da) {
+        return CollectionUtils.emptyIfNull(da.getVirtualSystems()).stream().anyMatch(vs -> !VirtualSystemEntityMgr.isProtectingWorkload(vs));
     }
 }
