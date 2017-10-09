@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class LogUtil {
 
-    public static void initLog() {
+    public static void redirectConsoleMessagesToLog() {
         try {
             StdOutErrLog.tieSystemOutAndErrToLog();
         } catch (Exception ex) {

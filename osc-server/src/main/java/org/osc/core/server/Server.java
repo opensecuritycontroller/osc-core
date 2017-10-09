@@ -194,7 +194,7 @@ public class Server implements ServerApi {
     }
 
     private void startServer() throws Exception {
-        LogUtil.initLog();
+        LogUtil.redirectConsoleMessagesToLog();
         loadServerProps();
 
         try {
