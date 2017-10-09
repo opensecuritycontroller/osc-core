@@ -106,13 +106,6 @@ implements DeleteDeploymentSpecServiceApi {
 
         this.ds = em.find(DeploymentSpec.class, request.getId());
 
-        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds)) {
-            throw new VmidcBrokerValidationException(
-                    String.format("The deployment spec with name '%s' and '%id' is currently protecting a workload",
-                            this.ds.getName(),
-                            this.ds.getId()));
-        }
-
         // entry must pre-exist in db
         if (this.ds == null) { // note: we cannot use name here in error msg since
             // del req does not have name, only ID
@@ -120,7 +113,12 @@ implements DeleteDeploymentSpecServiceApi {
             + " is not found.");
         }
 
-        // TODO: Future if DS/DDS is in use send Alert/Warning to the user...
+        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds)) {
+            throw new VmidcBrokerValidationException(
+                    String.format("The deployment spec with name '%s' and '%s' is currently protecting a workload",
+                            this.ds.getName(),
+                            this.ds.getId()));
+        }
 
         if (!this.ds.getMarkedForDeletion() && request.isForceDelete()) {
             throw new VmidcBrokerValidationException(

@@ -171,6 +171,6 @@ public class DistributedApplianceEntityMgr {
     }
 
     public static boolean isProtectingWorkload(DistributedAppliance da) {
-        return CollectionUtils.emptyIfNull(da.getVirtualSystems()).stream().anyMatch(vs -> !VirtualSystemEntityMgr.isProtectingWorkload(vs));
+        return CollectionUtils.emptyIfNull(da.getVirtualSystems()).stream().anyMatch(vs -> VirtualSystemEntityMgr.isProtectingWorkload(vs));
     }
 }

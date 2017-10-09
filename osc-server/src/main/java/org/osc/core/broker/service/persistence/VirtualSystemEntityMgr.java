@@ -185,6 +185,6 @@ public class VirtualSystemEntityMgr {
     }
 
     public static boolean isProtectingWorkload(VirtualSystem vs) {
-        return CollectionUtils.emptyIfNull(vs.getDeploymentSpecs()).stream().anyMatch(ds -> !DeploymentSpecEntityMgr.isProtectingWorkload(ds));
+        return CollectionUtils.emptyIfNull(vs.getDeploymentSpecs()).stream().anyMatch(ds -> DeploymentSpecEntityMgr.isProtectingWorkload(ds));
     }
 }

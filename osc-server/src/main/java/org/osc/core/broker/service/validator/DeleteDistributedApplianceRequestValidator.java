@@ -49,7 +49,7 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
 
         if (DistributedApplianceEntityMgr.isProtectingWorkload(da)) {
             throw new VmidcBrokerValidationException(
-                    String.format("The ddistributed appliance with name '%s' and '%id' is currently protecting a workload",
+                    String.format("The distributed appliance with name '%s' and '%s' is currently protecting a workload",
                             da.getName(),
                             da.getId()));
         }
