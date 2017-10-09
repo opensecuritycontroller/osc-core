@@ -142,7 +142,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                     "The associated Appliance Manager Connector must be selected for this Distributed Appliance.");
         }
 
-        List<Long> existingVsIds = new ArrayList<>();
+        List<Long> providedVsIds = new ArrayList<>();
         for (VirtualSystemDto vsDto : dto.getVirtualizationSystems()) {
             VirtualSystemDtoValidator.checkForNullFields(vsDto);
 
@@ -204,13 +204,13 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                 }
             }
 
-            existingVsIds.add(vsDto.getId());
+            providedVsIds.add(vsDto.getId());
         }
 
         if (!forCreate) {
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 // When updating a DA if the user is attempting to remove a VS that is being used to protect a workload fail the call.
-                if (!existingVsIds.contains(vs.getId()) && VirtualSystemEntityMgr.isProtectingWorkload(vs)) {
+                if (!providedVsIds.contains(vs.getId()) && VirtualSystemEntityMgr.isProtectingWorkload(vs)) {
                     throw new VmidcBrokerInvalidEntryException(String.format("The virtual system '%s' cannot be deleted. It is currently assigned to protect a workload.", vs.getName()));
                 }
             }
