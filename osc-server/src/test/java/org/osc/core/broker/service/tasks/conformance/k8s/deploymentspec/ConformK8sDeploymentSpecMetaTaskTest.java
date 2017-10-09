@@ -37,7 +37,6 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DeleteDSFromDbTask;
 import org.osc.core.broker.service.test.InMemDB;
@@ -118,7 +117,7 @@ public class ConformK8sDeploymentSpecMetaTaskTest {
         // Arrange.
         this.factoryTask.deleteDSFromDbTask = new DeleteDSFromDbTask();
         this.factoryTask.mgrCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
-        this.factoryTask.deleteDAIFromDbTask = new DeleteDAIFromDbTask();
+        this.factoryTask.deleteK8sDAIInspectionPortTask = new DeleteK8sDAIInspectionPortTask();
         this.factoryTask.createOrUpdateK8sDeploymentSpecMetaTask = new CreateOrUpdateK8sDeploymentSpecMetaTask();
         this.factoryTask.deleteK8sDeploymentTask = new DeleteK8sDeploymentTask();
 
