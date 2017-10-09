@@ -20,9 +20,6 @@
     com.google.gson.*
 
 -includeresource: \
-    @${slf4j-api.dep},\
-    @${logback-core.dep},\
-    @${logback-classic.dep},\
     @${osc-service-api.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\
