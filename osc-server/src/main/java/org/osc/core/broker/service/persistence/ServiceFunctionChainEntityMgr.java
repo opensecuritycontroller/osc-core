@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
@@ -44,6 +47,17 @@ public class ServiceFunctionChainEntityMgr {
 
 	public static ServiceFunctionChain findById(EntityManager em, Long id) {
         return em.find(ServiceFunctionChain.class, id);
+    }
+
+    public static List<ServiceFunctionChain> listServiceFunctionChainsByVirtualSystem(EntityManager em, VirtualSystem vs) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<ServiceFunctionChain> query = cb.createQuery(ServiceFunctionChain.class);
+
+        Root<ServiceFunctionChain> root = query.from(ServiceFunctionChain.class);
+        query = query.select(root).where(cb.equal(root.join("virtualSystems"), vs));
+
+        return em.createQuery(query).getResultList();
     }
 
 }
