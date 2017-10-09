@@ -126,5 +126,12 @@ implements DeleteDeploymentSpecServiceApi {
                             + this.ds.getName()
                             + "' is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
         }
+
+        if (vs.getServiceFunctionChains().size() > 0) {
+            throw new VmidcBrokerValidationException("Cannot delete Deployment Specification entry with ID " + request.getId()
+                    + " as its associated Virtual System : " + vs.getName()
+                    + " is being referenced by Service Function Chain : "
+                    + vs.getServiceFunctionChains().get(0).getName());
+        }
     }
 }
