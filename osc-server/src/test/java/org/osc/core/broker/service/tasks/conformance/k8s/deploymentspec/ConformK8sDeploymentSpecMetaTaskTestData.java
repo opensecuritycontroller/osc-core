@@ -31,7 +31,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DeleteDSFromDbTask;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -98,7 +97,7 @@ public class ConformK8sDeploymentSpecMetaTaskTestData {
         expectedGraph.appendTask(new DeleteK8sDeploymentTask().create(ds));
 
         for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-            expectedGraph.addTask(new DeleteDAIFromDbTask().create(dai));
+            expectedGraph.addTask(new DeleteK8sDAIInspectionPortTask().create(dai));
         }
 
         expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()));

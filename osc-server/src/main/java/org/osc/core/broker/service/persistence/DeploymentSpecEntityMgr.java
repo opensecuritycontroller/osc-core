@@ -26,6 +26,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -184,5 +185,9 @@ public class DeploymentSpecEntityMgr {
                 .where(root.get("virtualSystem").in(da.getVirtualSystems()));
 
         return em.createQuery(query).getResultList();
+    }
+
+    public static boolean isProtectingWorkload(DeploymentSpec ds) {
+        return CollectionUtils.emptyIfNull(ds.getDistributedApplianceInstances()).stream().anyMatch(dai -> !dai.getProtectedPorts().isEmpty());
     }
 }

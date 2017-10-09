@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +27,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -93,17 +96,17 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
             throw new VmidcBrokerValidationException("Appliance Manager Connector change is not allowed.");
         }
 
-        validate(dto, false);
+        validate(dto, false, da);
 
         return da;
     }
 
     // TODO: Emanoel - Add a unit test for image url update for DA
     void validate(DistributedApplianceDto dto) throws Exception {
-        validate(dto, true);
+        validate(dto, true, null);
     }
 
-    void validate(DistributedApplianceDto dto, boolean forCreate) throws Exception {
+    void validate(DistributedApplianceDto dto, boolean forCreate, DistributedAppliance da) throws Exception {
         DistributedApplianceDtoValidator.checkForNullFields(dto);
 
         // Ensure DA name complies with Manager naming requirements
@@ -139,6 +142,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                     "The associated Appliance Manager Connector must be selected for this Distributed Appliance.");
         }
 
+        List<Long> providedVsIds = new ArrayList<>();
         for (VirtualSystemDto vsDto : dto.getVirtualizationSystems()) {
             VirtualSystemDtoValidator.checkForNullFields(vsDto);
 
@@ -197,6 +201,17 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                 if (domain.getName().length() > ValidateUtil.DEFAULT_MAX_LEN) {
                     throw new VmidcBrokerInvalidEntryException("Invalid domain length found in Virtual System "
                             + vc.getName() + ".");
+                }
+            }
+
+            providedVsIds.add(vsDto.getId());
+        }
+
+        if (!forCreate) {
+            for (VirtualSystem vs : da.getVirtualSystems()) {
+                // When updating a DA if the user is attempting to remove a VS that is being used to protect a workload fail the call.
+                if (!providedVsIds.contains(vs.getId()) && VirtualSystemEntityMgr.isProtectingWorkload(vs)) {
+                    throw new VmidcBrokerInvalidEntryException(String.format("The virtual system '%s' cannot be deleted. It is currently assigned to protect a workload.", vs.getName()));
                 }
             }
         }
