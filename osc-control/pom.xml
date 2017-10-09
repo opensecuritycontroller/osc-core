@@ -123,7 +123,6 @@
             <artifactId>jersey-client</artifactId>
             <version>2.25</version>
         </dependency>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -134,11 +133,8 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
-            <scope>provided</scope>
+            <scope>runtime</scope>
         </dependency>
-        
-        
-
         <!-- slf4j and log impl is not imported because server does. -->
         <dependency>
             <groupId>org.osc.core</groupId>

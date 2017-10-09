@@ -110,8 +110,8 @@ public class ServerControl {
             } else if (cmd.hasOption("check")) {
                 // --check is used by vmidc.sh
                 if (isRunningServer()) {
-                    System.out.println(ServerControl.PRODUCT_NAME + " Server is already running.");
-                    System.out.println(getServerVersion());
+                    log.info(ServerControl.PRODUCT_NAME + " Server is already running.");
+                    log.info(getServerVersion());
                     exitStatus = 2; // already running
                 }
             } else if (cmd.hasOption("version")) {
@@ -131,7 +131,7 @@ public class ServerControl {
                 throw new ParseException("no option specified");
             }
         } catch (ParseException e) {
-            log.info("Error parsing command line arguments", e);
+            log.error("Error parsing command line arguments", e);
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("vmiDC", options);
             System.exit(1);
@@ -142,20 +142,20 @@ public class ServerControl {
     private static void enableRestLogging(String enable) throws Exception {
         VmidcServerRestClient restClient = new VmidcServerRestClient(apiPort);
         String restLogging = restClient.postResource("rest-logging", String.class, enable);
-        System.out.println("Logging of Rest API's: " + restLogging);
+        log.info("Logging of Rest API's: " + restLogging);
     }
 
     private static void getLockInfomation() throws Exception {
         VmidcServerRestClient restClient = new VmidcServerRestClient(apiPort);
         String lockInfo = restClient.getResource("lock", String.class);
-        System.out.println(lockInfo);
+        log.info(lockInfo);
     }
 
     private static void query(String sql) throws Exception {
         if (isRunningServer()) {
             VmidcServerRestClient restClient = new VmidcServerRestClient(apiPort);
             String queryOutput = restClient.postResource("query", String.class, sql);
-            System.out.println(queryOutput);
+            log.info(queryOutput);
         } else {
             offlineQuery(sql);
         }
@@ -165,7 +165,7 @@ public class ServerControl {
         if (isRunningServer()) {
             VmidcServerRestClient restClient = new VmidcServerRestClient(apiPort);
             String queryOutput = restClient.postResource("exec", String.class, sql);
-            System.out.println(queryOutput);
+            log.info(queryOutput);
         } else {
             offlineExec(sql);
         }
@@ -189,7 +189,7 @@ public class ServerControl {
             }
         }
 
-        System.out.println(output.toString());
+        log.info(output.toString());
     }
 
     private static void offlineExec(String sql) throws IOException {
@@ -210,7 +210,7 @@ public class ServerControl {
                 ex.printStackTrace(pw);
             }
         }
-        System.out.println(output.toString());
+        log.info(output.toString());
     }
 
     private static void processResultSetForQuery(StringBuilder output, ResultSet result) throws SQLException {
@@ -237,14 +237,14 @@ public class ServerControl {
     }
 
     private static void reportVersion() {
-        System.out.println(ServerControl.PRODUCT_NAME + " version: " + VersionUtil.getVersion().getVersionStr());
+        log.info(ServerControl.PRODUCT_NAME + " version: " + VersionUtil.getVersion().getVersionStr());
     }
 
     private static void reportStatus() {
         if (isRunningServer()) {
-            System.out.println(ServerControl.PRODUCT_NAME + " Server is running.");
+            log.info(ServerControl.PRODUCT_NAME + " Server is running.");
         } else {
-            System.out.println(ServerControl.PRODUCT_NAME + " Server is not running.");
+            log.info(ServerControl.PRODUCT_NAME + " Server is not running.");
         }
     }
 
@@ -256,7 +256,7 @@ public class ServerControl {
             //set ISC public IP in Server Util
             ServerUtil.setServerIP(prop.getProperty(ISC_PUBLIC_IP, ""));
         } catch (Exception ex) {
-            System.out.println("Warning: Failed to load server configuration file "
+            log.warn("Warning: Failed to load server configuration file "
                     + ServerControl.CONFIG_PROPERTIES_FILE + " (Error:" + ex.getMessage() + ")");
         }
     }

@@ -165,13 +165,6 @@
             <version>${slf4j.version}</version>
             <scope>provided</scope>
         </dependency>
-         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-            <scope>provided</scope>
-        </dependency>
-		
 		<dependency>
 			<groupId>org.apache.aries.tx-control</groupId>
 			<artifactId>tx-control-api</artifactId>
