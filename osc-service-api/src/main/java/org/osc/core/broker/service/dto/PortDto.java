@@ -70,6 +70,10 @@ public class PortDto extends BaseDto {
         return this.openstackId;
     }
 
+    public String getInspectionHookId() {
+        return this.inspectionHookId;
+    }
+
     @Override
     public String toString() {
         return "PortDto [macAddress=" + this.macAddress + ", openstackId=" + this.openstackId + ", ipAddresses=" + this.ipAddresses

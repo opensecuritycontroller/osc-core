@@ -26,6 +26,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -112,7 +113,7 @@ public class DistributedApplianceEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.get("markedForDeletion"), false),
-                       cb.equal(root.get("applianceManagerConnector"), mc));
+                        cb.equal(root.get("applianceManagerConnector"), mc));
 
         return em.createQuery(query).getResultList();
     }
@@ -142,7 +143,6 @@ public class DistributedApplianceEntityMgr {
     }
 
     public static boolean isReferencedByDistributedAppliance(EntityManager em, ApplianceManagerConnector mc) {
-
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<DistributedAppliance> query = cb.createQuery(DistributedAppliance.class);
@@ -168,7 +168,9 @@ public class DistributedApplianceEntityMgr {
         }
 
         return false;
-
     }
 
+    public static boolean isProtectingWorkload(DistributedAppliance da) {
+        return CollectionUtils.emptyIfNull(da.getVirtualSystems()).stream().anyMatch(vs -> VirtualSystemEntityMgr.isProtectingWorkload(vs));
+    }
 }

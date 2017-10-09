@@ -60,15 +60,6 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
     }
 
 	@Test
-	public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-
-		// Arrange.
-		this.exception.expect(NullPointerException.class);
-		// Act.
-		this.service.dispatch(null);
-	}
-
-	@Test
 	public void testDispatch_WhenVirtualSystemListEmpty_SfcIsUpdated() throws Exception {
 
 		// Act.

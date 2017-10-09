@@ -71,7 +71,7 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
     SfcFlowClassifierDeleteTask sfcFlowClassifierDeleteTask;
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    ApiFactoryService apiFactoryService;
 
     private TaskGraph tg;
     private SecurityGroupMember sgm;
