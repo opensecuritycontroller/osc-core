@@ -63,7 +63,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         MockitoAnnotations.initMocks(this);
 
         this.validator = new DeleteDistributedApplianceRequestValidator(this.em);
-   
+
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID))).thenReturn(NOT_MARKED_FOR_DELETION_DA);
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_FOR_DELETION))).thenReturn(MARKED_FOR_DELETION_DA);
     }
@@ -125,30 +125,29 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         // Assert
         Assert.assertEquals("The received ID in non force delete case  is different than expected VALID_ID_FOR_DELETION.", VALID_ID_FOR_DELETION, da.getId());
     }
-    
+
     @Test
     public void testValidateAndLoad_WhenChainedToSfcDeleteRequest_ThrowsValidationException() throws Exception {
-    	// Arrange
+        // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
-    	DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
-    	ServiceFunctionChain sfc = new ServiceFunctionChain("sfc-1", null);
+        DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
+        ServiceFunctionChain sfc = new ServiceFunctionChain("sfc-1", null);
 
-    	VirtualSystem vs = new VirtualSystem(null);
-    	vs.setName("vs-1");
-		vs.setEncapsulationType(TagEncapsulationType.VLAN);
-		vs.setServiceFunctionChains(Arrays.asList(sfc));
+        VirtualSystem vs = new VirtualSystem(null);
+        vs.setName("vs-1");
+        vs.setEncapsulationType(TagEncapsulationType.VLAN);
+        vs.setServiceFunctionChains(Arrays.asList(sfc));
         da.addVirtualSystem(vs);
-   
-        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC))).thenReturn(da);
-    	this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage("Cannot delete Distributed Appilance with ID " + VALID_ID_WITH_SFC
-                + " as its associated Virtual System : " + vs.getName()
-                + " is being referenced by Service Function Chain : " + vs.getServiceFunctionChains().get(0).getName());
-    	
+
+        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
+                .thenReturn(da);
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(
+                String.format("The distributed appliance with name '%s' and id '%s' is currently protecting a workload",
+                        da.getName(), da.getId()));
+
         // Act
         this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
-
-
     }
 
     private static BaseDeleteRequest createRequest(Long id, boolean forceDelete) {
