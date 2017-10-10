@@ -142,6 +142,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
         this.addSecurityGroupService = this.factory.addSecurityGroupService;
         this.portGroupCheckMetaTask = this.factory.portGroupCheckMetaTask;
+        this.checkServiceFunctionChainMetaTask = this.factory.checkServiceFunctionChainMetaTask;
         this.checkPortGroupHookMetaTask = this.factory.checkPortGroupHookMetaTask;
         this.deleteMgrSecurityGroupTask = this.factory.deleteMgrSecurityGroupTask;
         this.deleteSecurityGroupInterfaceTask = this.factory.deleteSecurityGroupInterfaceTask;
