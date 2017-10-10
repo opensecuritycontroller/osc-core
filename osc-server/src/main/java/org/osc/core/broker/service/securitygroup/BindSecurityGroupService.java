@@ -45,6 +45,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
+import org.osc.core.broker.service.persistence.ServiceFunctionChainEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BindSecurityGroupRequest;
@@ -52,11 +53,11 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BindSecurityGroupRequestValidator;
 import org.osc.core.broker.util.ValidateUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
@@ -70,7 +71,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 	private ConformService conformService;
 
 	@Reference
-	private ApiFactoryService apiFactoryService;
+	public ApiFactoryService apiFactoryService;
 
 	private SecurityGroup securityGroup;
 
@@ -402,16 +403,18 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
              }
              //by removing virtual system id from the list , will help to throw any exception in case of duplication
              sfcVsIdList.remove(virtualSystemId);
-             
+
              VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
-             
+
              //if this virtual system is pointing to more than one SFC and one of the SFC other than given SFC
-             //is already binded to SG and active, throw exception
-            if (vs.getServiceFunctionChains().size() > 1) {
-                for (ServiceFunctionChain serviceFunctionChain : vs.getServiceFunctionChains()) {
-                    if (!serviceFunctionChain.getId().equals(sfc.getId())) {
-                        checkVirtualSystemRedundancyInServiceFunctionChains(em, serviceFunctionChain.getId(), vs);
-                    }
+             //is already binded to SG and active, throw exception;
+             //Get All the sfcs having this virtual system in the chain
+             List<ServiceFunctionChain> serviceFunctionChainList = ServiceFunctionChainEntityMgr.
+                                                                 listServiceFunctionChainsByVirtualSystem(em, vs);
+
+            for (ServiceFunctionChain serviceFunctionChain : serviceFunctionChainList) {
+                if (!serviceFunctionChain.getId().equals(sfc.getId())) {
+                    checkVirtualSystemRedundancyInServiceFunctionChains(em, serviceFunctionChain.getId(), vs);
                 }
             }
          }
@@ -419,12 +422,12 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
          //number of vsIds in sfc should match with number of binding request vsIds
          if(!sfcVsIdList.isEmpty()) {
         	 throw new VmidcBrokerValidationException(
- 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfcVsIdList.size() +
+ 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfc.getVirtualSystems().size() +
  					" and Binding request Virtual System Ids " + servicesToBindTo.size() + " do not match");
          }
     	return sfc;
     }
-	
+
 	/**
      * This methods checks if there exist Security Groups binded with given sfcId and TentantId.
      * and If there are Security groups, checks if they are binded and not marked for deletion.
@@ -435,18 +438,19 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
      * @param VirtualSystem
      * @return
      */
-    private void checkVirtualSystemRedundancyInServiceFunctionChains(EntityManager em, Long sfcId, VirtualSystem virtualSystem) throws Exception {
+    private void checkVirtualSystemRedundancyInServiceFunctionChains(EntityManager em, Long sfcId,
+            VirtualSystem virtualSystem) throws Exception {
 
         List<SecurityGroup> sgList = SecurityGroupEntityMgr.listSecurityGroupsBySfcIdAndProjectId(em, sfcId,
                 this.securityGroup.getProjectId());
-        for(SecurityGroup sg : sgList){
-            if(sg.getMarkedForDeletion()) {
+        for (SecurityGroup sg : sgList) {
+            if (!sg.getMarkedForDeletion() && !sg.equals(this.securityGroup)) {
                 SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
                         .findSecurityGroupInterfacesByVsAndSecurityGroup(em, virtualSystem, sg);
-                if(sgi != null && !sgi.getMarkedForDeletion()) {
-                    throw new VmidcBrokerValidationException(
-                            "Service with VirtualSystem " + virtualSystem.getId() + " is already chained to ServiceFunctionChain Id " +
-                            sfcId + " and binded to SecurityGroup : " + sg.getName());  
+                if (sgi != null && !sgi.getMarkedForDeletion()) {
+                    throw new VmidcBrokerValidationException("Service with VirtualSystem " + virtualSystem.getId()
+                            + " is already chained to ServiceFunctionChain Id " + sfcId
+                            + " and binded to SecurityGroup : " + sg.getName());
                 }
             }
         }
