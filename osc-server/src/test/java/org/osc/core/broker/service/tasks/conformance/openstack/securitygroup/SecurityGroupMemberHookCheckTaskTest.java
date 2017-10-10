@@ -115,6 +115,7 @@ public class SecurityGroupMemberHookCheckTaskTest {
         SecurityGroupMemberHookCheckTaskTestData sfcWithDeletedPortsData = new SecurityGroupMemberHookCheckTaskTestData();
         SecurityGroupMemberHookCheckTaskTestData sfcWithMixedPortsData = new SecurityGroupMemberHookCheckTaskTestData();
         SecurityGroupMemberHookCheckTaskTestData sfcWithMismatchPortsData = new SecurityGroupMemberHookCheckTaskTestData();
+        SecurityGroupMemberHookCheckTaskTestData sfcWithMixedMismatchPortsData = new SecurityGroupMemberHookCheckTaskTestData();
         SecurityGroupMemberHookCheckTaskTestData sfcWithSgmUnbinded = new SecurityGroupMemberHookCheckTaskTestData();
         SecurityGroupMemberHookCheckTaskTestData sfcWithSgmUnbindedPortsUnbinded = new SecurityGroupMemberHookCheckTaskTestData();
 
@@ -124,7 +125,8 @@ public class SecurityGroupMemberHookCheckTaskTest {
                     { SFC_SGM_WITH_PORTS, null, sfcWithPortsData.getSfcWithPortsTaskGraph(SFC_SGM_WITH_PORTS), sfcWithPortsData },
                     { SFC_SGM_WITH_DELETED_PORTS, null, sfcWithDeletedPortsData.getSfcWithDeletedPortsTaskGraph(SFC_SGM_WITH_DELETED_PORTS), sfcWithDeletedPortsData },
                     { SFC_SGM_WITH_MIXED_PORTS, null, sfcWithMixedPortsData.getSfcWithMixedPortsTaskGraph(SFC_SGM_WITH_MIXED_PORTS), sfcWithMixedPortsData },
-                    { SFC_SGM_WITH_PORTS, null, sfcWithMismatchPortsData.getSfcMismatchTaskGraph(SFC_SGM_WITH_PORTS), sfcWithMismatchPortsData },
+                    { SFC_SGM_WITH_PORTS_SFC_MISMATCH, null, sfcWithMismatchPortsData.getSfcMismatchTaskGraph(SFC_SGM_WITH_PORTS_SFC_MISMATCH), sfcWithMismatchPortsData },
+                    { SFC_SGM_WITH_PORTS_SFC_MIXED_MISMATCH, null, sfcWithMixedMismatchPortsData.getSfcMixedMismatchTaskGraph(SFC_SGM_WITH_PORTS_SFC_MIXED_MISMATCH), sfcWithMixedMismatchPortsData },
                     { SFC_SGM_UNBINDED_WITH_PORTS, null, sfcWithSgmUnbinded.getSfcUnbindedTaskGraph(SFC_SGM_UNBINDED_WITH_PORTS), sfcWithSgmUnbinded },
                     { SFC_SGM_UNBINDED_WITH_PORTS_UNBINDED, null, new TaskGraph(), sfcWithSgmUnbindedPortsUnbinded },
                     });
