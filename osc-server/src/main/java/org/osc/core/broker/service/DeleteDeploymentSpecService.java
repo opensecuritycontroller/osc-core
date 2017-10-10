@@ -113,11 +113,11 @@ implements DeleteDeploymentSpecServiceApi {
             + " is not found.");
         }
 
-        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds)) {
+        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds) ||
+                VirtualSystemEntityMgr.isProtectingWorkload(vs)) {
             throw new VmidcBrokerValidationException(
-                    String.format("The deployment spec with name '%s' and '%s' is currently protecting a workload",
-                            this.ds.getName(),
-                            this.ds.getId()));
+                    String.format("The deployment spec with name '%s' is currently protecting a workload",
+                            this.ds.getName()));
         }
 
         if (!this.ds.getMarkedForDeletion() && request.isForceDelete()) {
