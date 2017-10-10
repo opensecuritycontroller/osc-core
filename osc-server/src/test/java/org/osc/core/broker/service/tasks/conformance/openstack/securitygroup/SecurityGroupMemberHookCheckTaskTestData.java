@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.HashSet;
@@ -61,21 +60,19 @@ class SecurityGroupMemberHookCheckTaskTestData {
     public static SecurityGroupMember SFC_SGM_WITH_PORTS_SFC_MISMATCH = createBindedSfcSecurityGroupMember(
             getSfcPorts(false));
 
+    public static SecurityGroupMember SFC_SGM_WITH_PORTS_SFC_MIXED_MISMATCH = createBindedSfcSecurityGroupMember(
+            getSfcPorts(false, true, 3));
+
     public static SecurityGroupMember SFC_SGM_UNBINDED_WITH_PORTS = createUnBindedSfcSecurityGroupMember(
             getSfcPorts(false));
 
     public static SecurityGroupMember SFC_SGM_UNBINDED_WITH_PORTS_UNBINDED = createUnBindedSfcSecurityGroupMember(
-            getSfcPorts(false, false));
+            getSfcPorts(false, false, 2));
 
     public TaskGraph getSfcWithPortsTaskGraph(SecurityGroupMember sgm) {
         TaskGraph expectedGraph = new TaskGraph();
 
-        try {
-            initializeApiFactory(sgm);
-            when(this.redirApiMock.getInspectionHook(any())).thenReturn(null);
-        } catch (Exception e) {
-            throw new RuntimeException();
-        }
+        initializeApiFactory(sgm);
         for (VMPort port : sgm.getVmPorts()) {
             expectedGraph.appendTask(new SfcFlowClassifierCreateTask().create(sgm.getSecurityGroup(), port));
         }
@@ -119,12 +116,47 @@ class SecurityGroupMemberHookCheckTaskTestData {
             InspectionHookElement mockInspectionHook = mock(InspectionHookElement.class);
             when(mockInspectionHook.getInspectionPort()).thenReturn(mock(InspectionPortElement.class));
             when(mockInspectionHook.getInspectionPort().getElementId()).thenReturn("foo");
-            when(this.redirApiMock.getInspectionHook(any())).thenReturn(mockInspectionHook);
+
+            for (VMPort port : sgm.getVmPorts()) {
+                expectedGraph.appendTask(new SfcFlowClassifierUpdateTask().create(sgm.getSecurityGroup(), port));
+                when(this.redirApiMock.getInspectionHook(port.getInspectionHookId())).thenReturn(mockInspectionHook);
+            }
         } catch (Exception e) {
             throw new RuntimeException();
         }
-        for (VMPort port : sgm.getVmPorts()) {
-            expectedGraph.appendTask(new SfcFlowClassifierUpdateTask().create(sgm.getSecurityGroup(), port));
+        return expectedGraph;
+    }
+
+    public TaskGraph getSfcMixedMismatchTaskGraph(SecurityGroupMember sgm) {
+        TaskGraph expectedGraph = new TaskGraph();
+
+        try {
+            initializeApiFactory(sgm);
+
+            InspectionHookElement mockInspectionHook = mock(InspectionHookElement.class);
+            when(mockInspectionHook.getInspectionPort()).thenReturn(mock(InspectionPortElement.class));
+            when(mockInspectionHook.getInspectionPort().getElementId()).thenReturn("foo");
+
+            for (VMPort port : sgm.getVmPorts()) {
+                // for first port expect mismatch
+                if (port.getInspectionHookId().endsWith("0")) {
+                    when(this.redirApiMock.getInspectionHook(port.getInspectionHookId()))
+                            .thenReturn(mockInspectionHook);
+                    expectedGraph.appendTask(new SfcFlowClassifierUpdateTask().create(sgm.getSecurityGroup(), port));
+                } else if(port.getInspectionHookId().endsWith("1")) {
+                    // Second port has no hook, so expect creating of hooks
+                    expectedGraph.appendTask(new SfcFlowClassifierCreateTask().create(sgm.getSecurityGroup(), port));
+                } else if(port.getInspectionHookId().endsWith("2")) {
+                    // For port with the right sfcid, we should no-op
+                    InspectionHookElement mockedExistingHook = mock(InspectionHookElement.class);
+                    when(mockedExistingHook.getInspectionPort()).thenReturn(mock(InspectionPortElement.class));
+                    when(mockedExistingHook.getInspectionPort().getElementId()).thenReturn(OPENSTACK_SFC_ID);
+                    when(this.redirApiMock.getInspectionHook(port.getInspectionHookId()))
+                    .thenReturn(mockedExistingHook);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException();
         }
         return expectedGraph;
     }
@@ -180,12 +212,12 @@ class SecurityGroupMemberHookCheckTaskTestData {
     }
 
     private static Set<VMPort> getSfcPorts(boolean markDeleted) {
-        return getSfcPorts(markDeleted, true);
+        return getSfcPorts(markDeleted, true, 2);
     }
 
-    private static Set<VMPort> getSfcPorts(boolean markDeleted, boolean addFlowClassifier) {
+    private static Set<VMPort> getSfcPorts(boolean markDeleted, boolean addFlowClassifier, int count) {
         Set<VMPort> ports = new HashSet<>();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < count; i++) {
             VMPort mockPort = mock(VMPort.class);
             when(mockPort.getVm()).thenReturn(mock(VM.class));
             when(mockPort.getMarkedForDeletion()).thenReturn(markDeleted);
