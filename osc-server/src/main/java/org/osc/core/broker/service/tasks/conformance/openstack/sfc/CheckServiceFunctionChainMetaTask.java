@@ -112,28 +112,28 @@ public class CheckServiceFunctionChainMetaTask extends TransactionalMetaTask {
 		List<NetworkElement> portPairGroups = new ArrayList<>();
 
 		for (VirtualSystem vs : vsList) {
-			if (vs.getDeploymentSpecs().isEmpty()) {
-				throw new VmidcBrokerValidationException(
-						String.format("No deployment found for virtual system '%s'.", vs.getName()));
-			}
 
 			// Currently, We have no information on OSC SG about the OST region. SFC do not support port chain with multiple region deployment.
 			// We cannot create Port Chain of VNF Deployment's belonging to different region. If we find the VS with multiple DS on different region throw an exception.
 			List<DeploymentSpec> dsList = DeploymentSpecEntityMgr
 					.findDeploymentSpecsByVirtualSystemProjectWithDefaultRegionOne(em, vs, projectId);
+
+			if (dsList.isEmpty()) {
+				throw new VmidcBrokerValidationException(
+						String.format("No deployment found for virtual system '%s'.", vs.getName()));
+			}
+
 			if (dsList.size() > 1) {
 				throw new VmidcBrokerValidationException(String
 						.format("Multiple deployments found for vs '%s' belonging to the same project.", vs.getName()));
 			}
 
-			if (!dsList.isEmpty()) {
-				if (dsList.iterator().next().getPortGroupId() == null) {
-					throw new VmidcBrokerValidationException(String.format(
-							"No port pair group found. Deployment spec '%s' is expected to have port pair group for vs '%s'.",
-							dsList.iterator().next().getName(), vs.getName()));
-				}
-				portPairGroups.add(new PortPairGroupNetworkElementImpl(dsList.iterator().next().getPortGroupId()));
+			if (dsList.iterator().next().getPortGroupId() == null) {
+				throw new VmidcBrokerValidationException(String.format(
+						"No port pair group found. Deployment spec '%s' is expected to have port pair group for vs '%s'.",
+						dsList.iterator().next().getName(), vs.getName()));
 			}
+			portPairGroups.add(new PortPairGroupNetworkElementImpl(dsList.iterator().next().getPortGroupId()));
 
 		}
 		return portPairGroups;
