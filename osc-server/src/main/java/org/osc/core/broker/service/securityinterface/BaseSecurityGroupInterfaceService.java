@@ -16,12 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securityinterface;
 
-import java.util.Set;
-
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
@@ -54,9 +51,10 @@ ServiceDispatcher<I, O> {
             throw new VmidcBrokerValidationException("Security group interfaces cannot be created or updated for appliance manager that does not support policy mapping.");
         }
 
-        // Validate policies
-        Set<Policy> policies = PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
-                vs.getDistributedAppliance().getApplianceManagerConnector());
+		// Validate policies
+        // TODO Larkins: Improve the method not to do the validation
+		PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
+				vs.getDistributedAppliance().getApplianceManagerConnector());
 
         return vs;
     }

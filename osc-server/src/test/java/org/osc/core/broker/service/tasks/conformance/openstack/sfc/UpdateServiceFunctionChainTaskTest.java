@@ -111,6 +111,8 @@ public class UpdateServiceFunctionChainTaskTest {
         this.sfc.setId(3L);
         this.sfc.setName("A_SFC_NAME");
 
+        this.sg.setServiceFunctionChain(this.sfc);
+
         Mockito.when(this.em.find(ServiceFunctionChain.class, this.sfc.getId())).thenReturn(this.sfc);
 
         Mockito.when(this.apiFactoryServiceMock.createNetworkRedirectionApi(mockVc)).thenReturn(this.sdnApi);
@@ -120,7 +122,7 @@ public class UpdateServiceFunctionChainTaskTest {
     @Test
     public void testExecute_WithSecurityGroupSFCIdSetToNull_ExpectUpdate() throws Exception {
         // Arrange
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sg, this.networkElementList);
         this.sg.setNetworkElementId(null);
         Mockito.when(this.sdnApi
                 .updateNetworkElement(argThat(new ElementIdMatcher<NetworkElement>(this.sg.getNetworkElementId())), any()))
@@ -137,7 +139,7 @@ public class UpdateServiceFunctionChainTaskTest {
     public void testExecute_WithSecurityGroupSFCIdSetToNotEmpty_ExpectUpdate() throws Exception {
         // Arrange
         this.sg.setNetworkElementId("OLD_SFC_ID");
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sg, this.networkElementList);
         Mockito.when(this.sdnApi
                 .updateNetworkElement(argThat(new ElementIdMatcher<NetworkElement>(this.sg.getNetworkElementId())), any()))
                 .thenReturn(new NetworkElementImpl("UPDATED_SFC_ID"));
@@ -155,7 +157,7 @@ public class UpdateServiceFunctionChainTaskTest {
         this.sg.setNetworkElementId("OLD_SFC_ID");
         this.networkElementList = new ArrayList<>();
 
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sg, this.networkElementList);
 
         Mockito.when(this.sdnApi.updateNetworkElement(
                 argThat(new ElementIdMatcher<NetworkElement>(this.sg.getNetworkElementId())), this.neListCaptor.capture()))
@@ -170,7 +172,7 @@ public class UpdateServiceFunctionChainTaskTest {
     @Test
     public void testGetName_WithSecurityGroupSFCId_ExpectCorrect() {
         // Arrange
-        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sfc, this.sg, this.networkElementList);
+        UpdateServiceFunctionChainTask updateTask = this.task.create(this.sg, this.networkElementList);
 
         // Act.
         String taskName = updateTask.getName();

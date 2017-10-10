@@ -50,9 +50,9 @@ import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.osc.core.broker.service.tasks.conformance.openstack.sfc.CheckServiceFunctionChainMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
@@ -65,6 +65,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Validates the Security Group members and syncs them if needed
@@ -74,6 +75,9 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Reference
     PortGroupCheckMetaTask portGroupCheckMetaTask;
+
+    @Reference
+    CheckServiceFunctionChainMetaTask checkServiceFunctionChainMetaTask;
 
     @Reference
     CheckPortGroupHookMetaTask checkPortGroupHookMetaTask;
@@ -236,7 +240,19 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(),
                 this.sg.getVirtualizationConnector().getProviderAdminProjectName());
 
-        // in case of neutron sfc, make sure the SFC is upto date and SFC has the id set.
+		if (this.apiFactoryService.supportsNeutronSFC(this.sg.getVirtualizationConnector().getControllerType())) {
+
+			// if SFC binded and network element null -> create PC
+			// if SFC binded and network element not null -> update PC
+			// if SFC not binded and network element not null -> delete PC
+
+			if (this.sg.getServiceFunctionChain() != null
+					|| (this.sg.getServiceFunctionChain() == null && this.sg.getNetworkElementId() != null)) {
+				this.tg.appendTask(this.checkServiceFunctionChainMetaTask.create(this.sg),
+						TaskGuard.ALL_PREDECESSORS_SUCCEEDED);
+			}
+
+		}
 
         // SGM Member sync with no task deferred
         addSGMemberSyncJob(em, isDeleteTg, vdc);
