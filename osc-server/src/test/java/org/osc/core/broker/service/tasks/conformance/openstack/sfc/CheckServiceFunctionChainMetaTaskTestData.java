@@ -43,12 +43,13 @@ public class CheckServiceFunctionChainMetaTaskTestData {
 
     static PortPairGroupNetworkElementImpl PPG_NETWORK_ELEMENT_NOT_MATCHING = new PortPairGroupNetworkElementImpl("PORT_PAIR_GROUP_NOT_MATCHING");
 
-	private static final ServiceFunctionChain SERVICE_FUCNTION_CHAIN = createSFC();
+	private static final ServiceFunctionChain SERVICE_FUCNTION_CHAIN_CREATE = createSFC("CREATE");
+	private static final ServiceFunctionChain SERVICE_FUCNTION_CHAIN_DELETE = createSFC("UPDATE");
 	private static final VirtualizationConnector VIRTUALIZATION_CONNECTOR = createVC();
 
-	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_CREATE_SFC = createSG("SG_1", SERVICE_FUCNTION_CHAIN,
+	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_CREATE_SFC = createSG("SG_1", SERVICE_FUCNTION_CHAIN_CREATE,
 			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_1", null);
-	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_UPDATE_SFC = createSG("SG_2", SERVICE_FUCNTION_CHAIN,
+	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_UPDATE_SFC = createSG("SG_2", SERVICE_FUCNTION_CHAIN_DELETE,
 			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_2", "NETWORK_ELEMENT_ID_2");
 	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_DELETE_SFC = createSG("SG_3", null, VIRTUALIZATION_CONNECTOR,
 			"PROJECT_ID_3", "NETWORK_ELEMENT_ID_3");
@@ -105,9 +106,9 @@ public class CheckServiceFunctionChainMetaTaskTestData {
 		}
 	}
 
-	private static ServiceFunctionChain createSFC() {
+	private static ServiceFunctionChain createSFC(String name) {
 		ServiceFunctionChain sfc = new ServiceFunctionChain();
-		sfc.setName("sfc");
+		sfc.setName(name);
 		return sfc;
 	}
 
