@@ -117,10 +117,12 @@ public class SfcFlowClassifierUpdateTaskTest {
 
         this.port = mock(VMPort.class);
 
+        when(this.port.getId()).thenReturn(1L);
         when(this.port.getOpenstackId()).thenReturn(OPENSTACK_VMPORT_ID);
         when(this.port.getVm()).thenReturn(mockVm);
         when(this.port.getInspectionHookId()).thenReturn(INSPECTION_HOOK_ID);
 
+        Mockito.when(this.em.find(VMPort.class, this.port.getId())).thenReturn(this.port);
         Mockito.when(this.apiFactoryServiceMock.createNetworkRedirectionApi(mockVc)).thenReturn(this.sdnApi);
 
     }

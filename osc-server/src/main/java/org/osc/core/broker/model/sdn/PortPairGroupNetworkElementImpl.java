@@ -66,15 +66,15 @@ public class PortPairGroupNetworkElementImpl implements NetworkElement {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (!(obj instanceof NetworkElement)) {
 			return false;
 		}
-		PortPairGroupNetworkElementImpl other = (PortPairGroupNetworkElementImpl) obj;
+		NetworkElement other = (NetworkElement) obj;
 		if (this.elementId == null) {
-			if (other.elementId != null) {
+			if (other.getElementId() != null) {
 				return false;
 			}
-		} else if (!this.elementId.equals(other.elementId)) {
+		} else if (!this.elementId.equals(other.getElementId())) {
 			return false;
 		}
 		return true;

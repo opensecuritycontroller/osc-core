@@ -22,7 +22,6 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -36,7 +35,6 @@ public class SfcFlowClassifierDeleteTask extends TransactionalTask {
     @Reference
     private ApiFactoryService apiFactory;
 
-    private ServiceFunctionChain sfc;
     private SecurityGroup securityGroup;
     private VMPort port;
     private String vmName;
@@ -45,7 +43,6 @@ public class SfcFlowClassifierDeleteTask extends TransactionalTask {
         SfcFlowClassifierDeleteTask task = new SfcFlowClassifierDeleteTask();
 
         task.securityGroup = securityGroup;
-        task.sfc = securityGroup.getServiceFunctionChain();
         task.port = port;
         task.vmName = port.getVm() != null ? port.getVm().getName() : port.getSubnet().getName();
         task.apiFactory = this.apiFactory;
@@ -58,8 +55,8 @@ public class SfcFlowClassifierDeleteTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        this.sfc = em.find(ServiceFunctionChain.class, this.sfc.getId());
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
+        this.port = em.find(VMPort.class, this.port.getId());
 
         String inspectionHookId = this.port.getInspectionHookId();
 
@@ -76,13 +73,13 @@ public class SfcFlowClassifierDeleteTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format(
-                "Deleting flow classifier for port '%s' belonging to Security Group Member '%s' using Service Function Chain '%s'",
-                this.port.getOpenstackId(), this.vmName, this.sfc.getName());
+                "Deleting flow classifier for port '%s' belonging to Security Group Member '%s'",
+                this.port.getOpenstackId(), this.vmName);
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(this.securityGroup, this.sfc);
+        return LockObjectReference.getObjectReferences(this.securityGroup);
     }
 
 }
