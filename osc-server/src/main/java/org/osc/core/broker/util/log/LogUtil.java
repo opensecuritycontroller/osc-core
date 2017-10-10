@@ -38,10 +38,8 @@ public class LogUtil {
         private static final Logger logger = LoggerFactory.getLogger(StdOutErrLog.class);
 
         public static void tieSystemOutAndErrToLog() {
-            synchronized (System.class) {
-                System.setOut(createLoggingProxy(System.out, false));
-                System.setErr(createLoggingProxy(System.err, true));
-            }
+            System.setOut(createLoggingProxy(System.out, false));
+            System.setErr(createLoggingProxy(System.err, true));
         }
 
         public static PrintStream createLoggingProxy(final PrintStream realPrintStream, final boolean isError) {
