@@ -15,13 +15,7 @@
     limitations under the License. 
 -->
 <configuration scan="true">
- 
-  <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
-      <Pattern>%d [%-5p| %t| %c{1}]: %m%n</Pattern>
-    </layout>    
-  </appender>
-  
+
   <appender name="fileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <layout class="ch.qos.logback.classic.PatternLayout">
       <Pattern>%d [%-5p| %t| %c{1}]: %m%n</Pattern>
@@ -35,7 +29,6 @@
   </appender>
 
   <root level="info">
-    <appender-ref ref="consoleAppender" />
     <appender-ref ref="fileAppender" />
   </root>
 
