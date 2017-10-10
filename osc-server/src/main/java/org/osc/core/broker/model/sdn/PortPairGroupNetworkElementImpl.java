@@ -19,7 +19,9 @@ package org.osc.core.broker.model.sdn;
 import java.util.List;
 
 import org.osc.sdk.controller.element.NetworkElement;
-
+/**
+ * PortPairGroupNetworkElementImpl contains only element id which is used to compare the manager sfc port group element id.
+ */
 public class PortPairGroupNetworkElementImpl implements NetworkElement {
 
     private String elementId;
