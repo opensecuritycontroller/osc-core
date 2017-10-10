@@ -60,6 +60,7 @@ public class SfcFlowClassifierUpdateTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
+        this.port = em.find(VMPort.class, this.port.getId());
 
         String flowClassifier = this.port.getInspectionHookId();
         String sfcId = this.securityGroup.getNetworkElementId();
