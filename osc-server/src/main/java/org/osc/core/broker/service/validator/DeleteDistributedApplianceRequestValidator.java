@@ -19,7 +19,6 @@ package org.osc.core.broker.service.validator;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
@@ -59,14 +58,6 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
                     "Distributed Appilance with ID "
                             + request.getId()
                             + " is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
-        }
-
-        for (VirtualSystem vs : da.getVirtualSystems()) {
-            if (vs.getServiceFunctionChains().size() > 0) {
-                throw new VmidcBrokerValidationException("Cannot delete Distributed Appilance with ID " + request.getId()
-                + " as its associated Virtual System : " + vs.getName() + " is being referenced by Service Function Chain : " +
-                vs.getServiceFunctionChains().get(0).getName());
-            }
         }
 
         return da;
