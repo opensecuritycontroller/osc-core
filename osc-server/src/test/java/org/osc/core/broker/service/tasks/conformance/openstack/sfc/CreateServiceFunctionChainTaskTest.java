@@ -171,8 +171,6 @@ public class CreateServiceFunctionChainTaskTest {
 		Mockito.verify(this.em, Mockito.never()).merge(any());
 	}
 
-
-
 	private void populateDatabase() {
 		if (!DB_POPULATED) {
 			this.em.getTransaction().begin();
