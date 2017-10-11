@@ -39,25 +39,31 @@ import org.osc.core.common.virtualization.VirtualizationType;
 public class CheckServiceFunctionChainMetaTaskTestData {
 	public static boolean DB_POPULATED = false;
 
-    static PortPairGroupNetworkElementImpl PPG_NETWORK_ELEMENT_MATCHING = new PortPairGroupNetworkElementImpl("PORT_PAIR_GROUP");
+	static PortPairGroupNetworkElementImpl PPG_NETWORK_ELEMENT_MATCHING = new PortPairGroupNetworkElementImpl(
+			"PORT_PAIR_GROUP");
 
-    static PortPairGroupNetworkElementImpl PPG_NETWORK_ELEMENT_NOT_MATCHING = new PortPairGroupNetworkElementImpl("PORT_PAIR_GROUP_NOT_MATCHING");
+	static PortPairGroupNetworkElementImpl PPG_NETWORK_ELEMENT_NOT_MATCHING = new PortPairGroupNetworkElementImpl(
+			"PORT_PAIR_GROUP_NOT_MATCHING");
 
 	private static final ServiceFunctionChain SERVICE_FUCNTION_CHAIN_CREATE = createSFC("CREATE");
-	private static final ServiceFunctionChain SERVICE_FUCNTION_CHAIN_DELETE = createSFC("UPDATE");
+	private static final ServiceFunctionChain SERVICE_FUCNTION_CHAIN_UPDATE = createSFC("UPDATE");
+	private static final ServiceFunctionChain SG_DELETE_SERVICE_FUCNTION_CHAIN_DELETE = createSFC("DELETE");
 	private static final VirtualizationConnector VIRTUALIZATION_CONNECTOR = createVC();
 
-	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_CREATE_SFC = createSG("SG_1", SERVICE_FUCNTION_CHAIN_CREATE,
-			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_1", null);
-	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_UPDATE_SFC = createSG("SG_2", SERVICE_FUCNTION_CHAIN_DELETE,
-			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_2", "NETWORK_ELEMENT_ID_2");
-	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_DELETE_SFC = createSG("SG_3", null, VIRTUALIZATION_CONNECTOR,
-			"PROJECT_ID_3", "NETWORK_ELEMENT_ID_3");
+	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_CREATE_SFC = createSG("SG_1", false,
+			SERVICE_FUCNTION_CHAIN_CREATE, VIRTUALIZATION_CONNECTOR, "PROJECT_ID_1", null);
+	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_UPDATE_SFC = createSG("SG_2", false,
+			SERVICE_FUCNTION_CHAIN_UPDATE, VIRTUALIZATION_CONNECTOR, "PROJECT_ID_2", "NETWORK_ELEMENT_ID_2");
+	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_DELETE_SFC = createSG("SG_3", false, null,
+			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_3", "NETWORK_ELEMENT_ID_3");
+	static final SecurityGroup SECURITY_GROUP_MARK_DELETE_SFC_BINDED_DELETE_SFC = createSG("SG_4", true,
+			SG_DELETE_SERVICE_FUCNTION_CHAIN_DELETE, VIRTUALIZATION_CONNECTOR, "PROJECT_ID_4", "NETWORK_ELEMENT_ID_4");
 
 	public static TaskGraph createSFCGraph(SecurityGroup sg) {
 		TaskGraph expectedGraph = new TaskGraph();
 
-		expectedGraph.appendTask(new CreateServiceFunctionChainTask().create(sg, Arrays.asList(PPG_NETWORK_ELEMENT_MATCHING)));
+		expectedGraph.appendTask(
+				new CreateServiceFunctionChainTask().create(sg, Arrays.asList(PPG_NETWORK_ELEMENT_MATCHING)));
 
 		return expectedGraph;
 	}
@@ -65,7 +71,8 @@ public class CheckServiceFunctionChainMetaTaskTestData {
 	public static TaskGraph updateSFCGraph(SecurityGroup sg) {
 		TaskGraph expectedGraph = new TaskGraph();
 
-		expectedGraph.appendTask(new UpdateServiceFunctionChainTask().create(sg, Arrays.asList(PPG_NETWORK_ELEMENT_MATCHING)));
+		expectedGraph.appendTask(
+				new UpdateServiceFunctionChainTask().create(sg, Arrays.asList(PPG_NETWORK_ELEMENT_MATCHING)));
 
 		return expectedGraph;
 	}
@@ -123,13 +130,14 @@ public class CheckServiceFunctionChainMetaTaskTestData {
 		return vc;
 	}
 
-	private static SecurityGroup createSG(String baseName, ServiceFunctionChain sfc, VirtualizationConnector vc,
-			String projectId, String networkElementId) {
+	private static SecurityGroup createSG(String baseName, boolean markedForDeletion, ServiceFunctionChain sfc,
+			VirtualizationConnector vc, String projectId, String networkElementId) {
 		VirtualSystem vs = createVirtualSystem(baseName, "NSM", vc, projectId);
 
 		SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), projectId, "PROJECT_NAME");
 		sg.setName(baseName + "_sg");
 		sg.setNetworkElementId(networkElementId);
+		sg.setMarkedForDeletion(markedForDeletion);
 
 		if (sfc != null) {
 			sfc.addVirtualSystem(vs);
@@ -140,7 +148,8 @@ public class CheckServiceFunctionChainMetaTaskTestData {
 		return sg;
 	}
 
-	private static VirtualSystem createVirtualSystem(String baseName, String mgrType, VirtualizationConnector vc, String projectId) {
+	private static VirtualSystem createVirtualSystem(String baseName, String mgrType, VirtualizationConnector vc,
+			String projectId) {
 		ApplianceManagerConnector mc = new ApplianceManagerConnector();
 		mc.setIpAddress(baseName + "_mcIp");
 		mc.setName(baseName + "_mc");
