@@ -75,7 +75,12 @@ public class CheckServiceFunctionChainMetaTask extends TransactionalMetaTask {
 		this.tg = new TaskGraph();
 		this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 
-		if (this.securityGroup.getNetworkElementId() == null && this.securityGroup.getServiceFunctionChain() != null) {
+		if (this.securityGroup.getNetworkElementId() != null && (this.securityGroup.getMarkedForDeletion()
+				|| this.securityGroup.getServiceFunctionChain() == null)) {
+			// if network element not null AND SFC unbinded OR SG mark for deletion -> delete PC
+			this.tg.appendTask(this.deleteServiceFunctionChainTask.create(this.securityGroup));
+
+		} else if (this.securityGroup.getNetworkElementId() == null && this.securityGroup.getServiceFunctionChain() != null) {
 			// if SFC binded and network element null -> create PC
 			this.portPairGroups = getPortPairGroupWithSameProjectId(em, this.securityGroup.getProjectId(),
 					this.securityGroup.getServiceFunctionChain().getVirtualSystems());
@@ -98,10 +103,6 @@ public class CheckServiceFunctionChainMetaTask extends TransactionalMetaTask {
 							this.updateServiceFunctionChainTask.create(this.securityGroup, this.portPairGroups));
 				}
 			}
-
-		} else if (this.securityGroup.getNetworkElementId() != null && this.securityGroup.getServiceFunctionChain() == null) {
-			// if SFC not binded and network element not null -> delete PC
-			this.tg.appendTask(this.deleteServiceFunctionChainTask.create(this.securityGroup));
 
 		}
 	}

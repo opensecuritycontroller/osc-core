@@ -139,7 +139,9 @@ public class CheckServiceFunctionChainMetaTaskTest {
 		return Arrays.asList(new Object[][] {
 				{ SECURITY_GROUP_SFC_BINDED_CREATE_SFC, createSFCGraph(SECURITY_GROUP_SFC_BINDED_CREATE_SFC) },
 				{ SECURITY_GROUP_SFC_BINDED_UPDATE_SFC, updateSFCGraph(SECURITY_GROUP_SFC_BINDED_UPDATE_SFC) },
-				{ SECURITY_GROUP_SFC_BINDED_DELETE_SFC, deleteSFCGraph(SECURITY_GROUP_SFC_BINDED_DELETE_SFC) }, });
+				{ SECURITY_GROUP_SFC_BINDED_DELETE_SFC, deleteSFCGraph(SECURITY_GROUP_SFC_BINDED_DELETE_SFC) },
+				{ SECURITY_GROUP_MARK_DELETE_SFC_BINDED_DELETE_SFC,
+						deleteSFCGraph(SECURITY_GROUP_MARK_DELETE_SFC_BINDED_DELETE_SFC) }, });
 	}
 
 	private void populateDatabase() {
@@ -148,6 +150,7 @@ public class CheckServiceFunctionChainMetaTaskTest {
 			persist(SECURITY_GROUP_SFC_BINDED_CREATE_SFC, this.em);
 			persist(SECURITY_GROUP_SFC_BINDED_UPDATE_SFC, this.em);
 			persist(SECURITY_GROUP_SFC_BINDED_DELETE_SFC, this.em);
+			persist(SECURITY_GROUP_MARK_DELETE_SFC_BINDED_DELETE_SFC, this.em);
 			this.em.getTransaction().commit();
 			DB_POPULATED = true;
 		}
