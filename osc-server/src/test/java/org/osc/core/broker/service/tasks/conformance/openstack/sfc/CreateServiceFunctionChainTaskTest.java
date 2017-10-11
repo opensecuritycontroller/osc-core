@@ -121,6 +121,27 @@ public class CreateServiceFunctionChainTaskTest {
 	}
 
 	@Test
+	public void testExecute_WithSecurityGroupSFCBoundAndExistingSGElementIdNull_ExpectCreate() throws Exception {
+		// Arrange.
+		CreateServiceFunctionChainTask task = this.task
+				.create(NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT, this.portPairGroup);
+		registerNetworkElement(NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT,
+				new PortPairGroupNetworkElementImpl(
+						NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT.getNetworkElementId()),
+				null);
+
+		// Act.
+		task.execute();
+
+		// Assert
+		assertEquals(
+				SecurityGroupEntityMgr
+						.findById(this.em, NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT.getId())
+						.getNetworkElementId(),
+				NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT.getNetworkElementId());
+	}
+
+	@Test
 	public void testExecute_WithSecurityGroupBoundToSFCAlreadyBound_ExpectUpdateSFCElementId() throws Exception {
 		// Arrange.
 		CreateServiceFunctionChainTask task = this.task.create(NEW_SECURITY_GROUP_SAME_SFC_BINDED_UPDATE_ELEMENT_ID,
@@ -150,6 +171,8 @@ public class CreateServiceFunctionChainTaskTest {
 		Mockito.verify(this.em, Mockito.never()).merge(any());
 	}
 
+
+
 	private void populateDatabase() {
 		if (!DB_POPULATED) {
 			this.em.getTransaction().begin();
@@ -157,6 +180,8 @@ public class CreateServiceFunctionChainTaskTest {
 			persist(SECURITY_GROUP_SFC_BINDED_EXPECT_CREATE, this.em);
 			persist(NEW_SECURITY_GROUP_SAME_SFC_BINDED_UPDATE_ELEMENT_ID, this.em);
 			persist(SECURITY_GROUP_SFC, this.em);
+			persist(SECURITY_GROUP_SFC_BINDED_NETWORK_ELEMENT_ID_NULL, this.em);
+			persist(NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT, this.em);
 			this.em.getTransaction().commit();
 			DB_POPULATED = true;
 		}
