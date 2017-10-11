@@ -30,7 +30,7 @@
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>./log/securityBroker.%d{yyyy-MM-dd}.log</fileNamePattern>
       <maxHistory>10</maxHistory> 
-      <totalSizeCap>10MB</totalSizeCap>
+      <totalSizeCap>100MB</totalSizeCap>
     </rollingPolicy>
   </appender>
 
