@@ -45,14 +45,14 @@ implements AcknowledgeAlertServiceApi {
 
         if (request.isAcknowledge()) {
             for (AlertDto dto : request.getDtoList()) {
-                dto.setStatus(AcknowledgementStatus.ACKNOWLEDGED.toString());
+                dto.setStatus(AcknowledgementStatus.ACKNOWLEDGED);
                 dto.setAcknowledgedUser(this.userContext.getCurrentUser());
                 dto.setTimeAcknowledgedTimestamp(new Date());
             }
         } else {
             //This is unacknowledge request
             for (AlertDto dto : request.getDtoList()) {
-                dto.setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
+                dto.setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
                 dto.setAcknowledgedUser(null);
                 dto.setTimeAcknowledgedTimestamp(null);
             }

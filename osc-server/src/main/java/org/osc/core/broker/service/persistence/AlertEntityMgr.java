@@ -21,9 +21,6 @@ import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
-import org.osc.core.common.alarm.EventType;
-import org.osc.core.common.alarm.Severity;
-import org.osc.core.common.job.AcknowledgementStatus;
 
 public class AlertEntityMgr {
 
@@ -38,14 +35,14 @@ public class AlertEntityMgr {
         // transform from dto to entity
         alert.setId(dto.getId());
         alert.setName(dto.getName());
-        alert.setType(EventType.fromText(dto.getEventType()));
+        alert.setType(dto.getEventType());
         if (dto.getObject() != null) {
             alert.setObjectId(dto.getObject().getId());
             alert.setObjectType(ObjectType.valueOf(dto.getObject().getType().getName()));
             alert.setObjectName(dto.getObject().getName());
         }
-        alert.setSeverity(Severity.fromText(dto.getSeverity()));
-        alert.setStatus(AcknowledgementStatus.fromText(dto.getStatus()));
+        alert.setSeverity(dto.getSeverity());
+        alert.setStatus(dto.getStatus());
         alert.setMessage(dto.getMessage());
         alert.setAcknowledgedBy(dto.getAcknowledgedUser());
         alert.setTimeAcknowledgedTimestamp(dto.getTimeAcknowledgedTimestamp());
@@ -56,15 +53,15 @@ public class AlertEntityMgr {
 
         dto.setId(alert.getId());
         dto.setName(alert.getName());
-        dto.setEventType(alert.getType().toString());
+        dto.setEventType(alert.getType());
 
         if (alert.getObjectId() != null) {
             LockObjectDto object = new LockObjectDto(alert.getObjectId(), alert.getObjectName(),
                     new ObjectTypeDto(alert.getObjectType().name(), alert.getObjectType().toString()));
             dto.setObject(object);
         }
-        dto.setSeverity(alert.getSeverity().toString());
-        dto.setStatus(alert.getStatus().toString());
+        dto.setSeverity(alert.getSeverity());
+        dto.setStatus(alert.getStatus());
         dto.setMessage(alert.getMessage());
         dto.setAcknowledgedUser(alert.getAcknowledgedBy());
         dto.setTimeAcknowledgedTimestamp(alert.getTimeAcknowledgedTimestamp());

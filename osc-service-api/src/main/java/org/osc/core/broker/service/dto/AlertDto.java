@@ -24,28 +24,29 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.job.LockObjectDto;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
+import org.osc.core.common.job.AcknowledgementStatus;
 
 import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "alert")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AlertDto extends BaseDto {
-    public static final String AcknowledgementStatus_ACKNOWLEDGED = "Acknowledged";
-
     @ApiModelProperty(required=true)
     private String name;
 
     private LockObjectDto object;
 
     @ApiModelProperty(required=true)
-    private String severity;
+    private Severity severity;
 
     @ApiModelProperty(required=true)
-    private String eventType;
+    private EventType eventType;
 
     @ApiModelProperty(required=true)
     @XmlElement(name = "status")
-    private String status;
+    private AcknowledgementStatus status;
 
     private String message;
     private String acknowledgedUser;
@@ -68,27 +69,27 @@ public class AlertDto extends BaseDto {
         this.object = object;
     }
 
-    public String getSeverity() {
+    public Severity getSeverity() {
         return this.severity;
     }
 
-    public void setSeverity(String severity) {
+    public void setSeverity(Severity severity) {
         this.severity = severity;
     }
 
-    public String getEventType() {
+    public EventType getEventType() {
         return this.eventType;
     }
 
-    public void setEventType(String eventType) {
+    public void setEventType(EventType eventType) {
         this.eventType = eventType;
     }
 
-    public String getStatus() {
+    public AcknowledgementStatus getStatus() {
         return this.status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(AcknowledgementStatus status) {
         this.status = status;
     }
 
