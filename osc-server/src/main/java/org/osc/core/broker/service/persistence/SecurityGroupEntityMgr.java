@@ -126,15 +126,15 @@ public class SecurityGroupEntityMgr {
         return dto;
     }
 
-	public static List<SecurityGroup> listOtherSecurityGroupsWithSameSFC(EntityManager em,
-			SecurityGroup sg) {
+	public static List<SecurityGroup> listOtherSecurityGroupsWithSameSFC(EntityManager em, SecurityGroup sg) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 
 		CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
 
 		Root<SecurityGroup> root = query.from(SecurityGroup.class);
 		query = query.select(root).where(cb.equal(root.join("serviceFunctionChain"), sg.getServiceFunctionChain()),
-				cb.equal(root.get("projectId"), sg.getProjectId()), cb.notEqual(root, sg));
+				cb.equal(root.get("projectId"), sg.getProjectId()), cb.notEqual(root, sg),
+				cb.isNotNull(root.get("networkElementId")));
 
 		List<SecurityGroup> list = em.createQuery(query).getResultList();
 		return list;

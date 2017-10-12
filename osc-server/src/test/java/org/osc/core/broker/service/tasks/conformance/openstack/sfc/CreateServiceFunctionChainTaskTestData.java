@@ -48,6 +48,10 @@ public class CreateServiceFunctionChainTaskTestData {
 			SERVICE_FUCNTION_CHAIN, VIRTUALIZATION_CONNECTOR, "PROJECT_ID_2", "NETWORK_ELEMENT_ID_2");
 	static final SecurityGroup SECURITY_GROUP_SFC = createSG("SG_4", SERVICE_FUCNTION_CHAIN,
 			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_3", null);
+	static final SecurityGroup SECURITY_GROUP_SFC_BINDED_NETWORK_ELEMENT_ID_NULL = createSG("SG_5", SERVICE_FUCNTION_CHAIN,
+			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_4", null);
+	static final SecurityGroup NEW_SG_SAME_SFC_BINDED_EXISTING_SG_ELEMENT_ID_NULL_CREATE_ELEMENT = createSG("SG_6", SERVICE_FUCNTION_CHAIN,
+			VIRTUALIZATION_CONNECTOR, "PROJECT_ID_4", "NETWORK_ELEMENT_ID_3");
 
 	static void persist(SecurityGroup sg, EntityManager em) {
 		VirtualizationConnector vc = sg.getVirtualizationConnector();
