@@ -96,17 +96,6 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 			List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
 
 			if (sfcBind) {
-				//no order just bind the virtual system policies
-				if(sfc == null){
-					//user is trying to remove binding.
-					//ignore all the virtual system binding policies and remove them if there are in the DB
-					// we force to delete all the SGIs in case of sfc value is null.
-				    //for now if we see services consider it as bnding from UI. From API this should not effect.
-                    if (servicesToBindTo.isEmpty()) {
-                        servicesToBindTo = new ArrayList<>();
-                        request.setServicesToBindTo(servicesToBindTo);
-                    }
-				}
 				this.securityGroup.setServiceFunctionChain(sfc);
 			} else {
 				// Sorts the services by the order specified.
@@ -368,6 +357,13 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 	private ServiceFunctionChain validateAndLoadSfcBind(EntityManager em, BindSecurityGroupRequest request) throws Exception {
 
     	ServiceFunctionChain sfc = null;
+        if (!request.isBindSfc()) {
+            //user is trying to configure binding SFC with either UI which currently not supported or APIs that are not
+            //valid for SFC binding, so throw an exception.
+            throw new VmidcBrokerValidationException(String.format(
+                    "Unsupported Interface or API to bind/unbind Security Group %s to Virtual System with a Service Function Chain",
+                    this.securityGroup.getName()));
+        }
 		if(request.getSfcId() == null) {
 			//user wants to unbind serviceFunctonChain with Security Group
 			return null;
@@ -398,8 +394,8 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
              Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
             if (sfcVsIdList.size() == 0 || virtualSystemId == null || !sfcVsIdList.contains(virtualSystemId)) {
             	 throw new VmidcBrokerValidationException(
-     					"Binding request Virutal System Id : " + virtualSystemId +
-     					" do not match with any of the id in Service Function Chain's Virtual System Id list");
+     					"Binding request Virtual System Id : " + virtualSystemId +
+     					" do not match with any of the ids in Service Function Chain Virtual System Id list");
              }
              //by removing virtual system id from the list , will help to throw any exception in case of duplication
              sfcVsIdList.remove(virtualSystemId);
@@ -420,11 +416,12 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
          }
 
          //number of vsIds in sfc should match with number of binding request vsIds
-         if(!sfcVsIdList.isEmpty()) {
-        	 throw new VmidcBrokerValidationException(
- 					"Number of Virtual System Ids in ServiceFunctionChain  " + sfc.getVirtualSystems().size() +
- 					" and Binding request Virtual System Ids " + servicesToBindTo.size() + " do not match");
-         }
+        if (!sfcVsIdList.isEmpty()) {
+            throw new VmidcBrokerValidationException(String.format(
+                    "Number of Virtual Systems in Service Function Chain(%s:%s)"
+                            + "and Binding request Virtual Systems:%s do not match",
+                    sfc.getName(), sfc.getVirtualSystems().size(), servicesToBindTo.size()));
+        }
     	return sfc;
     }
 
