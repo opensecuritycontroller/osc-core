@@ -473,7 +473,7 @@
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0.1-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/2.0.0-SNAPSHOT">
 										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>
