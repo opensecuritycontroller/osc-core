@@ -134,12 +134,14 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
                     .findSecurityGroupInterfacesByVsAndSecurityGroup(em, this.vs, this.sg);
             ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(sgi.getMgrSecurityGroupId());
-            if (mepg == null) {
-                // Add new security group to Manager
-                this.tg.appendTask(this.createMgrSecurityGroupTask.create(this.vs, this.sg, sgi));
-            } else if (sgi.getMarkedForDeletion() == null || !sgi.getMarkedForDeletion()){
-                this.tg.appendTask(this.updateMgrSecurityGroupTask.create(this.vs, this.sg, sgi));
-            } else {
+            if (!sgi.getMarkedForDeletion()) {
+                if (mepg == null) {
+                    // Add new security group to Manager
+                    this.tg.appendTask(this.createMgrSecurityGroupTask.create(this.vs, this.sg, sgi));
+                } else {
+                    this.tg.appendTask(this.updateMgrSecurityGroupTask.create(this.vs, this.sg, sgi));
+                }
+            } else if (mepg != null){
                 this.tg.appendTask(this.deleteMgrSecurityGroupTask.create(this.vs, mepg));
             }
         }
@@ -195,5 +197,4 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         return LockObjectReference
                 .getObjectReferences(this.vs.getDistributedAppliance().getApplianceManagerConnector());
     }
-
 }
