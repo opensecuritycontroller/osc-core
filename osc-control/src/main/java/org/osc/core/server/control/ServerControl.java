@@ -48,8 +48,13 @@ import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.broker.util.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServerControl {
+
+    private static Logger log = LoggerFactory.getLogger(ServerControl.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
     private static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
@@ -63,8 +68,12 @@ public class ServerControl {
     public static final String VMIDC_DEFAULT_LOGIN = "admin";
     public static final String VMIDC_DEFAULT_PASS = "admin123";
 
+
     public static void main(final String[] args) throws Exception {
 
+
+
+        LogUtil.redirectConsoleMessagesToLog();
         loadServerProps();
 
         final Options options = new Options();
@@ -273,26 +282,26 @@ public class ServerControl {
 
     private static boolean isRunningServer() {
         try {
-            System.out.println("Check if server is running ...");
+            log.info("Check if server is running ...");
             VmidcServerRestClient restClient = new VmidcServerRestClient("localhost", apiPort, VMIDC_DEFAULT_LOGIN, VMIDC_DEFAULT_PASS, true);
 
             ServerStatusResponse res = getServerStatusResponse(restClient);
 
             String oldPid = res.getPid();
 
-            System.out.println("Current pid:" + ServerUtil.getCurrentPid() + ". Running server (pid:" + oldPid + ") version: "
+            log.warn("Current pid:" + ServerUtil.getCurrentPid() + ". Running server (pid:" + oldPid + ") version: "
                     + res.getVersion() + " with db version: " + res.getDbVersion());
 
             // If we're here, server is running. Check for active pending
             // upgrade
-            System.out.println("Checking pending server upgrade.");
+            log.warn("Checking pending server upgrade.");
 
             try {
                 restClient.putResource("upgradecomplete", Entity.entity(null, MediaType.APPLICATION_JSON));
                 // If we made it to here, running server is in active upgrade mode
                 // It should be shutting down now. We'll wait till the old process
                 // goes away first by testing if we can get status.
-                System.out.println("Pending active server upgrade. Waiting for old process (" + oldPid
+                log.warn("Pending active server upgrade. Waiting for old process (" + oldPid
                         + ") to exit... (current pid:" + ServerUtil.getCurrentPid() + ")");
                 int oldServerStatusCheckCount = 5; // 5 x 500ms = 2.5 seconds.
                 while (oldServerStatusCheckCount > 0) {
@@ -324,14 +333,14 @@ public class ServerControl {
                         if (!pidFound) {
                             break;
                         }
-                        System.out.println("Old process (" + oldPid + ") is still running. Retry (" + retries
+                        log.info("Old process (" + oldPid + ") is still running. Retry (" + retries
                                 + ") wait for graceful termination.");
                         retries--;
                         Thread.sleep(500);
                     }
                     // If process is still there, we'll force termination.
                     if (pidFound) {
-                        System.out.println("Old process (" + oldPid + ") is still running. Triggering forceful termination.");
+                        log.warn("Old process (" + oldPid + ") is still running. Triggering forceful termination.");
                         ServerUtil.execWithLog("kill -9 " + oldPid);
                     }
                 }
@@ -339,14 +348,14 @@ public class ServerControl {
                 // We'll proceed normal startup as the newly upgraded server.
                 return false;
             } catch (Exception ex) {
-                System.out.println("No active pending upgrade.");
+                log.warn("No active pending upgrade.");
             }
 
             return true;
         } catch (ProcessingException | ConnectException e1) {
-            System.err.println("Fail to connect to running server: "+ e1.getMessage());
+            log.warn("Fail to connect to running server: "+ e1.getMessage());
         } catch (Exception ex) {
-            System.err.println("Fail to connect to running server. Assuming not running: " + ex);
+            log.warn("Fail to connect to running server. Assuming not running: " + ex);
         }
 
         return false;

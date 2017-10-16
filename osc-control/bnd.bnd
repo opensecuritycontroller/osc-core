@@ -19,7 +19,10 @@
     org.osc.core.broker.service.common,\
     com.google.gson.*
 
+# *.dep variables are defined in depend.bnd
+# The @ prefix unwraps the jar files
 -includeresource: \
+    logback.xml=target/logback.xml,\
     @${slf4j-api.dep},\
     @${logback-core.dep},\
     @${logback-classic.dep},\
