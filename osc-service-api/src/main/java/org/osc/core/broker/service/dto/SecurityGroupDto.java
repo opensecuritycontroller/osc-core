@@ -41,6 +41,10 @@ public class SecurityGroupDto extends BaseDto {
     @ApiModelProperty(required = false)
     private Long serviceFunctionChainId;
 
+    @ApiModelProperty(value = "Partner integration value like Port Group id or Service Function Chain id",
+            required = false)
+    private String networkElementId;
+
     @ApiModelProperty(readOnly = true)
     private boolean markForDeletion = false;
 
@@ -93,6 +97,14 @@ public class SecurityGroupDto extends BaseDto {
 
     public void setServiceFunctionChainId(Long serviceFunctionChainId) {
         this.serviceFunctionChainId = serviceFunctionChainId;
+    }
+
+    public String getNetworkElementId() {
+        return this.networkElementId;
+    }
+
+    public void setNetworkElementId(String networkElementId) {
+        this.networkElementId = networkElementId;
     }
 
     public boolean isMarkForDeletion() {
