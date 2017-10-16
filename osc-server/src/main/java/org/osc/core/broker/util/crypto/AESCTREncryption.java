@@ -31,8 +31,8 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.service.api.server.EncryptionException;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AESCTREncryption {
     private static final Logger LOG = LoggerFactory.getLogger(AESCTREncryption.class);
@@ -79,7 +79,7 @@ public class AESCTREncryption {
 
             return new String(result, "UTF-8");
         } catch (Exception ex) {
-            LOG.error("Error encrypting message", ex);
+            LOG.error("Error decrypting message", ex);
             throw new EncryptionException("Failed to decrypt cipher with AES-CTR", ex);
         }
     }

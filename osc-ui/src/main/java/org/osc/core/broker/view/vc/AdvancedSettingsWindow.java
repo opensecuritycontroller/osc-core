@@ -16,15 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import org.osc.core.broker.service.api.server.EncryptionApi;
-import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -50,11 +48,9 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
     private PasswordField rabbitMQUserPassword = null;
     private TextField rabbitMQPort = null;
     private final BaseVCWindow baseVCWindow;
-    private final EncryptionApi encrypter;
 
-    public AdvancedSettingsWindow(BaseVCWindow baseVCWindow, EncryptionApi encrypter) throws Exception {
+    public AdvancedSettingsWindow(BaseVCWindow baseVCWindow) throws Exception {
         this.baseVCWindow = baseVCWindow;
-        this.encrypter = encrypter;
         createWindow(ADVANCED_SETTINGS_CAPTION);
         getComponentModel().setOkClickedListener(new ClickListener() {
             /**
@@ -100,8 +96,8 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
                     .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER));
         }
         if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
-            this.rabbitMQUserPassword.setValue(this.encrypter.decryptAESCTR(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)));
+            this.rabbitMQUserPassword.setValue(this.baseVCWindow.providerAttributes
+                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
         }
         if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
             this.rabbitMQPort.setValue(this.baseVCWindow.providerAttributes
@@ -144,11 +140,11 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
                 this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER,
                         this.rabbitMQUserName.getValue().toString());
                     this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                            this.encrypter.encryptAESCTR(this.rabbitMQUserPassword.getValue().toString()));
+                            this.rabbitMQUserPassword.getValue().toString());
                 this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT,
                         this.rabbitMQPort.getValue().toString());
                 close();
-            } catch (EncryptionException e) {
+            } catch (Exception e) {
                 String msg = "Failed to encrypt rabbit MQ user password";
                 LOG.error(msg, e);
                 ViewUtil.iscNotification(msg, Notification.Type.ERROR_MESSAGE);

@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +74,13 @@ public class VirtualizationConnectorEntityMgr {
         vc.setAdminProjectName(dto.getAdminProjectName());
         vc.setAdminDomainId(dto.getAdminDomainId());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
+
+        // For rabbit MQ password, encrypt it before setting it on the entity.
+        String rabbitMqPassword = vc.getProviderAttributes()
+                .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+        vc.getProviderAttributes().put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                encryption.encryptAESCTR(rabbitMqPassword));
+
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
                 .stream()
                 .map(SslCertificateAttrEntityMgr::createEntity)
