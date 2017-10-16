@@ -481,6 +481,26 @@ public class BindSecurityGroupServiceTest {
         this.bindSecurityGroupService.dispatch(request);
     }
 
+    @Test
+    public void testValidate_WhenRequestSfcBindFlagIsFalseForVcOfTypeNeutronSfc_ThrowsValidationException() throws Exception {
+        // Arrange
+        BindSecurityGroupRequest request = createRequest(VALID_ID, VALID_ID, VALID_ID);
+        ServiceFunctionChain sfc = createSFC(VALID_ID, VALID_ID);
+        request.setBindSfc(false);
+
+        Mockito.when(this.em.find(Mockito.eq(VirtualizationConnector.class), Mockito.eq(VALID_ID)))
+                .thenReturn(VALID_SG.getVirtualizationConnector());
+        Mockito.when(this.em.find(Mockito.eq(ServiceFunctionChain.class), Mockito.eq(VALID_ID))).thenReturn(sfc);
+        Mockito.when(this.bindSecurityGroupService.apiFactoryService.supportsNeutronSFC(VALID_SG)).thenReturn(true);
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(String.format(
+                "Binding individual Virtual Systems/Services is not supported for the Security Group %s. Please bind to a Service Function Chain",
+                VALID_SG.getName()));
+
+        // Act
+        this.bindSecurityGroupService.dispatch(request);
+    }
+
     private static SecurityGroup createSecurityGroup(Long id, boolean markedFOrDeletion) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setId(id);
