@@ -361,7 +361,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
             //user is trying to configure binding SFC with either UI which currently not supported or APIs that are not
             //valid for SFC binding, so throw an exception.
             throw new VmidcBrokerValidationException(String.format(
-                    "Unsupported Interface or API to bind/unbind Security Group %s to Virtual System with a Service Function Chain",
+                    "Binding individual Virtual Systems/Services is not supported for the Security Group %s. Please bind to a Service Function Chain",
                     this.securityGroup.getName()));
         }
 		if(request.getSfcId() == null) {
