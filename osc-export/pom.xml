@@ -345,7 +345,7 @@
 			<id>java-jre-get</id>
 			<activation>
 				<file>
-					<missing>${basedir}/../osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz</missing>
+					<missing>${basedir}/../osc-server-bom/Sources/jre-8u131-linux-x64.tar.gz</missing>
 				</file>
 			</activation>
 			<build>
