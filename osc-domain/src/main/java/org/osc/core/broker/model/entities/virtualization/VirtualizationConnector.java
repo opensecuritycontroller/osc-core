@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -52,12 +54,6 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     private static final String NO_CONTROLLER = "NONE";
 
     private static final long serialVersionUID = 1L;
-
-    public static final String ATTRIBUTE_KEY_HTTPS = "ishttps";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
 
     @Column(name = "name", unique = true, nullable = false)
     private String name;
@@ -267,7 +263,7 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     }
 
     public boolean isProviderHttps() {
-        String httpsValue = this.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS);
+        String httpsValue = this.providerAttributes.get(ATTRIBUTE_KEY_HTTPS);
         return httpsValue != null && httpsValue.equals(Boolean.TRUE.toString());
     }
 

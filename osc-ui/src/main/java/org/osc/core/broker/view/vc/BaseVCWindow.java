@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,15 +61,8 @@ import com.vaadin.ui.TextField;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
-    public static final String ATTRIBUTE_KEY_HTTPS = "ishttps";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
-
     private static final String OPENSTACK_ICEHOUSE = "Icehouse";
     private static final String KUBERNETES_1_6 = "v1.6";
-
 
     /**
      *

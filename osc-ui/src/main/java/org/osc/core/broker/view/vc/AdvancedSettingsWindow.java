@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -85,23 +87,19 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
         this.rabbitMQPort.setRequiredError(this.rabbitMQPort.getCaption() + " cannot be empty");
 
         //fill this form with default/previous values
-        this.providerHttps.setValue(new Boolean(this.baseVCWindow.providerAttributes
-                .get(BaseVCWindow.ATTRIBUTE_KEY_HTTPS)));
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_IP) != null) {
-            this.rabbitMQIp.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_IP));
+        this.providerHttps.setValue(new Boolean(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_HTTPS)));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_IP) != null) {
+            this.rabbitMQIp.setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_IP));
         }
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER) != null) {
-            this.rabbitMQUserName.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER) != null) {
+            this.rabbitMQUserName.setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER));
         }
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
-            this.rabbitMQUserPassword.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
+            this.rabbitMQUserPassword
+                    .setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
         }
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
-            this.rabbitMQPort.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
+            this.rabbitMQPort.setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_PORT));
         }
 
         this.form.addComponent(this.providerHttps);
@@ -133,15 +131,14 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
             try {
                 //override all default values with user provided ones...
                 this.baseVCWindow.providerAttributes.clear();
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_HTTPS, this.providerHttps
-                        .getValue().toString());
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_IP,
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_HTTPS, this.providerHttps.getValue().toString());
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_IP,
                         this.rabbitMQIp.getValue().toString());
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER,
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER,
                         this.rabbitMQUserName.getValue().toString());
-                    this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                            this.rabbitMQUserPassword.getValue().toString());
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT,
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                        this.rabbitMQUserPassword.getValue().toString());
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_PORT,
                         this.rabbitMQPort.getValue().toString());
                 close();
             } catch (Exception e) {

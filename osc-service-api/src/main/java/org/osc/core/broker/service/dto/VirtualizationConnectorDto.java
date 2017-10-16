@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -248,5 +250,6 @@ public class VirtualizationConnectorDto extends BaseDto {
     public static void sanitizeVirtualizationConnector(VirtualizationConnectorDto dto) {
         dto.setProviderPassword(null);
         dto.setControllerPassword(null);
+        dto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, null);
     }
 }

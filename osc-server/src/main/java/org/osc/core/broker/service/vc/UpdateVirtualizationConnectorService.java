@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.vc;
 
 import static java.util.stream.Collectors.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
 
 import java.util.List;
 import java.util.Set;
@@ -245,7 +246,7 @@ implements UpdateVirtualizationConnectorServiceApi {
         String providerDbPassword = existingVc.getProviderPassword();
         String controllerDbPassword = existingVc.getControllerPassword();
         String rabbitDbPassword = existingVc.getProviderAttributes()
-                .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+                .get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
 
         VirtualizationConnectorDto dto = request.getDto();
         // Vanilla Transform the request to entity
@@ -260,8 +261,8 @@ implements UpdateVirtualizationConnectorServiceApi {
                 existingVc.setControllerPassword(controllerDbPassword);
             }
             if (StringUtils.isEmpty(
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD))) {
-                existingVc.getProviderAttributes().put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                    dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD))) {
+                existingVc.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
                         rabbitDbPassword);
             }
         }
