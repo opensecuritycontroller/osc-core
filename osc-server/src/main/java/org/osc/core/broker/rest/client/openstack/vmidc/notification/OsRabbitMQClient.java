@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.vmidc.notification;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,8 +29,8 @@ import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.StaticRegistry;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -69,11 +71,10 @@ public class OsRabbitMQClient extends RabbitMQClient {
         this.vc = vc;
         String rabbitMQIP = this.vc.getRabbitMQIP();
         init(rabbitMQIP,
-                Integer.parseInt(
-                        this.vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT)),
-                vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER),
-                StaticRegistry.encryptionApi().decryptAESCTR(
-                        vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)),
+                Integer.parseInt(this.vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_PORT)),
+                vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER),
+                StaticRegistry.encryptionApi()
+                        .decryptAESCTR(vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)),
                 NOVA_EXCHANGE, QUEUE_NAME, ROUTING_KEY);
     }
 
@@ -119,12 +120,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
     private synchronized void notifyListeners(final String message, final OsNotificationObjectType objectType) {
         if (this.listenersMap.get(objectType) != null) {
             for (final NotificationListener listener : this.listenersMap.get(objectType)) {
-                this.messageListenerService.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onMessage(message);
-                    }
-                });
+                this.messageListenerService.execute(() -> listener.onMessage(message));
             }
         }
     }

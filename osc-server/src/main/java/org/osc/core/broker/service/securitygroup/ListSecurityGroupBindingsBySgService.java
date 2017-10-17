@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +35,6 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
@@ -141,7 +142,7 @@ public class ListSecurityGroupBindingsBySgService
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }
 
-        if (sg.getVirtualizationConnector().getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)
+        if (sg.getVirtualizationConnector().getControllerType().equals(NO_CONTROLLER_TYPE)
                 && sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Controller is not defined for this Virtualization Connector.");

@@ -505,6 +505,7 @@ public class VirtualizationConnectorApis {
         BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
         bindRequest.setVcId(vcId);
         bindRequest.setSecurityGroupId(sgId);
+        bindRequest.setBindSfc(false);
         for (VirtualSystemPolicyBindingDto vsBinding : bindings) {
             bindRequest.addServiceToBindTo(vsBinding);
         }
@@ -531,6 +532,7 @@ public class VirtualizationConnectorApis {
         bindRequest.setVcId(vcId);
         bindRequest.setSecurityGroupId(sgId);
         bindRequest.setSfcId(sfcId);
+        bindRequest.setBindSfc(true);
         // stub SFC virtual system polices into VirtualSystemPolicyBindingDto
         for(BaseVirtualSystemPoliciesDto policy : policies) {
         	VirtualSystemPolicyBindingDto bindDto = new VirtualSystemPolicyBindingDto(policy.getVirtualSystemId(),
@@ -554,6 +556,7 @@ public class VirtualizationConnectorApis {
         BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
         bindRequest.setVcId(vcId);
         bindRequest.setSecurityGroupId(sgId);
+        bindRequest.setBindSfc(true);
         return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
     }
 

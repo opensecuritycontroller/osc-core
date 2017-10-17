@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +47,6 @@ import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.LabelEntityMgr;
@@ -60,8 +61,8 @@ import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPa
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseSecurityGroupService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
@@ -87,7 +88,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             + "  is not found.");
         }
 
-        if (vc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
+        if (vc.getControllerType().equals(NO_CONTROLLER_TYPE)) {
             throw new VmidcBrokerValidationException(
                     "Creation of Security Groups is not allowed in the absence of SDN Controller.");
         }
