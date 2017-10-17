@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -281,7 +283,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
         if (event.getButton().getId().equals(ToolbarButtons.ADD_CHILD.getId())) {
             VirtualizationConnectorDto vc = getParentItem().getBean();
-            if (vc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
+            if (vc.getControllerType().equals(NO_CONTROLLER_TYPE)) {
                 ViewUtil.iscNotification("Creation of Security Groups is not allowed in the absence of SDN Controller.",
                         Notification.Type.ERROR_MESSAGE);
             } else {

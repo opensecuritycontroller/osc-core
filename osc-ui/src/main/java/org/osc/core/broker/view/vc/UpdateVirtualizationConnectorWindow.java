@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -72,7 +74,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
             this.controllerPW.setValue(vcObject.getControllerPassword());
             this.controllerType.setValue(vcObject.getControllerType());
         } else {
-            this.controllerType.setValue(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+            this.controllerType.setValue(NO_CONTROLLER_TYPE);
             this.controllerType.setEnabled(true);
         }
 

@@ -137,7 +137,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString())) {
                 String controllerType = (String) BaseVCWindow.this.controllerType.getValue();
-                if (!VirtualizationConnectorDto.CONTROLLER_TYPE_NONE.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType)) {
+                if (!NO_CONTROLLER_TYPE.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType)) {
                     this.controllerIP.validate();
                     this.validator.checkValidIpAddress(this.controllerIP.getValue());
                     this.controllerUser.validate();
@@ -258,7 +258,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerType.setTextInputAllowed(false);
         this.controllerType.setNullSelectionAllowed(false);
 
-        this.controllerType.addItem(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+        this.controllerType.addItem(NO_CONTROLLER_TYPE);
         for (String ct : this.pluginService.getControllerTypes()) {
             this.controllerType.addItem(ct);
         }
@@ -289,8 +289,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerPanel.setContent(sdn);
 
         this.controllerType.addValueChangeListener(event -> updateControllerFields((String) BaseVCWindow.this.controllerType.getValue()));
-        this.controllerType.select(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE
-                );
+        this.controllerType.select(NO_CONTROLLER_TYPE);
 
         return this.controllerPanel;
     }
@@ -469,8 +468,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.controllerPanel.setCaption(SDN_CONTROLLER_CAPTION);
             this.providerPanel.setCaption(OPENSTACK_CAPTION);
             this.controllerType.setVisible(true);
-            this.controllerType.setValue(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
-            updateControllerFields(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+            this.controllerType.setValue(NO_CONTROLLER_TYPE);
+            updateControllerFields(NO_CONTROLLER_TYPE);
             this.adminDomainId.setVisible(true);
             this.adminProjectName.setVisible(true);
             this.advancedSettings.setVisible(true);
@@ -493,7 +492,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private void updateControllerFields(String type) {
         boolean enableFields = false;
 
-        if (!type.equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
+        if (!type.equals(NO_CONTROLLER_TYPE)) {
             try {
                 enableFields = !this.pluginService.usesProviderCreds(type.toString());
             } catch (Exception e) {

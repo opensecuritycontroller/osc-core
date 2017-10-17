@@ -2,7 +2,7 @@ package org.osc.core.common.virtualization;
 
 public interface VirtualizationConnectorProperties {
 
-    String NO_CONTROLLER = "NONE";
+    String NO_CONTROLLER_TYPE = "NONE";
 
     String ATTRIBUTE_KEY_HTTPS = "ishttps";
     String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";

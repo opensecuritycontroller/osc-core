@@ -51,8 +51,6 @@ import org.osc.core.common.virtualization.VirtualizationType;
 @Table(name = "VIRTUALIZATION_CONNECTOR")
 public class VirtualizationConnector extends BaseEntity implements LastJobContainer {
 
-    private static final String NO_CONTROLLER = "NONE";
-
     private static final long serialVersionUID = 1L;
 
     @Column(name = "name", unique = true, nullable = false)
@@ -84,7 +82,7 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     private String virtualizationSoftwareVersion;
 
     @Column(name = "controller_type", nullable = false)
-    private String controllerType = NO_CONTROLLER;
+    private String controllerType = NO_CONTROLLER_TYPE;
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY)
     private Set<VirtualSystem> virtualSystems = new HashSet<VirtualSystem>();
@@ -223,11 +221,11 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     }
 
     public void setControllerType(String controllerType) {
-        this.controllerType = controllerType != null ? controllerType : NO_CONTROLLER;
+        this.controllerType = controllerType != null ? controllerType : NO_CONTROLLER_TYPE;
     }
 
     public boolean isControllerDefined() {
-        return !getControllerType().equals(NO_CONTROLLER);
+        return !getControllerType().equals(NO_CONTROLLER_TYPE);
     }
 
     public Set<VirtualSystem> getVirtualSystems() {

@@ -36,8 +36,6 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class VirtualizationConnectorDto extends BaseDto {
 
-    public static final String CONTROLLER_TYPE_NONE = "NONE";
-
     @ApiModelProperty(required = true)
     private String name = "";
 
@@ -237,7 +235,7 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     public boolean isControllerDefined() {
-        return (getControllerType() != null && !getControllerType().equals(CONTROLLER_TYPE_NONE));
+        return (getControllerType() != null && !getControllerType().equals(NO_CONTROLLER_TYPE));
     }
 
     @Override
