@@ -42,7 +42,7 @@ public class BindSecurityGroupRequestValidator {
 					map.put("Virtual System Id", service.getVirtualSystemId());
 					map.put("Service Name", service.getName());
 					break;
-                } else if (request.getSfcId() == null && service.getOrder() == null) {
+                } else if (!request.isBindSfc() && service.getOrder() == null) {
 				    // In non-sfc case, service order is a required field.
 					map.put("Service Order", service.getOrder());
 					break;
