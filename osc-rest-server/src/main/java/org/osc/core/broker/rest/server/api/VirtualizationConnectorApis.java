@@ -463,7 +463,7 @@ public class VirtualizationConnectorApis {
  // SG Interface APIS
     @ApiOperation(value = "Retrieves the Security Group Bindings",
             notes = "Retrieves the all available Security Group Bindings to Security Function Service(Distributed Appliance).<br/>"
-                    + "The isBinded flag indicates whether the binding is active.",
+                    + "The binded flag indicates whether the binding is active.",
                     response = VirtualSystemPolicyBindingDto.class,
                     responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
