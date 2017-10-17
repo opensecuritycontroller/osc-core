@@ -36,11 +36,11 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ForceDeleteSecurityGroupTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
@@ -64,6 +64,9 @@ implements DeleteSecurityGroupServiceApi {
         try {
             unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
                     securityGroup.getVirtualizationConnector());
+            //remove sfc link to SG
+            securityGroup.setServiceFunctionChain(null);
+
             if (request.isForceDelete()) {
                 TaskGraph tg = new TaskGraph();
                 tg.addTask(this.forceDeleteSecurityGroupTask.create(securityGroup));
