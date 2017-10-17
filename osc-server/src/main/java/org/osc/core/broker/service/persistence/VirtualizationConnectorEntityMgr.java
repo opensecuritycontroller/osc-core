@@ -109,6 +109,12 @@ public class VirtualizationConnectorEntityMgr {
         dto.setAdminProjectName(vc.getProviderAdminProjectName());
         dto.setAdminDomainId(vc.getAdminDomainId());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
+
+        // For rabbit MQ password, decrypt it before setting it on the dto.
+        String rabbitMqPassword = dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+        dto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                encryption.decryptAESCTR(rabbitMqPassword));
+
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));
