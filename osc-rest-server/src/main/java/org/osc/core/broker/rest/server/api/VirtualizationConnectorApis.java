@@ -33,7 +33,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.osc.core.broker.rest.server.ApiUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
@@ -82,6 +81,7 @@ import org.osc.core.broker.service.response.SetResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -463,7 +463,7 @@ public class VirtualizationConnectorApis {
  // SG Interface APIS
     @ApiOperation(value = "Retrieves the Security Group Bindings",
             notes = "Retrieves the all available Security Group Bindings to Security Function Service(Distributed Appliance).<br/>"
-                    + "The isBinded flag indicates whether the binding is active.",
+                    + "The binded flag indicates whether the binding is active.",
                     response = VirtualSystemPolicyBindingDto.class,
                     responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -486,7 +486,7 @@ public class VirtualizationConnectorApis {
 
         return this.apiUtil.submitBaseRequestToService(this.listSecurityGroupBindingsBySgService, new BaseIdRequest(sgId));
     }
-    
+
     @ApiOperation(value = "Set Security Group Bindings",
             notes = "Adds/Update/Remove Security Group Bindings to Security Function Services.<br/>"
                     + "To Remove all services, pass in empty json.<br/>"
@@ -533,13 +533,13 @@ public class VirtualizationConnectorApis {
         bindRequest.setSfcId(sfcId);
         // stub SFC virtual system polices into VirtualSystemPolicyBindingDto
         for(BaseVirtualSystemPoliciesDto policy : policies) {
-        	VirtualSystemPolicyBindingDto bindDto = new VirtualSystemPolicyBindingDto(policy.getVirtualSystemId(), 
+        	VirtualSystemPolicyBindingDto bindDto = new VirtualSystemPolicyBindingDto(policy.getVirtualSystemId(),
         																	policy.getName(), policy.getPolicyIds(), policy.getPolicies());
-        	bindRequest.addServiceToBindTo(bindDto);		
+        	bindRequest.addServiceToBindTo(bindDto);
         }
         return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
     }
-    
+
     @ApiOperation(value = "Deletes a Service Function Chain binding with Security Group",
             notes = "Unbind a Serice Function Chain from a Given Security group and Virtualization Connector")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),

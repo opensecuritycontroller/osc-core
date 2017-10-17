@@ -55,7 +55,7 @@ public class VirtualSystemPolicyBindingDto extends BaseVirtualSystemPoliciesDto 
     private Long order;
 
     @ApiModelProperty(required = true)
-    private boolean isBinded;
+    private boolean binded;
 
     public VirtualSystemPolicyBindingDto() {
 
@@ -90,18 +90,18 @@ public class VirtualSystemPolicyBindingDto extends BaseVirtualSystemPoliciesDto 
     }
 
     public boolean isBinded() {
-        return this.isBinded;
+        return this.binded;
     }
 
     public void setBinded(boolean selected) {
-        this.isBinded = selected;
+        this.binded = selected;
     }
 
     @Override
     public String toString() {
         return "VirtualSystemPolicyBindingDto [virtualSystemId=" + getVirtualSystemId() + ", name=" + getName() + ", policyId="
                 + getPolicyIds() + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
-                + ", policies=" + getPolicies() + ", isBinded=" + this.isBinded + ", markedForDeletion=" + isMarkedForDeletion()
+                + ", policies=" + getPolicies() + ", binded=" + this.binded + ", markedForDeletion=" + isMarkedForDeletion()
                 + "]";
     }
 
