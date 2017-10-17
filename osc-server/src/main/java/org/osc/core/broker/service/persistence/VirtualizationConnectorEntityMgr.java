@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static java.util.stream.Collectors.toSet;
+
+import static java.util.stream.Collectors.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +76,12 @@ public class VirtualizationConnectorEntityMgr {
         vc.setAdminProjectName(dto.getAdminProjectName());
         vc.setAdminDomainId(dto.getAdminDomainId());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
+
+        // For rabbit MQ password, encrypt it before setting it on the entity.
+        String rabbitMqPassword = vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+        vc.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                encryption.encryptAESCTR(rabbitMqPassword));
+
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
                 .stream()
                 .map(SslCertificateAttrEntityMgr::createEntity)
@@ -101,6 +109,12 @@ public class VirtualizationConnectorEntityMgr {
         dto.setAdminProjectName(vc.getProviderAdminProjectName());
         dto.setAdminDomainId(vc.getAdminDomainId());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
+
+        // For rabbit MQ password, decrypt it before setting it on the dto.
+        String rabbitMqPassword = dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+        dto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                encryption.decryptAESCTR(rabbitMqPassword));
+
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));

@@ -16,8 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
-import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
-import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.VALUE_IS_SET_ERROR_MESSAGE;
+import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -92,7 +91,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 
         for (String invalidIp : invalidIps) {
             VirtualizationConnectorDto vcDto = VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithoutSDN();
-            vcDto.getProviderAttributes().put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_IP, invalidIp);
+            vcDto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_IP, invalidIp);
             String errorMessage = Server.PRODUCT_NAME + ": " + "IP Address: '" + invalidIp + "' has invalid format.";
 
             Class<?> expectedException = VmidcBrokerInvalidEntryException.class;
@@ -111,16 +110,16 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 
         for (String invalidName : invalidNames) {
             VirtualizationConnectorDto vcDto = VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithoutSDN();
-            vcDto.getProviderAttributes().put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, invalidName);
+            vcDto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_PORT, invalidName);
 
             String errorMessage;
             if (invalidName == null || invalidName.equals("")) {
                 errorMessage = Server.PRODUCT_NAME + ": " + "Rabbit MQ Port " + EMPTY_VALUE_ERROR_MESSAGE;
             } else if (!StringUtils.isNumeric(invalidName)) {
-                errorMessage = VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT
+                errorMessage = ATTRIBUTE_KEY_RABBITMQ_PORT
                         + " expected to be an Integer. Value is: " + invalidName;
             } else {
-                errorMessage = Server.PRODUCT_NAME + ": " + VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT
+                errorMessage = Server.PRODUCT_NAME + ": " + ATTRIBUTE_KEY_RABBITMQ_PORT
                         + " length should not exceed " + ValidateUtil.DEFAULT_MAX_LEN
                         + " characters. The provided field exceeds this limit by "
                         + (invalidName.length() - ValidateUtil.DEFAULT_MAX_LEN) + " characters.";
@@ -141,11 +140,11 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 
         for (String invalidName : invalidNames) {
             VirtualizationConnectorDto vcDto = VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithoutSDN();
-            vcDto.getProviderAttributes().put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+            vcDto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
                     invalidName);
             String errorMessage = invalidName == null || invalidName.equals("")
                     ? Server.PRODUCT_NAME + ": " + "Rabbit MQ Password " + EMPTY_VALUE_ERROR_MESSAGE
-                            : Server.PRODUCT_NAME + ": " + VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD
+                            : Server.PRODUCT_NAME + ": " + ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD
                             + " length should not exceed " + ValidateUtil.DEFAULT_MAX_LEN
                             + " characters. The provided field exceeds this limit by "
                             + (invalidName.length() - ValidateUtil.DEFAULT_MAX_LEN) + " characters.";
@@ -165,10 +164,10 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 
         for (String invalidName : invalidNames) {
             VirtualizationConnectorDto vcDto = VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithoutSDN();
-            vcDto.getProviderAttributes().put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, invalidName);
+            vcDto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER, invalidName);
             String errorMessage = invalidName == null || invalidName.equals("")
                     ? Server.PRODUCT_NAME + ": " + "Rabbit MQ User " + EMPTY_VALUE_ERROR_MESSAGE
-                            : Server.PRODUCT_NAME + ": " + VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER
+                            : Server.PRODUCT_NAME + ": " + ATTRIBUTE_KEY_RABBITMQ_USER
                             + " length should not exceed " + ValidateUtil.DEFAULT_MAX_LEN
                             + " characters. The provided field exceeds this limit by "
                             + (invalidName.length() - ValidateUtil.DEFAULT_MAX_LEN) + " characters.";

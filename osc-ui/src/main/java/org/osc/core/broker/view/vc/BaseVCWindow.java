@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,8 +26,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.osc.core.broker.service.api.plugin.PluginService;
-import org.osc.core.broker.service.api.server.EncryptionApi;
-import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -45,11 +45,9 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.common.virtualization.VirtualizationType;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -63,15 +61,8 @@ import com.vaadin.ui.TextField;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
-    public static final String ATTRIBUTE_KEY_HTTPS = "ishttps";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
-
     private static final String OPENSTACK_ICEHOUSE = "Icehouse";
     private static final String KUBERNETES_1_6 = "v1.6";
-
 
     /**
      *
@@ -130,15 +121,12 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private final X509TrustManagerApi trustManager;
 
-    private final EncryptionApi encrypter;
-
     public BaseVCWindow(PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager, EncryptionApi encrypter) {
+            X509TrustManagerApi trustManager) {
         super();
         this.pluginService = pluginService;
         this.validator = validator;
         this.trustManager = trustManager;
-        this.encrypter = encrypter;
     }
 
     @Override
@@ -149,7 +137,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString())) {
                 String controllerType = (String) BaseVCWindow.this.controllerType.getValue();
-                if (!VirtualizationConnectorDto.CONTROLLER_TYPE_NONE.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType)) {
+                if (!NO_CONTROLLER_TYPE.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType)) {
                     this.controllerIP.validate();
                     this.validator.checkValidIpAddress(this.controllerIP.getValue());
                     this.controllerUser.validate();
@@ -261,7 +249,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         return this.providerPanel;
     }
 
-    @SuppressWarnings("serial")
     protected Panel controllerPanel() {
         this.controllerPanel = new Panel();
         this.controllerPanel.setImmediate(true);
@@ -271,7 +258,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerType.setTextInputAllowed(false);
         this.controllerType.setNullSelectionAllowed(false);
 
-        this.controllerType.addItem(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+        this.controllerType.addItem(NO_CONTROLLER_TYPE);
         for (String ct : this.pluginService.getControllerTypes()) {
             this.controllerType.addItem(ct);
         }
@@ -301,20 +288,12 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
         this.controllerPanel.setContent(sdn);
 
-        this.controllerType.addValueChangeListener(new ValueChangeListener() {
-
-            @Override
-            public void valueChange(ValueChangeEvent event) {
-                updateControllerFields((String) BaseVCWindow.this.controllerType.getValue());
-            }
-        });
-        this.controllerType.select(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE
-                );
+        this.controllerType.addValueChangeListener(event -> updateControllerFields((String) BaseVCWindow.this.controllerType.getValue()));
+        this.controllerType.select(NO_CONTROLLER_TYPE);
 
         return this.controllerPanel;
     }
 
-    @SuppressWarnings("serial")
     protected void handleException(final Exception originalException) {
         String caption = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CAPTION);
         String contentText = null;
@@ -368,21 +347,17 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             final VmidcWindow<OkCancelButtonModel> alertWindow = WindowUtil.createAlertWindow(caption, contentText);
 
-            alertWindow.getComponentModel().setOkClickedListener(new ClickListener() {
-
-                @Override
-                public void buttonClick(ClickEvent event) {
-                    try {
-                        if (originalException instanceof ErrorTypeException) {
-                            ErrorType errorType = ((ErrorTypeException) originalException).getType();
-                            BaseVCWindow.this.errorTypesToIgnore.add(errorType);
-                        }
-                        submitForm();
-                    } catch (Exception e) {
-                        handleException(e);
+            alertWindow.getComponentModel().setOkClickedListener(event -> {
+                try {
+                    if (originalException instanceof ErrorTypeException) {
+                        ErrorType errorType = ((ErrorTypeException) originalException).getType();
+                        BaseVCWindow.this.errorTypesToIgnore.add(errorType);
                     }
-                    alertWindow.close();
+                    submitForm();
+                } catch (Exception e) {
+                    handleException(e);
                 }
+                alertWindow.close();
             });
             ViewUtil.addWindow(alertWindow);
         } else {
@@ -477,7 +452,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     protected void advancedSettingsClicked() {
         try {
-            ViewUtil.addWindow(new AdvancedSettingsWindow(this, this.encrypter));
+            ViewUtil.addWindow(new AdvancedSettingsWindow(this));
         } catch (Exception e) {
             ViewUtil.iscNotification(e.toString() + ".", Notification.Type.ERROR_MESSAGE);
         }
@@ -493,8 +468,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.controllerPanel.setCaption(SDN_CONTROLLER_CAPTION);
             this.providerPanel.setCaption(OPENSTACK_CAPTION);
             this.controllerType.setVisible(true);
-            this.controllerType.setValue(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
-            updateControllerFields(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+            this.controllerType.setValue(NO_CONTROLLER_TYPE);
+            updateControllerFields(NO_CONTROLLER_TYPE);
             this.adminDomainId.setVisible(true);
             this.adminProjectName.setVisible(true);
             this.advancedSettings.setVisible(true);
@@ -517,7 +492,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private void updateControllerFields(String type) {
         boolean enableFields = false;
 
-        if (!type.equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
+        if (!type.equals(NO_CONTROLLER_TYPE)) {
             try {
                 enableFields = !this.pluginService.usesProviderCreds(type.toString());
             } catch (Exception e) {
@@ -543,13 +518,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.providerAttributes.put(ATTRIBUTE_KEY_HTTPS, DEFAULT_HTTPS);
             this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER, DEFAULT_RABBITMQ_USER);
             this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_PORT, DEFAULT_RABBITMQ_PORT);
-
-            try {
-                this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                        this.encrypter.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
-            } catch (EncryptionException encryptionException) {
-                handleException(encryptionException);
-            }
+            this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, DEFAULT_RABBITMQ_USER_PASSWORD);
         }
     }
 }

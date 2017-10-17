@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -38,7 +40,6 @@ import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.util.crypto.SslContextProvider;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
@@ -47,6 +48,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.ShutdownSignalException;
 
@@ -222,8 +224,8 @@ public class VirtualizationConnectorUtil {
     }
 
     private static boolean isHttps(Map<String, String> attributes) {
-        return attributes.containsKey(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS)
-                && String.valueOf(true).equals(attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS));
+        return attributes.containsKey(ATTRIBUTE_KEY_HTTPS)
+                && String.valueOf(true).equals(attributes.get(ATTRIBUTE_KEY_HTTPS));
     }
 
     private void initSSLCertificatesListener(X509TrustManagerFactory managerFactory,
