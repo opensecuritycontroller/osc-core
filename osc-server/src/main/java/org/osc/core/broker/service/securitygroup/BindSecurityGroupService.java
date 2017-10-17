@@ -97,12 +97,13 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 
 			if (sfcBind) {
 				this.securityGroup.setServiceFunctionChain(sfc);
-			} else {
-				// Sorts the services by the order specified.
-				// We want to collapse the ordering, so we will 'reset' the order based on the request.
-
-				Collections.sort(servicesToBindTo, new VirtualSystemPolicyBindingDtoComparator());
 			}
+
+			// Sorts the services by the order specified.
+			// We want to collapse the ordering, so we will 'reset' the order based on the request.
+
+			Collections.sort(servicesToBindTo, new VirtualSystemPolicyBindingDtoComparator());
+
 			long order = 0;
 
 			// For all services selected, create or update the security group interfaces
@@ -385,9 +386,10 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                             sfc.getName(), vc.getId()));
 		}
 
-		 List<Long> sfcVsIdList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
+        List<Long> sfcVsIdList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
+        List<Long> sfcVsIdOrderList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
 
-		List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
+        List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
 
          // For all services selected, create or update the security group interfaces
          for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
@@ -399,6 +401,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
              }
              //by removing virtual system id from the list , will help to throw any exception in case of duplication
              sfcVsIdList.remove(virtualSystemId);
+
+             //To get virtual system services in align with sfc virtual system , add order
+             serviceToBindTo.setOrder(sfcVsIdOrderList.indexOf(virtualSystemId));
 
              VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
 
