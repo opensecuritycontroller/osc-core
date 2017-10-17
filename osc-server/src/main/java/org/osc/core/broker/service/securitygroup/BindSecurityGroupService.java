@@ -93,20 +93,20 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 			unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup,
 					this.securityGroup.getVirtualizationConnector());
 
-			List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
+            List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
 
-			if (sfcBind) {
-				this.securityGroup.setServiceFunctionChain(sfc);
-			}
+            if (sfcBind) {
+                this.securityGroup.setServiceFunctionChain(sfc);
+            }
 
-			// Sorts the services by the order specified.
-			// We want to collapse the ordering, so we will 'reset' the order based on the request.
+            // Sorts the services by the order specified.
+            // We want to collapse the ordering, so we will 'reset' the order based on the request.
 
-			Collections.sort(servicesToBindTo, new VirtualSystemPolicyBindingDtoComparator());
+            Collections.sort(servicesToBindTo, new VirtualSystemPolicyBindingDtoComparator());
 
-			long order = 0;
+            long order = 0;
 
-			// For all services selected, create or update the security group interfaces
+            // For all services selected, create or update the security group interfaces
 			for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
 				Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
 				VirtualSystem vs = validateAndLoadVirtualSystem(em, virtualSystemId);
