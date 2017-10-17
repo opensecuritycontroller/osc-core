@@ -29,8 +29,8 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.common.alarm.AlarmAction;
 import org.osc.core.common.alarm.EventType;
 import org.osc.core.common.alarm.Severity;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -160,7 +160,7 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
 
             @Override
             public void valueChange(ValueChangeEvent event) {
-                if (BaseAlarmWindow.this.alarmAction.getValue().equals(AlarmAction.EMAIL.toString())) {
+                if (BaseAlarmWindow.this.alarmAction.getValue().equals(AlarmAction.EMAIL)) {
                     BaseAlarmWindow.this.email.setVisible(true);
                 } else {
                     BaseAlarmWindow.this.email.setVisible(false);
