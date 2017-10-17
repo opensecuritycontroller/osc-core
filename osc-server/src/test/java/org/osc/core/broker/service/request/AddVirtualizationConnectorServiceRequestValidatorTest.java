@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import javax.persistence.EntityManager;
@@ -71,7 +71,6 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     public void testInitialize() throws EncryptionException {
         MockitoAnnotations.initMocks(this);
 
-        when(this.encryption.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
         PowerMockito.mockStatic(StaticRegistry.class);
         when(StaticRegistry.encryptionApi()).thenReturn(this.encryption);
     }

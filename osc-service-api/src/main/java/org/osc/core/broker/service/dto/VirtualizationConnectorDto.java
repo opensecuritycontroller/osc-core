@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,8 +35,6 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "virtualizationConnector")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class VirtualizationConnectorDto extends BaseDto {
-
-    public static final String CONTROLLER_TYPE_NONE = "NONE";
 
     @ApiModelProperty(required = true)
     private String name = "";
@@ -235,7 +235,7 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     public boolean isControllerDefined() {
-        return (getControllerType() != null && !getControllerType().equals(CONTROLLER_TYPE_NONE));
+        return (getControllerType() != null && !getControllerType().equals(NO_CONTROLLER_TYPE));
     }
 
     @Override
@@ -248,5 +248,6 @@ public class VirtualizationConnectorDto extends BaseDto {
     public static void sanitizeVirtualizationConnector(VirtualizationConnectorDto dto) {
         dto.setProviderPassword(null);
         dto.setControllerPassword(null);
+        dto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, null);
     }
 }
