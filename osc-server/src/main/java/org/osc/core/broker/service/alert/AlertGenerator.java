@@ -43,7 +43,6 @@ import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.alarm.AlarmAction;
 import org.osc.core.common.alarm.EventType;
 import org.osc.core.common.job.AcknowledgementStatus;
@@ -53,6 +52,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Types within the osc-server use the AlertGenerator type to process failures
@@ -166,11 +166,11 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
 
         request.setDto(new AlertDto());
         request.getDto().setName(alarm.getName());
-        request.getDto().setEventType(alarm.getEventType().toString());
+        request.getDto().setEventType(alarm.getEventType());
         request.getDto().setObject(new LockObjectDto(object.getId(), object.getName(),
                 new ObjectTypeDto(object.getType().name(), object.getType().toString())));
-        request.getDto().setSeverity(alarm.getSeverity().toString());
-        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
+        request.getDto().setSeverity(alarm.getSeverity());
+        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
         request.getDto().setMessage(message);
 
         AlertDtoValidator.checkForNullFields(request.getDto());

@@ -65,6 +65,7 @@ public class SecurityGroupEntityMgr {
         dto.setProjectId(entity.getProjectId());
         dto.setProjectName(entity.getProjectName());
         dto.setServiceFunctionChainId(sfc == null ? null : sfc.getId());
+        dto.setNetworkElementId(entity.getNetworkElementId());
         JobRecord lastJob = entity.getLastJob();
         if (lastJob != null) {
             dto.setLastJobStatus(lastJob.getStatus().name());

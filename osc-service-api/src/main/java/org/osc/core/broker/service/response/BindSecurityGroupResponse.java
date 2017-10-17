@@ -19,16 +19,22 @@ package org.osc.core.broker.service.response;
 
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 
+@XmlRootElement(name ="bindSecurityGroupResponse")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class BindSecurityGroupResponse implements Response {
-	
+
 	private Long sfcId;
-	
+
 	List<VirtualSystemPolicyBindingDto> memberList;
 
 	public Long getSfcId() {
-		return sfcId;
+		return this.sfcId;
 	}
 
 	public void setSfcId(Long sfcId) {
@@ -36,7 +42,7 @@ public class BindSecurityGroupResponse implements Response {
 	}
 
 	public List<VirtualSystemPolicyBindingDto> getMemberList() {
-		return memberList;
+		return this.memberList;
 	}
 
 	public void setMemberList(List<VirtualSystemPolicyBindingDto> memberList) {
