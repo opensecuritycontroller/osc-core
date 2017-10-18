@@ -123,15 +123,15 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     private String mgmtGateway;
 
     @ApiModelProperty(readOnly = true, value = "Determines whether the appliance manager enables retrieval of appliance status.")
-    private Boolean isApplianceStatusEnabled;
+    private Boolean applianceStatusEnabled;
 
     public DistributedApplianceInstanceDto() {
 
     }
 
-    public DistributedApplianceInstanceDto(Boolean isApplianceStatusEnabled,
+    public DistributedApplianceInstanceDto(Boolean applianceStatusEnabled,
             String discovered, String inspectionReady, String lastStatus) {
-        this.isApplianceStatusEnabled = isApplianceStatusEnabled;
+        this.applianceStatusEnabled = applianceStatusEnabled;
         this.discovered = discovered;
         this.inspectionReady = inspectionReady;
         this.lastStatus = lastStatus;
@@ -188,7 +188,7 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     }
 
     public Boolean isApplianceStatusEnabled() {
-        return this.isApplianceStatusEnabled;
+        return this.applianceStatusEnabled;
     }
 
     public String getDistributedApplianceName() {

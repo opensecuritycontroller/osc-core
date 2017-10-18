@@ -128,7 +128,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
 
         JobEngine jobEngine = JobEngine.getEngine();
         Job job = jobEngine.submit("testJob", new TaskGraph(), false);
-        job_id = job.getId();
+        this.job_id = job.getId();
 
         Mockito.when(this.conformService.startBindSecurityGroupConformanceJob(Mockito.any(EntityManager.class),
                 Mockito.any(), Mockito.any(UnlockObjectMetaTask.class))).thenReturn(job);
@@ -238,9 +238,9 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         this.em.persist(policy);
         policies.add(policy);
 
-        sgi_1 = new SecurityGroupInterface(this.vs, policies, "111", FailurePolicyType.NA, 0L);
-        sgi_1.setName(DEFAULT_NAME);
-        sgi_1.setSecurityGroup(this.sg);
+        this.sgi_1 = new SecurityGroupInterface(this.vs, policies, "111", FailurePolicyType.NA, 0L);
+        this.sgi_1.setName(DEFAULT_NAME);
+        this.sgi_1.setSecurityGroup(this.sg);
         this.em.persist(this.sgi_1);
 
         this.sfc_dup = new ServiceFunctionChain("sfc-dup", this.vc);
@@ -402,6 +402,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         request.setVcId(this.vc.getId());
         request.setSecurityGroupId(this.sg.getId());
         request.setSfcId(this.sfc.getId());
+        request.setBindSfc(true);
 
         this.sfc.addVirtualSystem(this.vs);
 
@@ -432,6 +433,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         request.setVcId(this.vc.getId());
         request.setSecurityGroupId(this.sg.getId());
         request.setSfcId(this.sfc.getId());
+        request.setBindSfc(true);
 
         this.sfc.addVirtualSystem(this.vs1);
 
@@ -458,6 +460,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         request.setVcId(this.vc.getId());
         request.setSecurityGroupId(this.sg_dup.getId());
         request.setSfcId(this.sfc.getId());
+        request.setBindSfc(true);
 
         this.sfc.addVirtualSystem(this.vs1);
         this.sfc.addVirtualSystem(this.vs);
@@ -469,14 +472,15 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         Mockito.when(this.bindSecurityGroupService.apiFactoryService.supportsNeutronSFC(this.sg_dup)).thenReturn(true);
 
         this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage("Number of Virtual System Ids in ServiceFunctionChain  "
-                + this.sfc.getVirtualSystems().size() + " and Binding request Virtual System Ids "
-                + request.getServicesToBindTo().size() + " do not match");
+        this.exception.expectMessage(String.format(
+                "Number of Virtual Systems in Service Function Chain(%s:%s)"
+                        + "and Binding request Virtual Systems:%s do not match",
+                this.sfc.getName(), this.sfc.getVirtualSystems().size(), request.getServicesToBindTo().size()));
 
         // Act
         this.bindSecurityGroupService.dispatch(request);
     }
-    
+
     @Test
     public void testValidate_WhenBindSGServiceWithSfcWhichIsAlreadyBindToAnotheSG_UpdateSuccessful() throws Exception {
         // Arrange
@@ -484,6 +488,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         request.setVcId(this.vc.getId());
         request.setSecurityGroupId(this.sg.getId());
         request.setSfcId(this.sfc_dup.getId());
+        request.setBindSfc(true);
 
         VirtualSystemPolicyBindingDto serviceToBindTo = createService(VALID_ID, this.vs1);
         serviceToBindTo.setOrder(0);

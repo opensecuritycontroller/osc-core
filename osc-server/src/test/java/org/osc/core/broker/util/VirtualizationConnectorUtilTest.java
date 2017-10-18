@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -239,7 +240,7 @@ public class VirtualizationConnectorUtilTest {
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
         when(this.apiFactoryService.getStatus(vc, null)).thenThrow(new Exception());
 
-        request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
+        request.getDto().getProviderAttributes().putIfAbsent(ATTRIBUTE_KEY_HTTPS, "true");
 
         // Act.
         this.util.checkConnection(spyRequest, vc);
@@ -264,7 +265,7 @@ public class VirtualizationConnectorUtilTest {
 
         DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-        request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
+        request.getDto().getProviderAttributes().putIfAbsent(ATTRIBUTE_KEY_HTTPS, "true");
 
         // Act.
         this.util.checkConnection(spyRequest, vc);
@@ -288,7 +289,7 @@ public class VirtualizationConnectorUtilTest {
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
         Openstack4jKeystone cloudKeyStone = mock(Openstack4jKeystone.class);
         when(cloudKeyStone.listProjects()).thenReturn(null);
-        request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
+        request.getDto().getProviderAttributes().putIfAbsent(ATTRIBUTE_KEY_HTTPS, "true");
         DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
         // Act.

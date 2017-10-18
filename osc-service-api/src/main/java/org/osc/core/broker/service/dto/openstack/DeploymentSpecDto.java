@@ -86,13 +86,13 @@ public class DeploymentSpecDto extends BaseDto {
     private String floatingIpPoolName;
 
     @ApiModelProperty(value = "The Availablity zones to deploy instances to", readOnly = true)
-    private Set<AvailabilityZoneDto> availabilityZones = new HashSet<AvailabilityZoneDto>();
+    private Set<AvailabilityZoneDto> availabilityZones = new HashSet<>();
 
     @ApiModelProperty(value = "The hosts to deploy instances to", readOnly = true)
-    private Set<HostDto> hosts = new HashSet<HostDto>();
+    private Set<HostDto> hosts = new HashSet<>();
 
     @ApiModelProperty(value = "The Host Aggregates to deploy instances to", readOnly = true)
-    private Set<HostAggregateDto> hostAggregates = new HashSet<HostAggregateDto>();
+    private Set<HostAggregateDto> hostAggregates = new HashSet<>();
 
     @ApiModelProperty(
             value = "The number of instances to deploy. This is applicable only for host based deployment, for all other deployments count is expected to be 1",
@@ -104,7 +104,7 @@ public class DeploymentSpecDto extends BaseDto {
             value = "Indicates whether the Deployment specification is exclusive for that project or if its shared across projects",
             required = true,
             readOnly = true)
-    private boolean isShared;
+    private boolean shared;
 
     @ApiModelProperty(value = "Indicates whether the deployment specification is marked for deletion",
             required = true,
@@ -225,11 +225,11 @@ public class DeploymentSpecDto extends BaseDto {
     }
 
     public boolean isShared() {
-        return this.isShared;
+        return this.shared;
     }
 
-    public void setShared(boolean isShared) {
-        this.isShared = isShared;
+    public void setShared(boolean shared) {
+        this.shared = shared;
     }
 
     public String getInspectionNetworkName() {

@@ -87,6 +87,8 @@
                                         <mapper type="regexp" from="^([^:]*):([^:]*):jar$" to="\2.dep"/>
                                     </propertyset>
                                 </echoproperties>
+                                <copy file="${basedir}/../osc-server-bom/root/opt/vmidc/bin/logback.xml" 
+                                      tofile="${basedir}/target/logback.xml"/>
                             </tasks>
                         </configuration>
                         <goals>

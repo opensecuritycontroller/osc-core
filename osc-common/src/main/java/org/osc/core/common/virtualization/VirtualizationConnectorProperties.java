@@ -14,21 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.common.alarm;
+package org.osc.core.common.virtualization;
 
-public enum EventType {
-    JOB_FAILURE("Job Failure"),
-    SYSTEM_FAILURE("System Failure"),
-    DAI_FAILURE("DAI Failure");
+public interface VirtualizationConnectorProperties {
 
-    private final String text;
+    String NO_CONTROLLER_TYPE = "NONE";
 
-    private EventType(final String text) {
-        this.text = text;
-    }
+    String ATTRIBUTE_KEY_HTTPS = "ishttps";
+    String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";
+    String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
+    String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
+    String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
 
-    @Override
-    public String toString() {
-        return this.text;
-    }
 }

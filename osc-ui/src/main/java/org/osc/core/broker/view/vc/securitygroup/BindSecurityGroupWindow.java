@@ -39,9 +39,9 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
@@ -124,6 +124,11 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 				bindRequest.setVcId(this.vcId);
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
 				bindRequest.setSfcId(this.currentSecurityGroup.getServiceFunctionChainId());
+                /*From UI to differentiate if it is a SFC  or non-SFC bind, we have to pass a value from
+                VirtualizationConnectorView file because binding window for sfc and non-sfc cases is going to be different.
+                A condition needs to be added when we support SFC bind
+                through UI(or shall we add it now?).For now we do not allow SFC bind from UI hence it is false*/
+                bindRequest.setBindSfc(false);
 
 				List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
 						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getMemberList();
@@ -162,7 +167,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 					}
 
                     Long order = null;
-                    if (this.currentSecurityGroup.getServiceFunctionChainId() == null) {
+                    if (!bindRequest.isBindSfc()) {
                         order = (Long) selectedService.getItemProperty(PROPERTY_ID_CHAIN_ORDER).getValue();
                     }
 
