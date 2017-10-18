@@ -37,10 +37,10 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.slf4j.LoggerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ExternalResource;
@@ -57,6 +57,7 @@ import com.vaadin.ui.VerticalLayout;
 public class PluginsLayout extends FormLayout {
 
     private static final String PROP_PLUGIN_INFO = "Info";
+    private static final int PLUGIN_INFO_COLUMN_WIDTH = 350;
     private static final String PROP_PLUGIN_STATE = "State";
     private static final String PROP_PLUGIN_NAME = "Name";
     private static final String PROP_PLUGIN_SERVICES = "Services";
@@ -100,15 +101,16 @@ public class PluginsLayout extends FormLayout {
         this.plugins.addContainerProperty(PROP_PLUGIN_INFO, String.class, null);
         this.plugins.addContainerProperty(PROP_PLUGIN_DELETE, Button.class, null);
 
+        this.plugins.setColumnWidth(PROP_PLUGIN_INFO, PLUGIN_INFO_COLUMN_WIDTH);
+
         this.pluginsPanel = new Panel();
         this.pluginsPanel.setContent(this.plugins);
 
         pluginsContainer.addComponent(ViewUtil.createSubHeader("Plugins", null));
         pluginsContainer.addComponent(this.pluginsPanel);
-
         Button downloadSdkSdn = getDownloadSdkButtonForSdnController();
         Button downloadSdkManager = getDownloadSdkButtonForManager();
-        
+
         sdkContainer.addComponent(ViewUtil.createSubHeader("SDK", null));
         sdkContainer.addComponent(new HorizontalLayout(downloadSdkSdn, downloadSdkManager));
 
@@ -124,7 +126,7 @@ public class PluginsLayout extends FormLayout {
 
     private void updateTable(PluginEvent event) {
         PluginApi plugin = event.getPlugin();
-        
+
         switch (event.getType()) {
         case ADDING:
             Item addingItem = this.plugins.addItem(plugin);
@@ -145,8 +147,8 @@ public class PluginsLayout extends FormLayout {
             this.plugins.removeItem(plugin);
             break;
         default:
-        	this.log.error("Unknown plugin event type: " + event.getType());
-        	break;
+            this.log.error("Unknown plugin event type: " + event.getType());
+            break;
         }
     }
 
@@ -171,7 +173,7 @@ public class PluginsLayout extends FormLayout {
         downloader.extend(downloadSdk);
         return downloadSdk;
     }
-    
+
     @SuppressWarnings("unchecked")
     private void updateItem(Item item, PluginApi plugin) {
 
