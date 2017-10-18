@@ -17,9 +17,11 @@
 package org.osc.core.broker.rest.client.openstack.vmidc.notification;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -204,7 +206,9 @@ public abstract class RabbitMQClient {
     private void initChannel(Channel channel) throws IOException {
         channel.basicQos(1);
         // this.channel.exchangeDeclare(this.exchange, TOPIC);
-        channel.queueDeclare(QUEUE_NAME, true, true, true, null);
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-expires", 180000); // Three minutes
+        channel.queueDeclare(QUEUE_NAME, true, true, true, args);
         channel.queueBind(QUEUE_NAME, NOVA_EXCHANGE, ROUTING_KEY);
         channel.queueBind(QUEUE_NAME, NEUTRON_EXCHANGE, ROUTING_KEY);
         channel.queueBind(QUEUE_NAME, KEYSTONE_EXCHANGE, ROUTING_KEY);
