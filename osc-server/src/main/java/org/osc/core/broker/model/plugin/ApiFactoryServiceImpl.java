@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
-import static java.util.Collections.emptyList;
+import static java.util.Collections.*;
 import static org.osc.sdk.controller.Constants.*;
 import static org.osc.sdk.manager.Constants.*;
 
@@ -54,7 +54,6 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.ServerUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
@@ -83,6 +82,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(immediate = true)
 public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
@@ -241,7 +241,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     }
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
-        removeApi(serviceObjs, this.sdnControllerRefs, null);
+        removeApi(serviceObjs, this.sdnControllerRefs, this.sdnControllerApis);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
