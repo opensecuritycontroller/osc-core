@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.data.Item;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FileDownloader;
-import com.vaadin.ui.AbstractSelect.ItemDescriptionGenerator;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
@@ -108,18 +107,13 @@ public class PluginsLayout extends FormLayout {
 
         // Add a tooltip to the error column so the user is able to see the
         // complete error message
-        this.plugins.setItemDescriptionGenerator(new ItemDescriptionGenerator() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public String generateDescription(Component source, Object itemId, Object propertyId) {
-                Object errorMessage = PluginsLayout.this.plugins.getContainerProperty(itemId, PROP_PLUGIN_INFO)
-                        .getValue();
-                if (errorMessage != null && errorMessage instanceof String) {
-                    return StringEscapeUtils.escapeHtml(errorMessage.toString());
-                } else {
-                    return null;
-                }
+        this.plugins.setItemDescriptionGenerator((Component source, Object itemId, Object propertyId) ->  {
+            Object errorMessage = PluginsLayout.this.plugins.getContainerProperty(itemId, PROP_PLUGIN_INFO)
+                    .getValue();
+            if (errorMessage != null && errorMessage instanceof String) {
+                return StringEscapeUtils.escapeHtml(errorMessage.toString());
+            } else {
+                return null;
             }
         });
 
