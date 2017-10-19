@@ -55,7 +55,7 @@ public class ApplianceManagerConnectorDto extends BaseDto {
     private Long lastJobId;
 
     @ApiModelProperty(readOnly = true, value = "Determines whether the appliance manager supports policy mapping.")
-    private Boolean isPolicyMappingSupported;
+    private Boolean policyMappingSupported;
 
     @ApiModelProperty(value = "The Api key of the Manager required if Manager uses Api key Authentication.")
     private String apiKey;
@@ -136,11 +136,11 @@ public class ApplianceManagerConnectorDto extends BaseDto {
     }
 
     public Boolean isPolicyMappingSupported() {
-        return this.isPolicyMappingSupported;
+        return this.policyMappingSupported;
     }
 
-    public void setPolicyMappingSupported(Boolean isPolicyMappingSupported) {
-        this.isPolicyMappingSupported = isPolicyMappingSupported;
+    public void setPolicyMappingSupported(Boolean policyMappingSupported) {
+        this.policyMappingSupported = policyMappingSupported;
     }
 
     public Set<SslCertificateAttrDto> getSslCertificateAttrSet() {

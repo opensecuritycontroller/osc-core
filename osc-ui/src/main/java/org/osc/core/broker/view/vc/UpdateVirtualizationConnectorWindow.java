@@ -16,9 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
-import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -27,8 +28,8 @@ import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
@@ -45,9 +46,8 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
             UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
             PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager, ServerApi server,
-            EncryptionApi encryption) throws Exception {
-        super(pluginService, validator, trustManager, encryption);
+            X509TrustManagerApi trustManager, ServerApi server) throws Exception {
+        super(pluginService, validator, trustManager);
         this.server = server;
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;
@@ -74,7 +74,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
             this.controllerPW.setValue(vcObject.getControllerPassword());
             this.controllerType.setValue(vcObject.getControllerType());
         } else {
-            this.controllerType.setValue(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+            this.controllerType.setValue(NO_CONTROLLER_TYPE);
             this.controllerType.setEnabled(true);
         }
 

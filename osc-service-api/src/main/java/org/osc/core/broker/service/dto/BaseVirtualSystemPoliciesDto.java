@@ -48,7 +48,7 @@ public class BaseVirtualSystemPoliciesDto {
     @ApiModelProperty(readOnly = true,
 			value = "Determines whether the appliance manager supports multiple policy mapping.")
     @XmlElement(name = "multiplePoliciesSupported")
-	private Boolean isMultiplePoliciesSupported;
+	private Boolean multiplePoliciesSupported;
 
     @ApiModelProperty(readOnly = true)
     private boolean markedForDeletion;
@@ -105,11 +105,11 @@ public class BaseVirtualSystemPoliciesDto {
 	}
 
 	public Boolean isMultiplePoliciesSupported() {
-		return this.isMultiplePoliciesSupported;
+		return this.multiplePoliciesSupported;
 	}
 
-	public void setMultiplePoliciesSupported(Boolean isMultiplePoliciesSupported) {
-		this.isMultiplePoliciesSupported = isMultiplePoliciesSupported;
+	public void setMultiplePoliciesSupported(Boolean multiplePoliciesSupported) {
+		this.multiplePoliciesSupported = multiplePoliciesSupported;
 	}
 
 	public boolean isMarkedForDeletion() {

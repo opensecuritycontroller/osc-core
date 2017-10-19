@@ -65,6 +65,7 @@ public class SecurityGroupEntityMgr {
         dto.setProjectId(entity.getProjectId());
         dto.setProjectName(entity.getProjectName());
         dto.setServiceFunctionChainId(sfc == null ? null : sfc.getId());
+        dto.setNetworkElementId(entity.getNetworkElementId());
         JobRecord lastJob = entity.getLastJob();
         if (lastJob != null) {
             dto.setLastJobStatus(lastJob.getStatus().name());
@@ -126,15 +127,15 @@ public class SecurityGroupEntityMgr {
         return dto;
     }
 
-	public static List<SecurityGroup> listOtherSecurityGroupsWithSameSFC(EntityManager em,
-			SecurityGroup sg) {
+	public static List<SecurityGroup> listOtherSecurityGroupsWithSameSFC(EntityManager em, SecurityGroup sg) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 
 		CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
 
 		Root<SecurityGroup> root = query.from(SecurityGroup.class);
 		query = query.select(root).where(cb.equal(root.join("serviceFunctionChain"), sg.getServiceFunctionChain()),
-				cb.equal(root.get("projectId"), sg.getProjectId()), cb.notEqual(root, sg));
+				cb.equal(root.get("projectId"), sg.getProjectId()), cb.notEqual(root, sg),
+				cb.isNotNull(root.get("networkElementId")));
 
 		List<SecurityGroup> list = em.createQuery(query).getResultList();
 		return list;

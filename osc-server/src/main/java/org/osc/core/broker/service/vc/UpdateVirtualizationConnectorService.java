@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
 
 import java.util.List;
 import java.util.Set;
@@ -61,10 +62,10 @@ import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateVirtualizationConnectorService
@@ -222,7 +223,7 @@ implements UpdateVirtualizationConnectorServiceApi {
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
         if (!existingVc.getControllerType().equals(dto.getControllerType())
-                && !existingVc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)
+                && !existingVc.getControllerType().equals(NO_CONTROLLER_TYPE)
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(
                     "SDN Controller type cannot be changed if this Virtualization Connector is "
@@ -244,6 +245,8 @@ implements UpdateVirtualizationConnectorServiceApi {
         // cache existing DB passwords
         String providerDbPassword = existingVc.getProviderPassword();
         String controllerDbPassword = existingVc.getControllerPassword();
+        String rabbitDbPassword = existingVc.getProviderAttributes()
+                .get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
 
         VirtualizationConnectorDto dto = request.getDto();
         // Vanilla Transform the request to entity
@@ -256,6 +259,11 @@ implements UpdateVirtualizationConnectorServiceApi {
             }
             if (StringUtils.isEmpty(dto.getControllerPassword())) {
                 existingVc.setControllerPassword(controllerDbPassword);
+            }
+            if (StringUtils.isEmpty(
+                    dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD))) {
+                existingVc.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                        rabbitDbPassword);
             }
         }
     }

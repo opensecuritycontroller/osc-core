@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
@@ -92,9 +93,9 @@ public class VirtualizationConnectorServiceData {
         vcDto.setAdminProjectName(projectName);
 
         Map<String, String> providerAttributes = new HashMap<>();
-        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
-        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
-        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
+        providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
+        providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
+        providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
         vcDto.setProviderAttributes(providerAttributes);
 
         if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {

@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,6 @@ import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
-import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
@@ -64,19 +65,17 @@ import org.osc.core.broker.view.vc.securitygroup.SecurityGroupMembershipInfoWind
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.common.virtualization.VirtualizationType;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
@@ -153,9 +152,6 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Reference
     private ServerApi server;
 
-    @Reference
-    private EncryptionApi encryption;
-
     @Activate
     void activate() {
         createView("Virtualization Connectors",
@@ -212,20 +208,16 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
     }
 
-    @SuppressWarnings("serial")
     @Override
     public void initChildTable() {
         this.childContainer = new BeanContainer<Long, SecurityGroupDto>(SecurityGroupDto.class);
         this.childTable.setContainerDataSource(this.childContainer);
         this.childTable.setVisibleColumns("name", "projectName", "memberDescription", "servicesDescription",
                 "markForDeletion", "lastJobStatus");
-        this.childTable.addGeneratedColumn("lastJobStatus", new ColumnGenerator() {
-            @Override
-            public Object generateCell(CustomTable source, Object itemId, Object columnId) {
-                SecurityGroupDto SGDto = VirtualizationConnectorView.this.childContainer.getItem(itemId).getBean();
-                return ViewUtil.generateJobLink(SGDto.getLastJobStatus(), SGDto.getLastJobState(),
-                        SGDto.getLastJobId(), VirtualizationConnectorView.this.server);
-            }
+        this.childTable.addGeneratedColumn("lastJobStatus", (source, itemId, columnId) -> {
+            SecurityGroupDto SGDto = VirtualizationConnectorView.this.childContainer.getItem(itemId).getBean();
+            return ViewUtil.generateJobLink(SGDto.getLastJobStatus(), SGDto.getLastJobState(),
+                    SGDto.getLastJobId(), VirtualizationConnectorView.this.server);
         });
 
         // re-naming table header columns
@@ -275,14 +267,15 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
     }
 
-    @SuppressWarnings("serial")
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
-            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager, this.server, this.encryption));
+            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService,
+                    this.pluginService, this.validator, this.trustManager, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
-            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager, this.server, this.encryption));
+            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService,
+                    this.pluginService, this.validator, this.trustManager, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,
@@ -290,7 +283,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
         if (event.getButton().getId().equals(ToolbarButtons.ADD_CHILD.getId())) {
             VirtualizationConnectorDto vc = getParentItem().getBean();
-            if (vc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
+            if (vc.getControllerType().equals(NO_CONTROLLER_TYPE)) {
                 ViewUtil.iscNotification("Creation of Security Groups is not allowed in the absence of SDN Controller.",
                         Notification.Type.ERROR_MESSAGE);
             } else {
@@ -338,13 +331,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             SecurityGroupDto securityGroup = getChildContainer().getItem(getChildItemId()).getBean();
             SecurityGroupMembershipInfoWindow memberShipWindow = new SecurityGroupMembershipInfoWindow(securityGroup,
                     this.listSecurityGroupMembersBySgService);
-            memberShipWindow.getComponentModel().setCloseClickedListener(new ClickListener() {
-
-                @Override
-                public void buttonClick(ClickEvent event) {
-                    memberShipWindow.close();
-                }
-            });
+            memberShipWindow.getComponentModel().setCloseClickedListener(event1 -> memberShipWindow.close());
             ViewUtil.addWindow(memberShipWindow);
         }
 
