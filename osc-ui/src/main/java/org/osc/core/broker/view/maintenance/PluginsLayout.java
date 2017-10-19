@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.osc.core.broker.service.api.ImportPluginServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginApi;
 import org.osc.core.broker.service.api.plugin.PluginApi.State;
@@ -45,7 +46,9 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.data.Item;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FileDownloader;
+import com.vaadin.ui.AbstractSelect.ItemDescriptionGenerator;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
@@ -102,6 +105,23 @@ public class PluginsLayout extends FormLayout {
         this.plugins.addContainerProperty(PROP_PLUGIN_DELETE, Button.class, null);
 
         this.plugins.setColumnWidth(PROP_PLUGIN_INFO, PLUGIN_INFO_COLUMN_WIDTH);
+
+        // Add a tooltip to the error column so the user is able to see the
+        // complete error message
+        this.plugins.setItemDescriptionGenerator(new ItemDescriptionGenerator() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String generateDescription(Component source, Object itemId, Object propertyId) {
+                Object errorMessage = PluginsLayout.this.plugins.getContainerProperty(itemId, PROP_PLUGIN_INFO)
+                        .getValue();
+                if (errorMessage != null && errorMessage instanceof String) {
+                    return StringEscapeUtils.escapeHtml(errorMessage.toString());
+                } else {
+                    return null;
+                }
+            }
+        });
 
         this.pluginsPanel = new Panel();
         this.pluginsPanel.setContent(this.plugins);
