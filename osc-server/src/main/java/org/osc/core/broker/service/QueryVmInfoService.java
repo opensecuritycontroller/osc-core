@@ -39,13 +39,13 @@ import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.VmInfo;
 import org.osc.core.broker.util.ValidateUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
@@ -119,15 +119,15 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                             FlowPortInfo portInfo = flowPortInfo.get(requestId);
 
                             FlowVmInfo flowVmInfo = new FlowVmInfo();
-                            flowVmInfo.flow = portInfo.flow;
+                            flowVmInfo.flow = portInfo.getFlow();
                             flowVmInfo.requestId = requestId;
 
-                            if (portInfo.sourcePortId != null) {
-                                flowVmInfo.sourceVmInfo = findVmByPortId(nova, neutron, dai, portInfo.sourcePortId);
+                            if (portInfo.getSourcePortId() != null) {
+                                flowVmInfo.sourceVmInfo = findVmByPortId(nova, neutron, dai, portInfo.getSourcePortId());
                             }
-                            if (portInfo.destinationPortId != null) {
+                            if (portInfo.getDestinationPortId() != null) {
                                 flowVmInfo.destinationVmInfo = findVmByPortId(nova, neutron, dai,
-                                        portInfo.destinationPortId);
+                                        portInfo.getDestinationPortId());
                             }
                             response.flowVmInfo.put(requestId, flowVmInfo);
                         }
@@ -140,9 +140,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                             flowVmInfo.requestId = requestId;
                             flowVmInfo.flow = flowInfo;
                             flowVmInfo.sourceVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
-                                    flowInfo.sourceMacAddress, flowInfo.sourceIpAddress);
+                                    flowInfo.getSourceMacAddress(), flowInfo.getSourceIpAddress());
                             flowVmInfo.destinationVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
-                                    flowInfo.destinationMacAddress, flowInfo.destinationIpAddress);
+                                    flowInfo.getDestinationMacAddress(), flowInfo.getDestinationIpAddress());
 
                             response.flowVmInfo.put(requestId, flowVmInfo);
                         }
