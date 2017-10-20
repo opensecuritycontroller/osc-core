@@ -517,17 +517,17 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void upgrade79to80(Statement stmt) throws SQLException {
-        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id;"
-                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_id;"
-                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_name;"
-                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_vsm_uuid;"
-                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_vm_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_name;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_vsm_uuid;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_vm_id;");
         execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN IF EXISTS nsx_agent_id;");
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN IF EXISTS nsx_vsm_uuid;");
-        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id;"
-                + "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_instance_id;"
-                + "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_manager_id;"
-                + "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_vsm_uuid;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_instance_id;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_manager_id;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_vsm_uuid;");
         execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_POLICY;");
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists virtual_system_policy_fk;");
         execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
