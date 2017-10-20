@@ -43,7 +43,9 @@ script:
 # the following command line builds the project, executes the SonarCloud analysis
     - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" || "$(cut -d'/' -f1 <<<${TRAVIS_REPO_SLUG})" != opensecuritycontroller ]]; then
         echo "Skipping sonar analysis as this is a pull request or a build of a fork";
-        mvn install;
+        mvn org.jacoco:jacoco-maven-plugin:prepare-agent install;
       else
-        mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar;
+        mvn org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar;
       fi
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
