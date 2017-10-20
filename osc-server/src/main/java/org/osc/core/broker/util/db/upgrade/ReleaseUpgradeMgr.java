@@ -35,10 +35,10 @@ import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.FreqType;
 import org.osc.core.common.job.ThresholdType;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -266,42 +266,42 @@ public class ReleaseUpgradeMgr {
                 log.error("Current DB version is unknown !!!");
         }
     }
-    
+
     private static void upgrade93to94(Statement stmt) throws SQLException {
         execSql(stmt, "create table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT (" +
                     "dai_fk bigint not null, " +
                     "pod_port_fk bigint not null," +
                     "primary key (dai_fk, pod_port_fk));");
-                
+
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT " +
                     "add constraint FK_DAI_PODP_DAI " +
                     "foreign key (dai_fk) " +
                     "references DISTRIBUTED_APPLIANCE_INSTANCE;");
-                    
+
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT " +
                 "add constraint FK_DAI_PODP_PODP " +
                 "foreign key (pod_port_fk) " +
                 "references POD_PORT;");
     }
-    
+
     private static void upgrade92to93(Statement stmt) throws SQLException {
     	execSql(stmt,
                 "alter table SECURITY_GROUP add column sfc_fk bigint;");
-    	
+
     	execSql(stmt,
 					"alter table SECURITY_GROUP " +
 					"add constraint FK_SG_SFC " +
 					"foreign key (sfc_fk) " +
 					"references SERVICE_FUNCTION_CHAIN;");
     }
-    
+
     private static void upgrade91to92(Statement stmt) throws SQLException {
     	execSql(stmt,
                 "alter table SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM add column vs_order bigint not null;");
-    	
+
     	execSql(stmt,
                 "alter table SERVICE_FUNCTION_CHAIN add column vc_fk bigint;");
-    	
+
     	execSql(stmt,
     			"alter table SERVICE_FUNCTION_CHAIN " +
     			"add constraint FK_SFC_VC " +
@@ -517,17 +517,22 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void upgrade79to80(Statement stmt) throws SQLException {
-        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id, "
-                + "nsx_host_id, nsx_host_name, nsx_host_vsm_uuid, nsx_vm_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id;"
+                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_id;"
+                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_name;"
+                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_vsm_uuid;"
+                + "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_vm_id;");
         execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN IF EXISTS nsx_agent_id;");
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN IF EXISTS nsx_vsm_uuid;");
-        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id, "
-                + "nsx_service_instance_id, nsx_service_manager_id, nsx_vsm_uuid;");
-        execSql(stmt, "drop table VIRTUAL_SYSTEM_POLICY;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id;"
+                + "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_instance_id;"
+                + "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_manager_id;"
+                + "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_vsm_uuid;");
+        execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_POLICY;");
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists virtual_system_policy_fk;");
-        execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
+        execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
         execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
-        execSql(stmt, "DROP table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
+        execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
     }
 
