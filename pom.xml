@@ -312,6 +312,7 @@
                 <configuration>
                     <destFile>${sonar.jacoco.reportPath}</destFile>
                     <append>true</append>
+                    <propertyName>surefireArgLine</propertyName>
                 </configuration>
                 <executions>
                     <execution>
