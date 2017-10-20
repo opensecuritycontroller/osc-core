@@ -36,8 +36,6 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -94,15 +92,6 @@ public class AddApplianceSoftwareVersionServiceTest {
     }
 
     @Test
-    public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-        // Arrange.
-        this.exception.expect(NullPointerException.class);
-
-        // Act.
-        this.service.dispatch(null);
-    }
-
-    @Test
     public void testDispatch_WhenAsvValidationFails_ThrowsUnhandledException() throws Exception {
         // Arrange.
         ApplianceSoftwareVersionDto dto = new ApplianceSoftwareVersionDto();
@@ -147,13 +136,10 @@ public class AddApplianceSoftwareVersionServiceTest {
 
         when(this.em.find(Appliance.class, dto.getParentId())).thenReturn(new Appliance());
 
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                ApplianceSoftwareVersion asv = invocation.getArgumentAt(0, ApplianceSoftwareVersion.class);
-                asv.setId(asvId);
-                return null;
-            }
+        doAnswer(invocation -> {
+            ApplianceSoftwareVersion asv = invocation.getArgumentAt(0, ApplianceSoftwareVersion.class);
+            asv.setId(asvId);
+            return null;
         }).when(this.em).persist(argThat(new ApplianceSoftwareVersionMatcher(dto.getSwVersion())));
 
         // Act.

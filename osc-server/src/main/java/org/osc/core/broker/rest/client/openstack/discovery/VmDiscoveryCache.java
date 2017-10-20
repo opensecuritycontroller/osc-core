@@ -90,21 +90,17 @@ public class VmDiscoveryCache {
 
         private Map<String, PortInfo> macAddressToPortMap = Maps.newConcurrentMap();
 
-
         public String getName() {
             return this.name;
         }
-
 
         public String getHost() {
             return this.host;
         }
 
-
         public Map<String, PortInfo> getMacAddressToPortMap() {
             return this.macAddressToPortMap;
         }
-
 
         @Override
         public String toString() {
