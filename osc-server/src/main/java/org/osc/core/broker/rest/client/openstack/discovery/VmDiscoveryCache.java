@@ -38,12 +38,12 @@ public class VmDiscoveryCache {
     private String project;
 
     public static class PortInfo implements NetworkElement {
-        public VmInfo vm;
-        public String osNetworkId;
-        public String osPortId;
-        public String macAddress;
-        public List<String> portIPs = new ArrayList<>();
-        public String parentId;
+        private VmInfo vm;
+        private String osNetworkId;
+        private String osPortId;
+        private String macAddress;
+        private List<String> portIPs = new ArrayList<>();
+        private String parentId;
 
         @Override
         public String toString() {
@@ -54,6 +54,14 @@ public class VmDiscoveryCache {
         @Override
         public String getElementId() {
             return this.osPortId;
+        }
+
+        public String getOsNetworkId() {
+            return this.osNetworkId;
+        }
+
+        public String getMacAddress() {
+            return this.macAddress;
         }
 
         @Override
@@ -75,12 +83,28 @@ public class VmDiscoveryCache {
     }
 
     public class VmInfo {
-        public String vmId;
-        public String projectId;
-        public String name;
-        public String host;
+        private String vmId;
+        private String projectId;
+        private String name;
+        private String host;
 
-        public Map<String, PortInfo> macAddressToPortMap = Maps.newConcurrentMap();
+        private Map<String, PortInfo> macAddressToPortMap = Maps.newConcurrentMap();
+
+
+        public String getName() {
+            return this.name;
+        }
+
+
+        public String getHost() {
+            return this.host;
+        }
+
+
+        public Map<String, PortInfo> getMacAddressToPortMap() {
+            return this.macAddressToPortMap;
+        }
+
 
         @Override
         public String toString() {
