@@ -25,6 +25,7 @@
 import re
 import os
 import sys
+import binascii
 from pbkdf2 import PBKDF2
 try:
     from configparser import ConfigParser
@@ -76,7 +77,7 @@ class pbkdf2_operations():
        max_val = config.getint('pbkdf2_key_params', 'MAX_SALT_VAL')
        if min_val <= salt_temp <= max_val:
          self.salt_len = salt_temp
-       self.salt = os.urandom(self.salt_len)
+       self.salt = binascii.hexlify(os.urandom(self.salt_len))
        config_write.set('pbkdf2_key_decode_info','salt',self.salt)
 
 	
