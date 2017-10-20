@@ -38,7 +38,7 @@ addons:
   sonarcloud:
     organization: "opensecuritycontroller-org"
     token:
-      secure: "yGoFG/dU0vmmn1A63+CiakDGaeUXup/piohBP96SpqM3jfPMNobnMC5vDze9JAx4LMAKsY0Ao+rea5DXJb4U9/hcY3aCDbKT6EodoT5+1tD5sD8riiY8nyVTBchDmyC35AcgM+nXaW8N7ZAj4K0l9EPyHw4fWyK4IwaiJ8gKTD6kvE5ryeahM+SUYPk3vS+d7HwpZeDJFV1XDpZ5kRTew+s68s0pMxDsGW1H6lQ/nWDXc2mHBuvPamtMklhNN5PVdH9JPcttnE4bmOxqLIIjeJTGBMBe2iuP6Pqm33f+Kr8OQ0NOFTN1MLnjcilw8e35Z0aUYRsN6WAwRK4QxIZI6fCXrWzHhrt1YVsTQpMhDGFDFK2vuX0y/2ArTNLxMtIsHBpXlh2dxQ2tCDktxhvtPNzrKYBpFnTr/6VgXFgITHpkw5IYuIM0DeyOzTniVBxDLCnWE6CyKzKrGye9E+t0rpB23shwx4jFadaeLJwl5jr1L+QfRZ1Ufr0TlBLyNGaFpfNWR+pxesdCJJ8poN3fUDV/ThIX8NLVVbZc0RUrgGxZQydPICySAt10aw7qUksXZdK7NZgSUKC2CKOoDY++kPzMjIRPezS5rXVL0LF8Am+xV4Yzv63hFT0NABvXIQ/eX1RH5LfaV2L7Tqm4tT6/t2GNhBbFFcgzIZnF8ZL5U34="
+      secure: "Xn/0H8skbWNMuZOj26JxmFvd0NpRdXgeCRFKOkvMTy1fYM2MOmz/QDmi8TYCtrSafrt0sU2F89mNbx6cp8B8J/aI/jZhgqEZyq4ZsRBrqozJFaUZHvB9I0Tiq2babV5e+NXjLnux9gajhZII4zolb3nG1Dz6vxwKe0+KBGocQ5DMm7LeNnHgqfb5FvVpnYlAP+jeEUX81cKeJ+CQSOhB8BUhC7QIMnzjsUAtOL3r009hGGE6oSYfzmCqu+cBfxcCNr6VLqd93Y33PyIvF3r0BiLD7CUWF+zHcopi/JGeox55U/Cav56PnFb1D8ksw82puPIdjQm5gP5mUWBTfglJehRf2vBjvKdDFpO8+XVgyN1w+a63eaqNlgQCg7kzrXHdvRhErsXZPCvZk+MXMN5vqkx2MZCp08qNZPNZs3rf150yLkSUnVKPsxGBRUKnDs9cFAr4mC7+A5jZXfgPFR85nBXHE9ls2j70Ze/SljBfFp5ed/HHVyjFUsgSUtck39CogXDY1g+lwst4kE/b2pKQq4E1EWoFO6Ac4l9R5Zk5huTj10lT7vIipFnp4jLMIH4meJ6vQsjkAI2MABN9szv0EQnsVl2nf1T8AIHf/5IgGAFznLxgGcWorFlStfKrSieapGmYqO0K0ccdQhwhMxdoB5Us2rOeuIgLx2eZGnqZtnA="
 script:
 # the following command line builds the project, executes the SonarCloud analysis
     - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" || "$(cut -d'/' -f1 <<<${TRAVIS_REPO_SLUG})" != opensecuritycontroller ]]; then
