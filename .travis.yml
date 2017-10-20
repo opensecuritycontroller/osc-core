@@ -34,5 +34,16 @@ before_install:
     - wget -O $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher/biz.aQute.launcher-3.3.0.jar http://central.maven.org/maven2/biz/aQute/bnd/biz.aQute.launcher/3.3.0/biz.aQute.launcher-3.3.0.jar
 install: 
     true
+addons:
+  sonarcloud:
+    organization: "opensecuritycontroller-org"
+    token:
+      secure: "yGoFG/dU0vmmn1A63+CiakDGaeUXup/piohBP96SpqM3jfPMNobnMC5vDze9JAx4LMAKsY0Ao+rea5DXJb4U9/hcY3aCDbKT6EodoT5+1tD5sD8riiY8nyVTBchDmyC35AcgM+nXaW8N7ZAj4K0l9EPyHw4fWyK4IwaiJ8gKTD6kvE5ryeahM+SUYPk3vS+d7HwpZeDJFV1XDpZ5kRTew+s68s0pMxDsGW1H6lQ/nWDXc2mHBuvPamtMklhNN5PVdH9JPcttnE4bmOxqLIIjeJTGBMBe2iuP6Pqm33f+Kr8OQ0NOFTN1MLnjcilw8e35Z0aUYRsN6WAwRK4QxIZI6fCXrWzHhrt1YVsTQpMhDGFDFK2vuX0y/2ArTNLxMtIsHBpXlh2dxQ2tCDktxhvtPNzrKYBpFnTr/6VgXFgITHpkw5IYuIM0DeyOzTniVBxDLCnWE6CyKzKrGye9E+t0rpB23shwx4jFadaeLJwl5jr1L+QfRZ1Ufr0TlBLyNGaFpfNWR+pxesdCJJ8poN3fUDV/ThIX8NLVVbZc0RUrgGxZQydPICySAt10aw7qUksXZdK7NZgSUKC2CKOoDY++kPzMjIRPezS5rXVL0LF8Am+xV4Yzv63hFT0NABvXIQ/eX1RH5LfaV2L7Tqm4tT6/t2GNhBbFFcgzIZnF8ZL5U34="
 script:
-    mvn install
+# the following command line builds the project, executes the SonarCloud analysis
+    - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" || "$(cut -d'/' -f1 <<<${TRAVIS_REPO_SLUG})" != opensecuritycontroller ]]; then
+        echo "Skipping sonar analysis as this is a pull request or a build of a fork";
+        mvn install;
+      else
+        mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar;
+      fi
