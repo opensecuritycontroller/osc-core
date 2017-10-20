@@ -81,6 +81,8 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
     private final ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
     private final ServerApi server;
 
+	private List<VirtualSystemPolicyBindingDto> allBindings;
+
 	public BindSecurityGroupWindow(SecurityGroupDto sgDto,
 	        BindSecurityGroupServiceApi bindSecurityGroupService,
 	        ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService,
@@ -130,12 +132,12 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
                 through UI(or shall we add it now?).For now we do not allow SFC bind from UI hence it is false*/
                 bindRequest.setBindSfc(false);
 
-				List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
+				this.allBindings = this.listSecurityGroupBindingsBySgService
 						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getMemberList();
 
 				for (Long selectedVsId : getSelectedServicesId()) {
 					VirtualSystemPolicyBindingDto previousBinding = null;
-					for (VirtualSystemPolicyBindingDto binding : allBindings) {
+					for (VirtualSystemPolicyBindingDto binding : this.allBindings) {
 						if (binding.getVirtualSystemId().equals(selectedVsId)) {
 							previousBinding = binding;
 							break;
@@ -298,10 +300,10 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 		this.serviceTable.removeAllItems();
 
-		List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
+		this.allBindings = this.listSecurityGroupBindingsBySgService
 				.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getMemberList();
 
-		for (VirtualSystemPolicyBindingDto binding : allBindings) {
+		for (VirtualSystemPolicyBindingDto binding : this.allBindings) {
 			List<PolicyDto> policies = binding.getPolicies();
 			ComboBox policyComboBox = getPolicyComboBox(policies);
 			if (binding.isMultiplePoliciesSupported()) {
@@ -395,8 +397,8 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		return failurePolicy;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void serviceTableClicked(long itemId, boolean setCheckBoxValue) {
+	@SuppressWarnings({ "rawtypes" })
+	private void serviceTableClicked(long itemId) {
 		ComboBox policyComboBox = (ComboBox) this.serviceTable.getContainerProperty(itemId, PROPERTY_ID_POLICY)
 				.getValue();
 		ComboBox failurePolicyComboBox = (ComboBox) this.serviceTable
@@ -404,24 +406,25 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		Property itemProperty = this.serviceTable.getContainerProperty(itemId, PROPERTY_ID_ENABLED);
 
 		boolean currentValue = (boolean) itemProperty.getValue();
-		if (setCheckBoxValue) {
-			itemProperty.setValue(!currentValue);
-			if (policyComboBox.getContainerDataSource().size() > 0) {
-				policyComboBox.setEnabled(!currentValue);
-			}
-			policyComboBox.setEnabled(!currentValue);
-			if (failurePolicyComboBox.getData() != null) {
-				failurePolicyComboBox.setEnabled(!currentValue);
-			}
-
-		} else {
-			if (policyComboBox.getContainerDataSource().size() > 0) {
+		if (policyComboBox.getContainerDataSource().size() > 0) {
+			if (isMultiplePoliciesSupported(itemId)) {
+				policyComboBox.setEnabled(false);
+			} else {
 				policyComboBox.setEnabled(currentValue);
 			}
-			if (failurePolicyComboBox.getData() != null) {
-				failurePolicyComboBox.setEnabled(currentValue);
+		}
+		if (failurePolicyComboBox.getData() != null) {
+			failurePolicyComboBox.setEnabled(currentValue);
+		}
+	}
+
+	private boolean isMultiplePoliciesSupported(Long vsId) {
+		for (VirtualSystemPolicyBindingDto binding : this.allBindings) {
+			if (binding.getVirtualSystemId().equals(vsId) && binding.isMultiplePoliciesSupported()) {
+				return true;
 			}
 		}
+		return false;
 	}
 
 	@SuppressWarnings("serial")
@@ -434,7 +437,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				@Override
 				public void valueChange(ValueChangeEvent event) {
-					serviceTableClicked((long) itemId, false);
+					serviceTableClicked((long) itemId);
 				}
 			});
 			return checkBox;
