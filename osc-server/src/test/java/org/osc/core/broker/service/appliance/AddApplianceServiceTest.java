@@ -36,8 +36,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -95,15 +93,6 @@ public class AddApplianceServiceTest {
     }
 
     @Test
-    public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-        // Arrange.
-        this.exception.expect(NullPointerException.class);
-
-        // Act.
-        this.service.dispatch(null);
-    }
-
-    @Test
     public void testDispatch_WhenApplianceValidationFails_ThrowsUnhandledException() throws Exception {
         // Arrange.
         ApplianceDto dto = new ApplianceDto(null, null, null);
@@ -123,13 +112,10 @@ public class AddApplianceServiceTest {
         BaseRequest<ApplianceDto> request = new BaseRequest<>(dto);
         Long applianceId = 111L;
 
-        Mockito.doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                Appliance appliance = invocation.getArgumentAt(0, Appliance.class);
-                appliance.setId(applianceId);
-                return null;
-            }
+        Mockito.doAnswer(invocation -> {
+            Appliance appliance = invocation.getArgumentAt(0, Appliance.class);
+            appliance.setId(applianceId);
+            return null;
         }).when(this.em).persist(Mockito.argThat(new ApplianceMatcher(dto.getManagerType(), dto.getModel(), dto.getManagerVersion())));
 
         // Act.

@@ -72,7 +72,7 @@ public class ReleaseUpgradeMgr {
             Schema.createSchema(dbMgr);
         } else {
             int curDbVer = currentRecord.getDbVersion();
-            log.info("Current database schema version: " + curDbVer);
+            log.info("Current database schema version: {}", curDbVer);
 
             if (TARGET_DB_VERSION > curDbVer) {
                 if (isLastUpgradeSucceeded()) {
@@ -80,8 +80,8 @@ public class ReleaseUpgradeMgr {
                 }
                 createUpgradeMarkerFile();
 
-                log.info("Upgrading security broker database from current version: " + curDbVer
-                        + " to target version: " + TARGET_DB_VERSION);
+                log.info("Upgrading security broker database from current version: {} to target version: {}", curDbVer,
+                        TARGET_DB_VERSION);
 
                 // call upgrade process logics here. After done with the upgrade,
                 // make sure to update the ReleaseInfo record with the TARGET DB VERSION
@@ -587,17 +587,18 @@ public class ReleaseUpgradeMgr {
 
         String sqlQuery = "SELECT vc_fk, value FROM virtualization_connector_provider_attr WHERE key = 'rabbitMQPassword';";
 
-        ResultSet result = stmt.executeQuery(sqlQuery);
         Map<Integer, String> attrs = new HashMap<>();
 
-        while (result.next()) {
-            String value = result.getString("value");
-            try {
-                value = encrypter.decryptDES(value);
-            } catch (EncryptionException e){
-                log.warn("Password is not encrypted with DES",e);
+        try (ResultSet result = stmt.executeQuery(sqlQuery)) {
+            while (result.next()) {
+                String value = result.getString("value");
+                try {
+                    value = encrypter.decryptDES(value);
+                } catch (EncryptionException e) {
+                    log.warn("Password is not encrypted with DES", e);
+                }
+                attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(value));
             }
-            attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(value));
         }
 
         try (PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'")) {
@@ -2015,11 +2016,13 @@ public class ReleaseUpgradeMgr {
     @SuppressWarnings("deprecation")
     private static void updatePasswordScheme(Statement statement, String tableName, String columnName, EncryptionApi encrypter) throws SQLException, EncryptionException {
         String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
-        ResultSet result = statement.executeQuery(sqlQuery);
         Map<Integer, String> idsAndPasswords = new HashMap<>();
 
-        while (result.next()) {
-            idsAndPasswords.put(result.getInt("id"), encrypter.encryptAESCTR(encrypter.decryptDES(result.getString(columnName))));
+        try (ResultSet result = statement.executeQuery(sqlQuery)) {
+            while (result.next()) {
+                idsAndPasswords.put(result.getInt("id"),
+                        encrypter.encryptAESCTR(encrypter.decryptDES(result.getString(columnName))));
+            }
         }
 
         try (PreparedStatement preparedStatementUpdate = statement.getConnection().prepareStatement("UPDATE " + tableName + " SET " + columnName + " = ? WHERE id = ?")) {
@@ -2066,7 +2069,7 @@ public class ReleaseUpgradeMgr {
             try (ResultSet result = statement.executeQuery(sql)) {
                 if (result.next()) {
                     int dbVersion = result.getInt("db_version");
-                    log.info("DB version: " + dbVersion);
+                    log.info("DB version: {}", dbVersion);
                     releaseInfo = new ReleaseInfo();
                     releaseInfo.setId(1L);
                     releaseInfo.setDbVersion(dbVersion);
@@ -2097,7 +2100,7 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void execSql(Statement stmt, String sql) throws SQLException {
-        log.info("Execute sql: " + sql);
+        log.info("Execute sql: {}", sql);
         stmt.execute(sql);
     }
 }

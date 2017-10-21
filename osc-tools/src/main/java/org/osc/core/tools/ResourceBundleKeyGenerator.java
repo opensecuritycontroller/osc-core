@@ -42,7 +42,7 @@ public class ResourceBundleKeyGenerator {
 			" * See the License for the specific language governing permissions and\n"+
 			" * limitations under the License.\n"+
 			" *******************************************************************************/\n";
-	
+
     private String generatedCodeFolder;
     private String bundleName;
 
@@ -62,14 +62,14 @@ public class ResourceBundleKeyGenerator {
 
         try {
             StringBuilder fileContent = new StringBuilder();
-            		
+
             fileContent.append(COPYRIGHT_AND_LICENSE);
 
             fileContent.append("package ");
             fileContent.append(packageName);
             fileContent.append(";\n\n");
 
-            fileContent.append("public class ");
+            fileContent.append("public interface ");
             fileContent.append(className);
             fileContent.append("_ {\n\n");
 

@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.sample;
 
-public class messages_ {
+public interface Messages_ {
 
 	/**
 	 * some name for the resource example
