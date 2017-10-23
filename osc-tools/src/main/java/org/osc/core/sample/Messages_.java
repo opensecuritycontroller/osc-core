@@ -16,11 +16,23 @@
  *******************************************************************************/
 package org.osc.core.sample;
 
-public class messages_ {
+public final class Messages_ {
+
+	private Messages_() {}
 
 	/**
 	 * some name for the resource example
 	 */
-	public static final String RESOURCE_EXAMPLE_BAR_FOO = "resource.example.bar.foo";
+	public static final String RESOURCE_EXAMPLE_BAR_FOO_A = "resource.example.bar.foo.a";
+
+	/**
+	 * some name for the resource example
+	 */
+	public static final String RESOURCE_EXAMPLE_BAR_FOO_B = "resource.example.bar.foo.b";
+
+	/**
+	 * some name for the resource example
+	 */
+	public static final String RESOURCE_EXAMPLE_BAR_FOO_C = "resource.example.bar.foo.c";
 
 }

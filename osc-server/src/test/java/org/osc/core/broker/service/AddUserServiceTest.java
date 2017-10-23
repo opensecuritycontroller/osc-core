@@ -98,15 +98,6 @@ public class AddUserServiceTest {
     }
 
     @Test
-    public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception{
-        // Arrange.
-        this.exception.expect(NullPointerException.class);
-
-        // Act.
-        this.service.dispatch(null);
-    }
-
-    @Test
     public void testDispatch_WhenUserValidationFails_ThrowsInvalidEntryException() throws Exception{
         // Arrange.
         this.exception.expect(VmidcBrokerInvalidEntryException.class);

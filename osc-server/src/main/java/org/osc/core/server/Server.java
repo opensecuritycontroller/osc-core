@@ -53,7 +53,6 @@ import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.ServerUtil;
-import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -178,14 +177,11 @@ public class Server implements ServerApi {
     @Activate
     void activate(BundleContext context) {
         this.context = context;
-        Runnable server = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    startServer();
-                } catch (Exception e) {
-                    log.error("startServer failed", e);
-                }
+        Runnable server = () -> {
+            try {
+                startServer();
+            } catch (Exception e) {
+                log.error("startServer failed", e);
             }
         };
 
@@ -241,27 +237,23 @@ public class Server implements ServerApi {
             addShutdownHook();
             startScheduler();
 
-            Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(new TimeChangeCommand() {
-
-                @Override
-                public void execute(long timeDifference) {
-                    String timeDifferenceString = DurationFormatUtils.formatDuration(Math.abs(timeDifference),
-                            "d 'Days' H 'Hours' m 'Minutes' s 'Seconds'");
-                    if (timeDifference < 0) {
-                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
-                                "System Clock Moved Back by " + timeDifferenceString);
-                    } else {
-                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
-                                "System Clock Moved Forward by " + timeDifferenceString);
-                    }
-                    stopScheduler();
-                    try {
-                        startScheduler();
-                    } catch (SchedulerException se) {
-                        log.error("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
-                        + ") due to system time change. Will reboot in 15 seconds", se);
-                        handleFatalSystemError(se);
-                    }
+            Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(timeDifference -> {
+                String timeDifferenceString = DurationFormatUtils.formatDuration(Math.abs(timeDifference),
+                        "d 'Days' H 'Hours' m 'Minutes' s 'Seconds'");
+                if (timeDifference < 0) {
+                    Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                            "System Clock Moved Back by " + timeDifferenceString);
+                } else {
+                    Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                            "System Clock Moved Forward by " + timeDifferenceString);
+                }
+                stopScheduler();
+                try {
+                    startScheduler();
+                } catch (SchedulerException se) {
+                    log.error("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
+                    + ") due to system time change. Will reboot in 15 seconds", se);
+                    handleFatalSystemError(se);
                 }
             }, SERVER_TIME_CHANGE_THRESHOLD, TIME_CHANGE_THREAD_SLEEP_INTERVAL);
             timeMonitorThread.start();
@@ -280,15 +272,15 @@ public class Server implements ServerApi {
         private static final String OVF_ENV_XML_DIR = "/mnt/media";
         private static final String OVF_ENV_XML_FILE = "ovf-env.xml";
 
-        public boolean dhcp;
-        public String hostIpAddress;
-        public String hostSubnetMask;
-        public String hostDefaultGateway;
-        public String hostDnsServer1;
-        public String hostDnsServer2;
-        public String hostname;
-        public String defaultCliPassword;
-        public String defaultGuiPassword;
+        private boolean dhcp;
+        private String hostIpAddress;
+        private String hostSubnetMask;
+        private String hostDefaultGateway;
+        private String hostDnsServer1;
+        private String hostDnsServer2;
+        private String hostname;
+        private String defaultCliPassword;
+        private String defaultGuiPassword;
 
         @Override
         public String toString() {

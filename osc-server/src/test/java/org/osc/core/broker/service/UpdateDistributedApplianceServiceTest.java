@@ -276,15 +276,6 @@ public class UpdateDistributedApplianceServiceTest {
      }
 
     @Test
-    public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-        // Arrange.
-        this.exception.expect(NullPointerException.class);
-
-        // Act.
-        this.service.dispatch(null);
-    }
-
-    @Test
     public void testDispatch_WhenDistributedApplianceValidationFails_ThrowsInvalidEntryException() throws Exception {
         // Arrange.
         this.daDto.setName(this.invalidDaName);

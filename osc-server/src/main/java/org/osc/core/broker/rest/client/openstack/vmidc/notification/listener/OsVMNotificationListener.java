@@ -40,9 +40,9 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OsVMNotificationListener extends OsNotificationListener {
 
@@ -211,7 +211,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
                 }
 
                 // if the migrated VM host is same as what we have in the database then VM was resized and not Migrated
-                return !vm.getHost().equals(vmInfo.host);
+                return !vm.getHost().equals(vmInfo.getHost());
 
             });
         } catch (ScopedWorkException e) {

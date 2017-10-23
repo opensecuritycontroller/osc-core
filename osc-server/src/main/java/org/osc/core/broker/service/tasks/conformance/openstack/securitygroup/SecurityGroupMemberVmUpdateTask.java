@@ -28,9 +28,9 @@ import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.Port
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmInfo;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service=SecurityGroupMemberVmUpdateTask.class)
 public class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
@@ -57,17 +57,17 @@ public class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
         VM vm = this.sgm.getVm();
 
         // Verify VM info
-        vm.setName(this.vmInfo.name);
-        vm.setHost(this.vmInfo.host);
+        vm.setName(this.vmInfo.getName());
+        vm.setHost(this.vmInfo.getHost());
         OSCEntityManager.update(em, vm, this.txBroadcastUtil);
 
         // Verify ports info
-        for (PortInfo portInfo : this.vmInfo.macAddressToPortMap.values()) {
+        for (PortInfo portInfo : this.vmInfo.getMacAddressToPortMap().values()) {
             boolean found = false;
             for (VMPort vmPort : vm.getPorts()) {
                 List<String> macList = vmPort.getMacAddresses();
                 if (CollectionUtils.isNotEmpty(macList)){
-                    if (portInfo.macAddress.equals(macList.get(0))) {
+                    if (portInfo.getMacAddress().equals(macList.get(0))) {
                         found = true;
                         break;
                     }
@@ -75,8 +75,8 @@ public class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
             }
             if (!found) {
                 // Create new missing port
-                VMPort newVmPort = new VMPort(vm, portInfo.macAddress, portInfo.osNetworkId, portInfo.osPortId,
-                        portInfo.getPortIPs());
+                VMPort newVmPort = new VMPort(vm, portInfo.getMacAddress(), portInfo.getOsNetworkId(),
+                        portInfo.getElementId(), portInfo.getPortIPs());
                 OSCEntityManager.update(em, this.sgm, this.txBroadcastUtil);
                 OSCEntityManager.create(em, newVmPort, this.txBroadcastUtil);
                 this.log.info("Creating port for VM '" + vm.getName() + "' (" + vm.getOpenstackId() + "). Port:"
@@ -87,7 +87,7 @@ public class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
             PortInfo portInfo = null;
             List<String> macAddresses = vmPort.getMacAddresses();
             if (CollectionUtils.isNotEmpty(macAddresses)){
-                portInfo = this.vmInfo.macAddressToPortMap.get(vmPort.getMacAddresses().get(0));
+                portInfo = this.vmInfo.getMacAddressToPortMap().get(vmPort.getMacAddresses().get(0));
             }
             if (portInfo == null) {
                 OSCEntityManager.markDeleted(em, vmPort, this.txBroadcastUtil);
@@ -95,8 +95,8 @@ public class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
                         + "). Port:" + vmPort);
             } else {
                 // Verify existing port info
-                vmPort.setOsNetworkId(portInfo.osNetworkId);
-                vmPort.setOpenstackId(portInfo.osPortId);
+                vmPort.setOsNetworkId(portInfo.getOsNetworkId());
+                vmPort.setOpenstackId(portInfo.getElementId());
 
                 OSCEntityManager.update(em, vmPort, this.txBroadcastUtil);
             }
@@ -105,7 +105,7 @@ public class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Updating Security Group Member VM '%s'", this.vmInfo.name);
+        return String.format("Updating Security Group Member VM '%s'", this.vmInfo.getName());
     }
 
 }
