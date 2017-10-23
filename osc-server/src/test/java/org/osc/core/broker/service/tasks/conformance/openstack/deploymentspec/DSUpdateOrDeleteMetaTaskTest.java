@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import static java.util.stream.Collectors.toSet;
 import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.*;
 
 import java.util.Arrays;
@@ -78,6 +79,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
 
     private TaskGraph expectedGraph;
 
+
     public DSUpdateOrDeleteMetaTaskTest(DeploymentSpec ds, TaskGraph tg) {
         this.ds = ds;
         this.expectedGraph = tg;
@@ -97,11 +99,18 @@ public class DSUpdateOrDeleteMetaTaskTest {
         populateDatabase();
 
         List<String> stringList = Arrays.asList(HS_1_1);
+
         List<AvailabilityZone> osAvailabilityZones1 = Arrays.asList(createAvailableZoneDetails(AZ_1, stringList));
         HostAggregate ha = Mockito.mock(HostAggregate.class);
         Mockito.doReturn(stringList).when(ha).getHosts();
         Mockito.doReturn("ha_name").when(ha).getName();
+
         Set<String> h1set = new HashSet<>(Arrays.asList(HS_1_1));
+        if (this.ds.getDistributedApplianceInstances().size() > 1) {
+            // For all our cases, if so, then the osHosts in here should all be defined in NovaApi
+            h1set.addAll(this.ds.getDistributedApplianceInstances().stream().map(d -> d.getName()).collect(toSet()));
+        }
+
         Mockito.doReturn(osAvailabilityZones1).when(this.novaApiMock).getAvailabilityZonesDetail(REGION_1);
         Mockito.doReturn(h1set).when(this.novaApiMock).getComputeHosts(REGION_1);
         Mockito.doReturn(ha).when(this.novaApiMock).getHostAggregateById(
@@ -184,6 +193,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
             {UPDATE_NO_HOST_SELECTED_DS, createAllHostsInRegionGraph(UPDATE_NO_HOST_SELECTED_DS)},
             {UPDATE_DAI_HOST_SELECTED_DS, createDAIHostSelectedGraph(UPDATE_DAI_HOST_SELECTED_DS)},
             {UPDATE_DAI_HOST_NOT_SELECTED_DS, createDAIHostNotSelectedGraph(UPDATE_DAI_HOST_NOT_SELECTED_DS)},
+            {UPDATE_MULT_DAI_ONE_HOST_SELECTED_DS, createMultippleDAIOneHostSelectedGraph(UPDATE_MULT_DAI_ONE_HOST_SELECTED_DS)},
             {UPDATE_AZ_SELECTED_DS, createAZSelectedGraph(UPDATE_AZ_SELECTED_DS)},
             {UPDATE_DAI_HOST_NOT_IN_AZ_DS, createDaiHostNotInAZSelectedGraph(UPDATE_DAI_HOST_NOT_IN_AZ_DS)},
             {UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS, createOpenStackAZNotSelectedGraph(UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS)},

@@ -286,7 +286,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
         for (DistributedApplianceInstance dai : daisToDelete) {
             // Remove any extra sva/DAI
-            log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + dai.getHostName());
+            log.info("Removing DAI/SVA: %s for host: %s", dai.getName(), dai.getHostName());
             this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai),
                     this.firstCreatePGTask != null ? this.firstCreatePGTask : this.tg.getStartTaskNode().getTask());
         }
