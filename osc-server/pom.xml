@@ -399,6 +399,9 @@
                     <dataFile>${sonar.jacoco.reportPath}</dataFile>
                     <append>true</append>
                     <propertyName>surefireArgLine</propertyName>
+                    <excludes>
+                        <exclude>**/generated/*.class</exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>
