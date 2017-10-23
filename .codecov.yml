@@ -24,6 +24,6 @@ coverage:
     patch:
       default:
         enabled: yes
-        target: 24
+        target: 0
         threshold: 1
         base: parent
