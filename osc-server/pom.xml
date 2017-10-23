@@ -400,7 +400,7 @@
                     <append>true</append>
                     <propertyName>surefireArgLine</propertyName>
                     <excludes>
-                        <exclude>**/generated/*.class</exclude>
+                        <exclude>**/generated/**/*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
