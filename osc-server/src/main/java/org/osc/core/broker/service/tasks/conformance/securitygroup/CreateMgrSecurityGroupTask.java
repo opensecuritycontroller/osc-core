@@ -72,7 +72,6 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
             String mgrEndpointGroupId = mgrApi.createSecurityGroup(this.sg.getName(), sgId,
                     getSecurityGroupMemberListElement(this.sg));
             this.sgi.setMgrSecurityGroupId(mgrEndpointGroupId);
-            OSCEntityManager.update(em, this.sg, this.txBroadcastUtil);
             OSCEntityManager.update(em, this.sgi, this.txBroadcastUtil);
 
         } finally {
