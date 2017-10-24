@@ -103,8 +103,8 @@ public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
     private static final int SERVER_FATAL_ERROR_REBOOT_TIMEOUT = 15 * 1000;
-    private static final long SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
-    private static final long TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
+    private static final int SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
+    private static final int TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
     private static final int SERVER_SYNC_DELAY = 60 * 3; // 3 mins
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
