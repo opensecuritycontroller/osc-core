@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -103,6 +105,7 @@ public class Server implements ServerApi {
     private static final int SERVER_FATAL_ERROR_REBOOT_TIMEOUT = 15 * 1000;
     private static final long SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
     private static final long TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
+    private static final int SERVER_SYNC_DELAY = 60 * 3; // 3 mins
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
@@ -349,11 +352,16 @@ public class Server implements ServerApi {
 
         JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).usingJobData(jobDataMap).build();
         JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class).usingJobData(jobDataMap).build();
-        Trigger syncDaJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
-                .simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
 
-        Trigger syncSgJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
-                .simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
+		// TODO: Remove the delay, once plugin state listener is implemented.
+        // Related issue: https://github.com/opensecuritycontroller/osc-core/issues/545
+		Trigger syncDaJobTrigger = TriggerBuilder.newTrigger()
+				.startAt(Date.from(Instant.now().plusSeconds(SERVER_SYNC_DELAY))).withSchedule(SimpleScheduleBuilder
+				.simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
+
+		Trigger syncSgJobTrigger = TriggerBuilder.newTrigger()
+				.startAt(Date.from(Instant.now().plusSeconds(SERVER_SYNC_DELAY))).withSchedule(SimpleScheduleBuilder
+				.simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
 
         scheduler.scheduleJob(syncDaJob, syncDaJobTrigger);
         scheduler.scheduleJob(syncSgJob, syncSgJobTrigger);
