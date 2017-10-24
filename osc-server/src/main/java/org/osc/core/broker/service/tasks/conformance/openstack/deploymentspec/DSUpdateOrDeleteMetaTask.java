@@ -49,7 +49,6 @@ import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -57,6 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service = DSUpdateOrDeleteMetaTask.class)
 public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
@@ -252,7 +252,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
 
         Set<DistributedApplianceInstance> existingDais = this.ds.getDistributedApplianceInstances();
-
+        Set<DistributedApplianceInstance> daisToDelete = new HashSet<>();
         for (DistributedApplianceInstance dai : existingDais) {
             String daiHostName = dai.getHostName();
             boolean isDAIHostSelectedInDs = isHostSelected(selectedHosts, daiHostName);
@@ -261,12 +261,9 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             boolean doesHostNeedSva = removeHost(hostsMissingSvas, daiHostName);
             if (doesHostNeedSva && isDAIHostSelectedInDs) {
                 log.info("Conforming DAI/SVA: " + dai.getName());
-
                 addConformanceCheckTask(dai, osHostSet);
             } else {
-                // Remove any extra sva/DAI
-                log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + daiHostName);
-                this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
+                daisToDelete.add(dai);
             }
         }
 
@@ -285,6 +282,13 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                             LockObjectReference.getObjectReferences(this.ds)));
                 }
             }
+        }
+
+        for (DistributedApplianceInstance dai : daisToDelete) {
+            // Remove any extra sva/DAI
+            log.info("Removing DAI/SVA: %s for host: %s", dai.getName(), dai.getHostName());
+            this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai),
+                    this.firstCreatePGTask != null ? this.firstCreatePGTask : this.tg.getStartTaskNode().getTask());
         }
     }
 
@@ -373,7 +377,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     .listByDsIdAndAvailabilityZone(em, this.ds.getId(), unconformedAz);
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
-                    this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
+                    this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai),
+                            this.firstCreatePGTask != null ? this.firstCreatePGTask : this.tg.getStartTaskNode().getTask());
                 }
             }
         }
