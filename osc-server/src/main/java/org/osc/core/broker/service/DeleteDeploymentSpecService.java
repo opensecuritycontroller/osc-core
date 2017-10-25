@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.Job;
@@ -24,11 +26,14 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -113,18 +118,36 @@ implements DeleteDeploymentSpecServiceApi {
             + " is not found.");
         }
 
-        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds) ||
-                VirtualSystemEntityMgr.isProtectingWorkload(vs)) {
+        if (DeploymentSpecEntityMgr.isProtectingWorkload(this.ds)) {
             throw new VmidcBrokerValidationException(
                     String.format("The deployment spec with name '%s' is currently protecting a workload",
                             this.ds.getName()));
         }
+
+        //check if virtual system of this DS is attached to a SFC and only allow deletion of DS if no SG is binding
+        // to this virtual systems SFC.
+        checkSfcAndBinding(em, vs);
 
         if (!this.ds.getMarkedForDeletion() && request.isForceDelete()) {
             throw new VmidcBrokerValidationException(
                     "Deployment Spec '"
                             + this.ds.getName()
                             + "' is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
+        }
+    }
+
+    private void checkSfcAndBinding(EntityManager em,  VirtualSystem vs) throws Exception {
+        if (!vs.getServiceFunctionChains().isEmpty()) {
+            //Look if these SFCs are binded to any of the SG of same tenant as of DS
+            for (ServiceFunctionChain sfc : vs.getServiceFunctionChains()) {
+                List<SecurityGroup> sgList = SecurityGroupEntityMgr.listSecurityGroupsBySfcIdAndProjectId(em,
+                        sfc.getId(), this.ds.getProjectId());
+                if (sgList.stream().anyMatch(sg -> !sg.getMarkedForDeletion())) {
+                    throw new VmidcBrokerValidationException(String.format(
+                            "Cannot delete deployment spec with name '%s' which is currently referencing Service Function Chain %s and binding to a SecurityGroup",
+                            this.ds.getName(), sfc.getName()));
+                }
+            }
         }
     }
 }
