@@ -18,12 +18,6 @@ coverage:
     project:
       default:
         enabled: yes
-        target: 24
-        threshold: 1
-        base: parent
-    patch:
-      default:
-        enabled: yes
-        target: 0
-        threshold: 1
+        target: 24%
+        threshold: 1%
         base: parent
