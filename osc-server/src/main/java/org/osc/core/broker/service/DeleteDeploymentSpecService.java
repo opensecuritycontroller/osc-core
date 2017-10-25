@@ -136,16 +136,18 @@ implements DeleteDeploymentSpecServiceApi {
         }
     }
 
-    private void checkSfcAndBinding(EntityManager em,  VirtualSystem vs) throws Exception {
+    private void checkSfcAndBinding(EntityManager em, VirtualSystem vs) throws Exception {
         if (!vs.getServiceFunctionChains().isEmpty()) {
             //Look if these SFCs are binded to any of the SG of same tenant as of DS
             for (ServiceFunctionChain sfc : vs.getServiceFunctionChains()) {
                 List<SecurityGroup> sgList = SecurityGroupEntityMgr.listSecurityGroupsBySfcIdAndProjectId(em,
                         sfc.getId(), this.ds.getProjectId());
-                if (sgList.stream().anyMatch(sg -> !sg.getMarkedForDeletion())) {
+                SecurityGroup sgActive = sgList.stream().filter(sg -> !sg.getMarkedForDeletion()).findFirst()
+                        .orElse(null);
+                if (sgActive != null) {
                     throw new VmidcBrokerValidationException(String.format(
-                            "Cannot delete deployment spec with name '%s' which is currently referencing Service Function Chain %s and binding to a SecurityGroup",
-                            this.ds.getName(), sfc.getName()));
+                            "Cannot delete deployment spec with name '%s' which is currently referencing Service Function Chain %s and binding to a SecurityGroup %s",
+                            this.ds.getName(), sfc.getName(), sgActive.getName()));
                 }
             }
         }
