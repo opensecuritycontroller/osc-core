@@ -17,6 +17,7 @@
 package org.osc.core.broker.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -126,7 +127,7 @@ implements DeleteDeploymentSpecServiceApi {
 
         //check if virtual system of this DS is attached to a SFC and only allow deletion of DS if no SG is binding
         // to this virtual systems SFC.
-        checkSfcAndBinding(em, vs);
+        validateDSReferenceToSfcAndSecurityGroup(em, vs);
 
         if (!this.ds.getMarkedForDeletion() && request.isForceDelete()) {
             throw new VmidcBrokerValidationException(
@@ -136,18 +137,17 @@ implements DeleteDeploymentSpecServiceApi {
         }
     }
 
-    private void checkSfcAndBinding(EntityManager em, VirtualSystem vs) throws Exception {
+    private void validateDSReferenceToSfcAndSecurityGroup(EntityManager em, VirtualSystem vs) throws Exception {
         if (!vs.getServiceFunctionChains().isEmpty()) {
             //Look if these SFCs are binded to any of the SG of same tenant as of DS
             for (ServiceFunctionChain sfc : vs.getServiceFunctionChains()) {
                 List<SecurityGroup> sgList = SecurityGroupEntityMgr.listSecurityGroupsBySfcIdAndProjectId(em,
                         sfc.getId(), this.ds.getProjectId());
-                SecurityGroup sgActive = sgList.stream().filter(sg -> !sg.getMarkedForDeletion()).findFirst()
-                        .orElse(null);
-                if (sgActive != null) {
+                String sgNames = sgList.stream().filter(sg -> !sg.getMarkedForDeletion()).map(sg -> sg.getName()).collect(Collectors.joining(", "));
+                if (!sgNames.isEmpty()) {
                     throw new VmidcBrokerValidationException(String.format(
-                            "Cannot delete deployment spec with name '%s' which is currently referencing Service Function Chain %s and binding to a SecurityGroup %s",
-                            this.ds.getName(), sfc.getName(), sgActive.getName()));
+                            "Cannot delete deployment spec with name '%s' which is currently referencing Service Function Chain '%s' and binded to a SecurityGroup(s) '%s'",
+                            this.ds.getName(), sfc.getName(), sgNames));
                 }
             }
         }
