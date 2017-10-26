@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -69,6 +70,8 @@ public class ServiceFunctionChainRequestValidatorPersistTest {
 
 	protected ServiceFunctionChain sfc;
 
+	 protected SecurityGroup sg;
+
 	@Before
 	public void testInitialize() throws Exception {
 		MockitoAnnotations.initMocks(this);
@@ -84,7 +87,7 @@ public class ServiceFunctionChainRequestValidatorPersistTest {
 
 		Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
 		Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
-		
+
 		Mockito.when(apiFactoryService.supportsNeutronSFC("Neutron-sfc")).thenReturn(true);
 	}
 
@@ -103,11 +106,17 @@ public class ServiceFunctionChainRequestValidatorPersistTest {
 		this.vc.setProviderIpAddress("127.0.0.1");
 		this.vc.setProviderUsername("your-name");
 		this.vc.setProviderPassword("********");
-		this.vc.setControllerType("Neutron-sfc");	
+		this.vc.setControllerType("Neutron-sfc");
 		this.em.persist(this.vc);
 
 		this.sfc = new ServiceFunctionChain("sfc-1", this.vc);
 		this.em.persist(this.sfc);
+
+        this.sg = new SecurityGroup(this.vc, "111", "Demopp");
+        this.sg.setName("sg" + "PPP");
+        this.sg.setMarkedForDeletion(false);
+        this.sg.setServiceFunctionChain(this.sfc);
+        this.em.persist(this.sg);
 
 		this.em.getTransaction().commit();
 	}
@@ -138,5 +147,25 @@ public class ServiceFunctionChainRequestValidatorPersistTest {
 		// Act.
 		this.validator.validate(request);
 	}
+
+    @Test
+    public void testValidateAndLoad_WhenSfcIsBindedToSGUpdateSfc_ThrowsVmidcBrokerValidationException()
+            throws Exception {
+        AddOrUpdateServiceFunctionChainRequest request = new AddOrUpdateServiceFunctionChainRequest();
+        BaseDto dto = new BaseDto();
+        request.setName(this.sfc.getName());
+        dto.setParentId(this.vc.getId());
+        dto.setId(this.sfc.getId());
+        request.setDto(dto);
+
+        // Arrange.
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(
+                String.format("Cannot update Service Function Chain: '%s' as it is binded to Security Group(s) '%s'",
+                        this.sfc.getName(), this.sg.getName()));
+
+        // Act.
+        this.validator.validateAndLoad(request);
+    }
 
 }

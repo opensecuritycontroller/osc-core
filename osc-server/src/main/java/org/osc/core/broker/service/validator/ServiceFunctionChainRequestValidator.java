@@ -19,17 +19,20 @@ package org.osc.core.broker.service.validator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
@@ -89,6 +92,16 @@ public class ServiceFunctionChainRequestValidator
 		}
 		ValidateUtil.checkMarkedForDeletion(sfc, sfc.getName());
 		validateCommon(request);
+
+        //Throw an exception if this sfc is already binded to a security group.
+        List<SecurityGroup> sgList = SecurityGroupEntityMgr.listSecurityGroupsBySfcId(this.em, sfc.getId());
+        String sgNames = sgList.stream().filter(sg -> !sg.getMarkedForDeletion()).map(sg -> sg.getName()).collect(Collectors.joining(", "));
+        if (!sgNames.isEmpty()) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Cannot update Service Function Chain: '%s' as it is binded to Security Group(s) '%s'",
+                            sfc.getName(), sgNames));
+        }
+
 		return sfc;
 	}
 

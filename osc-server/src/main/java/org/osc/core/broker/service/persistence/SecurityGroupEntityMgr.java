@@ -215,6 +215,18 @@ public class SecurityGroupEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
+    public static List<SecurityGroup>  listSecurityGroupsBySfcId(EntityManager em, Long sfcId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root)
+                .where(cb.equal(root.join("serviceFunctionChain").get("id"), sfcId));
+
+        return em.createQuery(query).getResultList();
+    }
+
     /**
      * @param em
      *            Hibernate EntityManager
