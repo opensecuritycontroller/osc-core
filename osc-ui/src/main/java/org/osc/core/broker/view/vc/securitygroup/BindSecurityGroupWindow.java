@@ -322,7 +322,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				ComboBox comboBoxPolicy = (ComboBox) this.serviceTable
 						.getContainerProperty(binding.getVirtualSystemId(), PROPERTY_ID_POLICY).getValue();
-				comboBoxPolicy.setEnabled(policies != null && policies.size() > 0 && binding.getPolicyIds().size() <= 1);
+				comboBoxPolicy.setEnabled(policies != null && !isBindedWithMultiplePolicies(binding));
 				for (Object comboBoxItemId : comboBoxPolicy.getContainerDataSource().getItemIds()) {
 					if (comboBoxPolicy.getItem(comboBoxItemId).getItemProperty("id").getValue()
 							.equals(binding.getPolicyIds().iterator().next())) {
