@@ -322,9 +322,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				ComboBox comboBoxPolicy = (ComboBox) this.serviceTable
 						.getContainerProperty(binding.getVirtualSystemId(), PROPERTY_ID_POLICY).getValue();
-				comboBoxPolicy
-						.setEnabled(policies != null && policies.size() > 0 && binding.getPolicyIds().size() <= 1);
-
+				comboBoxPolicy.setEnabled(policies != null && policies.size() > 0 && binding.getPolicyIds().size() <= 1);
 				for (Object comboBoxItemId : comboBoxPolicy.getContainerDataSource().getItemIds()) {
 					if (comboBoxPolicy.getItem(comboBoxItemId).getItemProperty("id").getValue()
 							.equals(binding.getPolicyIds().iterator().next())) {
@@ -401,8 +399,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 		boolean currentValue = (boolean) itemProperty.getValue();
 		if (policyComboBox.getContainerDataSource().size() > 0) {
-			VirtualSystemPolicyBindingDto binding = getVSPBinding(itemId);
-			if (binding != null && isBindedWithMultiplePolicies(binding)) {
+			if (isBindedWithMultiplePolicies(itemId)) {
 				policyComboBox.setEnabled(false);
 			} else {
 				policyComboBox.setEnabled(currentValue);
@@ -413,20 +410,17 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		}
 	}
 
-	private VirtualSystemPolicyBindingDto getVSPBinding(Long vsId) {
+	private boolean isBindedWithMultiplePolicies(Long vsId) {
 		for (VirtualSystemPolicyBindingDto binding : this.allBindings) {
-			if (binding.getVirtualSystemId().equals(vsId)) {
-				return binding;
+			if (binding.getVirtualSystemId().equals(vsId) && isBindedWithMultiplePolicies(binding)) {
+				return true;
 			}
 		}
-		return null;
+		return false;
 	}
 
 	private boolean isBindedWithMultiplePolicies(VirtualSystemPolicyBindingDto binding) {
-		if (binding.isMultiplePoliciesSupported() && binding.isBinded() && binding.getPolicyIds().size() > 1) {
-			return true;
-		}
-		return false;
+		return binding.isMultiplePoliciesSupported() && binding.isBinded() && binding.getPolicyIds().size() > 1;
 	}
 
 	@SuppressWarnings("serial")
