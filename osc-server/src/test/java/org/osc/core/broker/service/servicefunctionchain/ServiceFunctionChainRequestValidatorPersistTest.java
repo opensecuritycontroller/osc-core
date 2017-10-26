@@ -161,7 +161,7 @@ public class ServiceFunctionChainRequestValidatorPersistTest {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage(
-                String.format("Cannot update Service Function Chain: %s, as it is binded to Security Group(s) %s",
+                String.format("Cannot update Service Function Chain: '%s' as it is binded to Security Group(s) '%s'",
                         this.sfc.getName(), this.sg.getName()));
 
         // Act.
