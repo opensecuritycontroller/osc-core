@@ -98,7 +98,7 @@ public class ServiceFunctionChainRequestValidator
         String sgNames = sgList.stream().filter(sg -> !sg.getMarkedForDeletion()).map(sg -> sg.getName()).collect(Collectors.joining(", "));
         if (!sgNames.isEmpty()) {
             throw new VmidcBrokerValidationException(
-                    String.format("Cannot update Service Function Chain: %s, as it is binded to Security Group(s) %s",
+                    String.format("Cannot update Service Function Chain: '%s', as it is binded to Security Group(s) '%s'",
                             sfc.getName(), sgNames));
         }
 
