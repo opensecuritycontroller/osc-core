@@ -32,7 +32,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionChainServiceTest {
@@ -63,7 +63,7 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
 	public void testDispatch_WhenVirtualSystemListEmpty_SfcIsUpdated() throws Exception {
 
 		// Act.
-		BaseJobResponse response = this.service.dispatch(this.request);
+	    BaseResponse response = this.service.dispatch(this.request);
 		List<Long> sfcVsIdList = this.em.find(ServiceFunctionChain.class, this.sfc.getId()).getVirtualSystems().stream()
                 .map(vss -> vss.getId()).collect(Collectors.toList());
 
@@ -86,7 +86,7 @@ public class UpdateServiceFunctionChainServiceTest extends BaseServiceFunctionCh
 
 		// Act.
 		// update sfc with virtual system ids list {2,1}
-		BaseJobResponse response = this.service.dispatch(this.request);
+		BaseResponse response = this.service.dispatch(this.request);
 
 		// check Virtual system is as updated
 		List<Long> sfcVsIdList = this.em.find(ServiceFunctionChain.class, this.sfc.getId()).getVirtualSystems().stream()
