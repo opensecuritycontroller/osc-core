@@ -149,7 +149,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 					// Do not update the policy binding from the UI.
 					// Policy mapping for manager supporting multiple policies is not supported through UI.
 					Set<Long> policyIdSet = null;
-					if (previousBinding.isMultiplePoliciesSupported() && previousBinding.isBinded()) {
+					if (isBindedWithMultiplePolicies(previousBinding)) {
 						policyIdSet = previousBinding.getPolicyIds();
 					} else {
 						Object selectedPolicy = ((ComboBox) selectedService.getItemProperty(PROPERTY_ID_POLICY)
@@ -306,11 +306,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		for (VirtualSystemPolicyBindingDto binding : this.allBindings) {
 			List<PolicyDto> policies = binding.getPolicies();
 			ComboBox policyComboBox = getPolicyComboBox(policies);
-			if (binding.isMultiplePoliciesSupported()) {
-				policyComboBox.setEnabled(false);
-			} else {
-				policyComboBox.setRequired(policies != null && policies.size() > 0);
-			}
+			policyComboBox.setRequired(policies != null && policies.size() > 0);
 
 			ComboBox failurePolicyComboBox = getFailurePolicyComboBox();
 
@@ -326,11 +322,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				ComboBox comboBoxPolicy = (ComboBox) this.serviceTable
 						.getContainerProperty(binding.getVirtualSystemId(), PROPERTY_ID_POLICY).getValue();
-				if (binding.isMultiplePoliciesSupported()) {
-					comboBoxPolicy.setEnabled(false);
-				} else {
-					comboBoxPolicy.setEnabled(policies != null && policies.size() > 0);
-				}
+				comboBoxPolicy.setEnabled(policies != null && !isBindedWithMultiplePolicies(binding));
 				for (Object comboBoxItemId : comboBoxPolicy.getContainerDataSource().getItemIds()) {
 					if (comboBoxPolicy.getItem(comboBoxItemId).getItemProperty("id").getValue()
 							.equals(binding.getPolicyIds().iterator().next())) {
@@ -407,7 +399,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 		boolean currentValue = (boolean) itemProperty.getValue();
 		if (policyComboBox.getContainerDataSource().size() > 0) {
-			if (isMultiplePoliciesSupported(itemId)) {
+			if (isBindedWithMultiplePolicies(itemId)) {
 				policyComboBox.setEnabled(false);
 			} else {
 				policyComboBox.setEnabled(currentValue);
@@ -418,13 +410,17 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		}
 	}
 
-	private boolean isMultiplePoliciesSupported(Long vsId) {
+	private boolean isBindedWithMultiplePolicies(Long vsId) {
 		for (VirtualSystemPolicyBindingDto binding : this.allBindings) {
-			if (binding.getVirtualSystemId().equals(vsId) && binding.isMultiplePoliciesSupported()) {
+			if (binding.getVirtualSystemId().equals(vsId) && isBindedWithMultiplePolicies(binding)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private boolean isBindedWithMultiplePolicies(VirtualSystemPolicyBindingDto binding) {
+		return binding.isMultiplePoliciesSupported() && binding.isBinded() && binding.getPolicyIds().size() > 1;
 	}
 
 	@SuppressWarnings("serial")
