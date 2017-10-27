@@ -36,15 +36,14 @@ import org.openstack4j.model.network.Network;
 import org.openstack4j.model.network.Port;
 import org.openstack4j.model.network.SecurityGroup;
 import org.openstack4j.model.network.SecurityGroupRule;
-import org.openstack4j.model.network.State;
 import org.openstack4j.model.network.Subnet;
 import org.openstack4j.model.network.builder.NetFloatingIPBuilder;
 import org.openstack4j.model.network.builder.NetSecurityGroupBuilder;
 import org.openstack4j.model.network.options.PortListOptions;
 import org.openstack4j.openstack.networking.domain.NeutronFloatingIP;
 import org.openstack4j.openstack.networking.domain.NeutronSecurityGroup;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -116,9 +115,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
         for (Port port : portList) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null
-                    && deviceOwner.startsWith(QUERY_PARAM_COMPUTE_DEVICE_OWNER)
-                    && port.getState() == State.ACTIVE) {
+			if (deviceOwner != null && deviceOwner.startsWith(QUERY_PARAM_COMPUTE_DEVICE_OWNER)) {
                 computePorts.add(port);
             }
         }
@@ -133,9 +130,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         List<? extends Port> osPorts = listPorts(region, projectId, networkId);
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null
-                    && deviceOwner.startsWith(QUERY_PARAM_ROUTER_DEVICE_OWNER)
-                    && port.getState() == State.ACTIVE) {
+			if (deviceOwner != null && deviceOwner.startsWith(QUERY_PARAM_ROUTER_DEVICE_OWNER)) {
                 routerPortDeviceId = port.getDeviceId();
             }
         }
@@ -151,7 +146,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null && deviceOwner.startsWith(classifier) && port.getState() == State.ACTIVE) {
+            if (deviceOwner != null && deviceOwner.startsWith(classifier)) {
                 for (IP ip : port.getFixedIps()) {
                     if (ip.getSubnetId().equals(subnetId)) {
                         subnetPorts.add(port);
