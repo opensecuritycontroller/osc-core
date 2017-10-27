@@ -25,7 +25,7 @@ import org.osc.core.broker.service.api.UpdateServiceFunctionChainServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.validator.RequestValidator;
 import org.osc.core.broker.service.validator.ServiceFunctionChainRequestValidator;
 import org.osgi.service.component.annotations.Component;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateServiceFunctionChainService
-		extends ServiceDispatcher<AddOrUpdateServiceFunctionChainRequest, BaseJobResponse>
+		extends ServiceDispatcher<AddOrUpdateServiceFunctionChainRequest, BaseResponse>
 		implements UpdateServiceFunctionChainServiceApi {
 
 	RequestValidator<AddOrUpdateServiceFunctionChainRequest, ServiceFunctionChain> validator;
@@ -42,7 +42,7 @@ public class UpdateServiceFunctionChainService
 	private ServiceFunctionChainRequestValidator validatorFactory;
 
 	@Override
-	public BaseJobResponse exec(AddOrUpdateServiceFunctionChainRequest request, EntityManager em) throws Exception {
+	public BaseResponse exec(AddOrUpdateServiceFunctionChainRequest request, EntityManager em) throws Exception {
 
 		if (this.validator == null) {
 			this.validator = this.validatorFactory.create(em);
@@ -68,7 +68,7 @@ public class UpdateServiceFunctionChainService
 		}
 		OSCEntityManager.update(em, sfc, this.txBroadcastUtil);
 
-		BaseJobResponse response = new BaseJobResponse();
+		BaseResponse response = new BaseResponse();
 		response.setId(sfc.getId());
 
 		return response;

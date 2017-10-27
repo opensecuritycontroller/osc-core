@@ -28,7 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AddServiceFunctionChainServiceTest extends BaseServiceFunctionChainServiceTest {
@@ -54,7 +54,7 @@ public class AddServiceFunctionChainServiceTest extends BaseServiceFunctionChain
 		this.request.setName("sfc-1");
 		this.request.setDto(dto);
 		// Act.
-		BaseJobResponse response = this.service.dispatch(this.request);
+		BaseResponse response = this.service.dispatch(this.request);
 		Assert.assertNotNull("The returned response should not be null.", response);
 	}
 
@@ -69,7 +69,7 @@ public class AddServiceFunctionChainServiceTest extends BaseServiceFunctionChain
 		vsIds.add(this.vs.getId());
 		this.request.setVirtualSystemIds(vsIds);
 		// Act.
-		BaseJobResponse response = this.service.dispatch(this.request);
+		BaseResponse response = this.service.dispatch(this.request);
 		Assert.assertNotNull("The returned response should not be null.", response);
 	}
 
