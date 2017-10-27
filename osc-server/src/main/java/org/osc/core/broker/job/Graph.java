@@ -177,7 +177,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
         return ImmutableSet.copyOf(this.edges.get(node));
     }
 
-    public Set<T> getPredecessors(T node) {
+    public synchronized Set<T> getPredecessors(T node) {
         Set<T> predecessors = new HashSet<T>();
 
         for (Map.Entry<T, T> edge : this.edges.entries()) {
@@ -211,7 +211,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
     }
 
     @SuppressWarnings("unchecked")
-    public void addEdges(T src, T... dests) {
+    public synchronized void addEdges(T src, T... dests) {
         this.addNode(src);
         for (T dest : dests) {
             this.addNode(dest);
@@ -219,7 +219,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
         }
     }
 
-    public void addEdges(T src, Set<T> dests) {
+    public synchronized void addEdges(T src, Set<T> dests) {
         this.addNode(src);
         for (T dest : dests) {
             this.addNode(dest);
@@ -227,7 +227,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
         }
     }
 
-    public void addEdges(Set<T> srcs, T dest) {
+    public synchronized void addEdges(Set<T> srcs, T dest) {
         this.addNode(dest);
         for (T src : srcs) {
             this.addNode(src);
