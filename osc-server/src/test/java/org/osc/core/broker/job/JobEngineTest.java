@@ -56,8 +56,6 @@ import org.osgi.service.transaction.control.TransactionControl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HibernateUtil.class, StaticRegistry.class})
@@ -248,6 +246,8 @@ public class JobEngineTest {
         verifyJobPersistence(this.job);
     }
 
+    // To address defect #550
+    // See https://github.com/opensecuritycontroller/osc-core/issues/550
     @Test
     public void testConcurrentGraphModification() throws Exception {
         String jobName = "Test-Concurrent-Graph-Modification";

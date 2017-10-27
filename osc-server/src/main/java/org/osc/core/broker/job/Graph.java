@@ -162,18 +162,20 @@ public class Graph<T> implements Iterable<T>, Serializable {
         this.edges = edges;
     }
 
-    public Set<Edge<T>> getEdges() {
+    private synchronized Set<Edge<T>> getEdges() {
         Set<Edge<T>> edgeSet = new HashSet<Edge<T>>();
+
         for (Map.Entry<T, T> edge : this.edges.entries()) {
             T src = edge.getKey();
             T dest = edge.getValue();
 
             edgeSet.add(new Edge<T>(src, dest));
         }
+
         return edgeSet;
     }
 
-    public Set<T> getSuccessors(T node) {
+    public synchronized Set<T> getSuccessors(T node) {
         return ImmutableSet.copyOf(this.edges.get(node));
     }
 
@@ -219,14 +221,6 @@ public class Graph<T> implements Iterable<T>, Serializable {
         }
     }
 
-    public synchronized void addEdges(T src, Set<T> dests) {
-        this.addNode(src);
-        for (T dest : dests) {
-            this.addNode(dest);
-            this.edges.put(src, dest);
-        }
-    }
-
     public synchronized void addEdges(Set<T> srcs, T dest) {
         this.addNode(dest);
         for (T src : srcs) {
@@ -235,7 +229,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
         }
     }
 
-    public void addNode(T node) {
+    public synchronized void addNode(T node) {
         this.nodes.add(node);
     }
 
@@ -244,7 +238,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
         return this.getNodes().iterator();
     }
 
-    public Set<T> getNodes() {
+    public synchronized Set<T> getNodes() {
         return Collections.unmodifiableSet(this.nodes);
     }
 
@@ -252,7 +246,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
         return this.reverse().getSinks();
     }
 
-    public Set<T> getSinks() {
+    public synchronized Set<T> getSinks() {
         return Sets.difference(this.nodes, this.edges.keySet());
     }
 
@@ -260,7 +254,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
      * Remove the node from the graph. All edges in which that node is a source
      * or destination will also be removed.
      */
-    public void removeNode(T node) {
+    public synchronized void removeNode(T node) {
         this.nodes.remove(node);
         this.edges.removeAll(node);
 
@@ -276,7 +270,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
 
     }
 
-    public void removeEdge(T src, T dest) {
+    public synchronized void removeEdge(T src, T dest) {
         for (Iterator<T> i = this.edges.get(src).iterator(); i.hasNext();) {
             if (i.next().equals(dest)) {
                 i.remove();
@@ -303,7 +297,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
      *
      * @return the reversed graph
      */
-    public Graph<T> reverse() {
+    public synchronized Graph<T> reverse() {
         Multimap<T, T> reverseEdges = HashMultimap.create();
         Multimaps.invertFrom(this.edges, reverseEdges);
 
@@ -362,7 +356,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
      * <p>
      * The results of this method are unspecified if the graph has cycles.
      */
-    public List<T> topologicalSort() {
+    public synchronized List<T> topologicalSort() {
         final Set<T> visited = new HashSet<T>(this.nodes.size());
         final Deque<T> result = new ArrayDeque<T>(this.nodes.size());
 
@@ -401,7 +395,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(this.nodes).append(this.edges).toHashCode();
+        return new HashCodeBuilder().append(getNodes()).append(getEdges()).toHashCode();
     }
 
     @Override
@@ -412,7 +406,7 @@ public class Graph<T> implements Iterable<T>, Serializable {
 
         @SuppressWarnings("unchecked")
         Graph<T> that = (Graph<T>) obj;
-        return new EqualsBuilder().append(this.nodes, that.nodes).append(this.edges, that.edges).isEquals();
+        return new EqualsBuilder().append(getNodes(), that.getNodes()).append(getEdges(), that.getEdges()).isEquals();
     }
 
     @Override
@@ -420,5 +414,4 @@ public class Graph<T> implements Iterable<T>, Serializable {
         return "Nodes:\n\t" + Joiner.on("\n\t").join(this.topologicalSort()) + "\n\nEndges:\n\t"
                 + Joiner.on("\n\t").join(this.getEdges()) + "\n";
     }
-
 }
