@@ -26,9 +26,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service = ForceDeleteDSTask.class)
 public class ForceDeleteDSTask extends TransactionalTask {
@@ -68,7 +68,7 @@ public class ForceDeleteDSTask extends TransactionalTask {
             boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(em,
                     this.ds.getVirtualSystem(), this.ds.getProjectId(), this.ds.getRegion()).size() <= 1;
 
-            if (osSgCanBeDeleted) {
+            if (osSgCanBeDeleted && this.ds.getOsSecurityGroupReference() != null) {
                 OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference(), this.txBroadcastUtil);
             }
         }
