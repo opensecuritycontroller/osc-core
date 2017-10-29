@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>0.8.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-resolver</artifactId>

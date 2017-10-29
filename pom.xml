@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.osc.core</groupId>
     <artifactId>osc-root</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.8.0</version>
     <packaging>pom</packaging>
     <name>org.osc.core:osc-root</name>
     <description>OSC Parent Project</description>
@@ -192,7 +192,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 
+                                <!-- Full version examples: 0.8.0-0-HASH, 
                                     1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
                                 1.0.0-1-HASH, etc -->
                                 <exec outputproperty="fullVersion"
@@ -200,7 +200,7 @@
                                     <arg value="-c" />
                                     <arg value="git describe --long | tr -d v" />
                                 </exec>
-                                <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, 
+                                <!-- Version examples: 0.8.0, 1.0.0, 
                                     etc -->
                                 <exec outputproperty="releaseVersion"
                                     dir="." executable="sh">
