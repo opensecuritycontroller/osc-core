@@ -53,7 +53,7 @@
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
-			<url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
+			<url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/releases/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
@@ -469,11 +469,11 @@
 
 								<copy todir="${basedir}/webapp/SDK">
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/2.0.0-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/2.0.0">
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/2.0.0-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/2.0.0">
 										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>
