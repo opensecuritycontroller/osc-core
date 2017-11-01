@@ -209,7 +209,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     private static DeploymentSpec createDsWithHostAggregateSelectedData(String dsName, String region, String hostAggregateOSId) {
         DeploymentSpec ds = createDeploymentSpec(dsName, region);
 
-        HostAggregate ha = new HostAggregate(ds, hostAggregateOSId);
+        HostAggregate ha = new HostAggregate(ds, hostAggregateOSId, ds + "_HOST_AGGR");
         ha.setName(dsName + "_ha");
 
         ds.setHostAggregates(new HashSet<>(Arrays.asList(ha)));
