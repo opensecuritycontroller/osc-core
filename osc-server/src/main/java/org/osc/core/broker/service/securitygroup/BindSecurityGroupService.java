@@ -387,6 +387,11 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 		}
 
         List<Long> sfcVsIdList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
+        if (sfcVsIdList.isEmpty()) {
+            throw new VmidcBrokerValidationException(String.format(
+                    "Service Function Chain : %s has no Virtual System references, cannot be binded",
+                    sfc.getName()));
+        }
         List<Long> sfcVsIdOrderList = sfc.getVirtualSystems().stream().map(vs -> vs.getId()).collect(Collectors.toList());
 
         List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
