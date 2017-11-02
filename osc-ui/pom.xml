@@ -46,15 +46,6 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-        <repository>
-            <id>osc-nexus</id>
-            <name>OSC Nexus</name>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
-        </repository>
-
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>

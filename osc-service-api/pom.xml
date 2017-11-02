@@ -15,16 +15,6 @@
 	</parent>
 	<artifactId>osc-service-api</artifactId>
 	<name>org.osc.core:osc-service-api</name>
-	<repositories>
-		<repository>
-			<id>osc-nexus</id>
-			<name>OSC Nexus</name>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
