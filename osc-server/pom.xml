@@ -28,23 +28,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>osc-nexus</id>
-            <name>OSC Nexus</name>
-            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/releases/</url>
-        </repository>
-        <repository>
-            <id>osc-nexus-snapshot</id>
-            <name>OSC Nexus Snapshot</name>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.osc.api</groupId>
