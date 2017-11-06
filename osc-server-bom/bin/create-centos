@@ -27,8 +27,6 @@ wget --quiet -O $BUILDDIR-bootstrap/RPM-GPG-KEY-CENTOS6.pub http://mirrors.kerne
 rpm --root=$BUILDDIR-bootstrap --import $BUILDDIR-bootstrap/RPM-GPG-KEY-CENTOS6.pub
 yum -y -q -c centos-6.yum.conf --installroot=$BUILDDIR-bootstrap install yum
 
-mkdir -p $BUILDDIR-bootstrap/var/www/
-mount --bind /var/www $BUILDDIR-bootstrap/var/www/
 mount --bind $BUILDDIR $BUILDDIR-bootstrap/mnt/sysimage
 cp centos-6.yum.conf $BUILDDIR-bootstrap/
 cp /etc/resolv.conf $BUILDDIR-bootstrap/etc/
@@ -41,7 +39,6 @@ chroot $BUILDDIR-bootstrap echo -e "%_excludedocs 1\n%_install_langs en_US\n" > 
 umount $BUILDDIR-bootstrap/proc
 umount $BUILDDIR-bootstrap/sys
 umount $BUILDDIR-bootstrap/mnt/sysimage
-umount $BUILDDIR-bootstrap/var/www
 
 rm -r $BUILDDIR-bootstrap
 
@@ -50,7 +47,6 @@ rm -r $BUILDDIR-bootstrap
 #chroot $BUILDDIR MAKEDEV /dev/console
 #chroot $BUILDDIR MAKEDEV /dev/tty
 #chroot $BUILDDIR MAKEDEV /dev/loop
-ln -s /proc/mounts $BUILDDIR/etc/mtab
 
 find $BUILDDIR/var/lib/rpm -type f -exec chmod 644 {} \;
 find $BUILDDIR/var/lib/yum -type f -exec chmod 644 {} \;
@@ -74,16 +70,8 @@ description=CENTOS 6
 directory=$BUILDDIR
 type=directory
 root-groups=sudo
-users=jenkins
-groups=vmidc
 EOF
 
-cat >> /etc/schroot/default/fstab << EOF
-/var/lib/jenkins/ /var/lib/jenkins/ none rw,bind        0       0
-EOF
-
-cat > $BUILDIR/etc/sudoers.d/jenkins << EOF
-jenkins   ALL=NOPASSWD: ALL
-EOF
+chmod 400 /etc/schroot/chroot.d/centos.conf
 
 apt-get purge rpm yum
