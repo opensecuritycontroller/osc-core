@@ -32,13 +32,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.osc.core.broker.rest.server.ApiUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
-import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
@@ -67,6 +65,7 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -84,9 +83,6 @@ import io.swagger.annotations.Authorization;
 public class VirtualSystemApis {
 
     private static final Logger logger = LoggerFactory.getLogger(VirtualSystemApis.class);
-
-    @Reference
-    private ConformServiceApi conformService;
 
     @Reference
     private ApiUtil apiUtil;
