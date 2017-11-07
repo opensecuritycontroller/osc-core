@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 public class SGConformService {
-    private static final Logger log = LoggerFactory.getLogger(ConformService.class);
+    private static final Logger log = LoggerFactory.getLogger(SGConformService.class);
 
     @Reference
     protected DBConnectionManager dbConnectionManager;

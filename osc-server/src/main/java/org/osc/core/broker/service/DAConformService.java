@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 
 @Component(service = {ConformServiceApi.class, DAConformService.class})
 public class DAConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
-    private static final Logger log = LoggerFactory.getLogger(ConformService.class);
+    private static final Logger log = LoggerFactory.getLogger(DAConformService.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;

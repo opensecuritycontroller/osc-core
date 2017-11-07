@@ -26,7 +26,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SGConformService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -51,7 +51,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
-    private ConformService conformService;
+    private SGConformService sgConformService;
     @Reference
     private DeleteSvaServerTask deleteSvaServerTask;
 
@@ -70,7 +70,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         }
         this.deleteSvaServerTask = this.factory.deleteSvaServerTask;
         this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.conformService = this.factory.conformService;
+        this.sgConformService = this.factory.sgConformService;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -110,7 +110,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         this.tg.appendTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
         this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformService);
     }
 
     @Override

@@ -91,7 +91,7 @@ public class BindSecurityGroupServiceTest {
     private DBConnectionManager dbMgr;
 
     @Mock
-    private ConformService conformService;
+    private SGConformService sgConformService;
 
     @Mock
     private TransactionalBroadcastUtil txBroadcastUtil;

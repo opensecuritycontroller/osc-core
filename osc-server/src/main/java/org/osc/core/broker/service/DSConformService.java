@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 @Component
 public class DSConformService {
 
-    private static final Logger log = LoggerFactory.getLogger(ConformService.class);
+    private static final Logger log = LoggerFactory.getLogger(DSConformService.class);
 
     private final AtomicBoolean initDone = new AtomicBoolean();
 
