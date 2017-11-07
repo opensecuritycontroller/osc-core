@@ -33,7 +33,8 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DSConformService;
+import org.osc.core.broker.service.SGConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -49,17 +50,20 @@ public class OsVMNotificationListener extends OsNotificationListener {
     private static final Logger log = LoggerFactory.getLogger(OsVMNotificationListener.class);
     private static final String REGION_NOTIFICATION_KEY = "region";
 
-    private final ConformService conformService;
+    private final DSConformService dsConformService;
+
+    private final SGConformService sgConformService;
 
     private final AlertGenerator alertGenerator;
 
     private final DBConnectionManager dbMgr;
 
     public OsVMNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService,
+            List<String> objectIdList, BaseEntity entity, DSConformService dsConformService, SGConformService sgConformService,
             AlertGenerator alertGenerator, RabbitMQRunner activeRunner, DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.VM, objectIdList, entity, activeRunner);
-        this.conformService = conformService;
+        this.dsConformService = dsConformService;
+        this.sgConformService = sgConformService;
         this.alertGenerator = alertGenerator;
         this.dbMgr = dbMgr;
         register(vc, objectType);
@@ -119,7 +123,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
             /*
              * If VM is not migrated then it is deleted we must trigger a SG Sync
              */
-            this.conformService.startSecurityGroupConformanceJob(securityGroup);
+            this.sgConformService.startSecurityGroupConformanceJob(securityGroup);
         } else {
 
             /*
@@ -136,7 +140,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
                     SecurityGroup sg = SecurityGroupEntityMgr.findById(em, securityGroup.getId());
 
                     // iterate through all SGI -> DDS mappings to trigger required DDS Sync
-                    return this.conformService.startSecurityGroupConformanceJob(em, sg, null, true);
+                    return this.sgConformService.startSecurityGroupConformanceJob(em, sg, null, true);
                 });
 
             } catch (ScopedWorkException e) {
@@ -155,11 +159,11 @@ public class OsVMNotificationListener extends OsNotificationListener {
         if (eventType.contains(OsNotificationEventState.RESIZE_CONFIRM_END.toString())) {
             if (isVmMigrated(vmOpenstackId, message)) {
                 // When some one migrate DAI then we trigger sync Job to fix this issue
-                this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                this.dsConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
             }
         } else {
             // DAI is either powered off or deleted. We must  trigger sync for this
-            this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+            this.dsConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
         }
     }
 
