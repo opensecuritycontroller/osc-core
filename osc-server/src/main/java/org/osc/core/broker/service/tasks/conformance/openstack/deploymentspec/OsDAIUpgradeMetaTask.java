@@ -17,7 +17,6 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -30,12 +29,8 @@ import org.osc.core.broker.service.SGConformService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Deletes existing SVA corresponding to the DAI and recreates the SVA with the new version. This task also schedules
@@ -46,8 +41,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
+    @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
@@ -60,26 +54,14 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private OsDAIUpgradeMetaTask factory;
-    @IgnoreCompare
-    private AtomicBoolean initDone = new AtomicBoolean();
 
     @Override
     protected void delayedInit() {
-        if (this.factory.initDone.compareAndSet(false, true)) {
-            this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-        }
         this.deleteSvaServerTask = this.factory.deleteSvaServerTask;
         this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
         this.sgConformService = this.factory.sgConformService;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
-        }
     }
 
     public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai,

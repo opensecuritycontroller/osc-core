@@ -74,8 +74,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
+    @Reference
     OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -100,9 +99,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     protected void delayedInit() {
         if (this.factory.initDone.compareAndSet(false, true)) {
             // allow for test injection
-            if (this.factory.osSvaCreateMetaTaskCSO != null) {
-                this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-            }
             if (this.factory.osDAIConformanceCheckMetaTaskCSO != null) {
                 this.factory.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO.getService();
             }
@@ -120,7 +116,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Deactivate
     private void deactivate() {
         if (this.initDone.get()) {
-            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
             this.factory.osDAIConformanceCheckMetaTaskCSO.ungetService(this.osDAIConformanceCheckMetaTask);
         }
     }

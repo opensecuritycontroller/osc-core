@@ -17,7 +17,6 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -30,21 +29,15 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 @Component(service = DeleteSvaServerAndDAIMetaTask.class)
 public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
-
+    @Reference
     private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     @Reference
@@ -62,15 +55,9 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private DeleteSvaServerAndDAIMetaTask factory;
-    @IgnoreCompare
-    private AtomicBoolean initDone = new AtomicBoolean();
 
     @Override
     protected void delayedInit() {
-        if (this.factory.initDone.compareAndSet(false, true)) {
-            this.factory.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
-        }
-
         this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
         this.deleteInspectionPort = this.factory.deleteInspectionPort;
         this.deleteSvaServer = this.factory.deleteSvaServer;
@@ -79,13 +66,6 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
-        }
     }
 
     /**
