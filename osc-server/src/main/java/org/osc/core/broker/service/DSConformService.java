@@ -53,7 +53,7 @@ import org.osgi.service.transaction.control.TransactionControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
+@Component(service = {DSConformService.class})
 public class DSConformService {
 
     private static final Logger log = LoggerFactory.getLogger(DSConformService.class);

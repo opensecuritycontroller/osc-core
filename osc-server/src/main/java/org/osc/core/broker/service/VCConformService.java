@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
+@Component(service = {VCConformService.class})
 public class VCConformService {
 
     private static final Logger log = LoggerFactory.getLogger(VCConformService.class);
