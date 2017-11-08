@@ -183,5 +183,4 @@ public class SGConformService {
     public Job startSecurityGroupConformanceJob(SecurityGroup sg) throws Exception {
         return startSecurityGroupConformanceJob(sg, null);
     }
-
 }

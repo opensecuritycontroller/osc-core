@@ -104,6 +104,4 @@ public class MCConformService {
     public Job startMCConformJob(final ApplianceManagerConnector mc, EntityManager em) throws Exception {
         return startMCConformJob(mc, null, em);
     }
-
-
 }

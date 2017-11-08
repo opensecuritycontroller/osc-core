@@ -35,8 +35,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = DeleteSvaServerAndDAIMetaTask.class)
 public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
-    // optional+dynamic to break circular DS dependency
-    // TODO: remove circularity and use mandatory references
     @Reference
     private DeleteDAIFromDbTask deleteDAIFromDbTask;
 

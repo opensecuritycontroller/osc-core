@@ -94,7 +94,6 @@ public class DSConformService {
     private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
     private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
 
-
     public Job startDsConformanceJob(DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask) throws Exception {
         return startDsConformanceJob(null, ds, dsUnlockTask, false);
     }

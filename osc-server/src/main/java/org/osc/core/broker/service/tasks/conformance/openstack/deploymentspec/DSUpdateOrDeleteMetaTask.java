@@ -67,8 +67,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     DeleteDSFromDbTask deleteDsFromDb;
 
-    // optional+dynamic to break circular DS dependency
-    // TODO: remove circularity and use mandatory references
     @Reference
     OsSvaCreateMetaTask osSvaCreateMetaTask;
 

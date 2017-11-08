@@ -87,5 +87,4 @@ public class VCConformService {
         log.info("Done submitting with jobId: " + job.getId());
         return job;
     }
-
 }

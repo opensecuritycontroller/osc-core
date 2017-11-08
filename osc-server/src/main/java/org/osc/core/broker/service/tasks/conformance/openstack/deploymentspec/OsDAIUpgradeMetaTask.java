@@ -39,8 +39,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = OsDAIUpgradeMetaTask.class)
 public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
-    // optional+dynamic to break circular DS dependency
-    // TODO: remove circularity and use mandatory references
     @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 

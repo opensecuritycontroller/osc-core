@@ -79,8 +79,6 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    // optional+dynamic to break circular DS dependency
-    // TODO: remove circularity and use mandatory references
     @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
