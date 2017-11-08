@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -49,12 +48,8 @@ import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,8 +72,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     OsSvaCreateMetaTask osSvaCreateMetaTask;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<OsDAIConformanceCheckMetaTask> osDAIConformanceCheckMetaTaskCSO;
+    @Reference
     OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
 
     @Reference
@@ -92,17 +86,9 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private Openstack4JNova novaApi;
     @IgnoreCompare
     private DSUpdateOrDeleteMetaTask factory;
-    @IgnoreCompare
-    private AtomicBoolean initDone = new AtomicBoolean();
 
     @Override
     protected void delayedInit() {
-        if (this.factory.initDone.compareAndSet(false, true)) {
-            // allow for test injection
-            if (this.factory.osDAIConformanceCheckMetaTaskCSO != null) {
-                this.factory.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO.getService();
-            }
-        }
         this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
         this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTask;
         this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
@@ -111,13 +97,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         this.deleteDsFromDb = this.factory.deleteDsFromDb;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.factory.osDAIConformanceCheckMetaTaskCSO.ungetService(this.osDAIConformanceCheckMetaTask);
-        }
     }
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
