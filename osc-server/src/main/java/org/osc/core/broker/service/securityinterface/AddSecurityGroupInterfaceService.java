@@ -21,7 +21,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.DAConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -43,7 +43,7 @@ public class AddSecurityGroupInterfaceService
     private static final Logger log = LoggerFactory.getLogger(AddSecurityGroupInterfaceService.class);
 
     @Reference
-    private DAConformService daConformService;
+    private DistributedApplianceConformJobFactory daConformService;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {

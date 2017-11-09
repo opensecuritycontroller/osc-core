@@ -53,10 +53,9 @@ import org.osgi.service.transaction.control.TransactionControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service = {DSConformService.class})
-public class DSConformService {
-
-    private static final Logger log = LoggerFactory.getLogger(DSConformService.class);
+@Component(service = {DeploymentSpecConformJobFactory.class})
+public class DeploymentSpecConformJobFactory {
+    private static final Logger log = LoggerFactory.getLogger(DeploymentSpecConformJobFactory.class);
 
     private final AtomicBoolean initDone = new AtomicBoolean();
 
@@ -152,7 +151,7 @@ public class DSConformService {
 
                 @Override
                 public void completed(Job job) {
-                    DSConformService.this.updateDSJob(null, ds, job);
+                    DeploymentSpecConformJobFactory.this.updateDSJob(null, ds, job);
                 }
             });
 

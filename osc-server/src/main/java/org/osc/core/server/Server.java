@@ -41,11 +41,11 @@ import org.osc.core.broker.rest.client.RestBaseClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsSecurityGroupNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.DAConformService;
-import org.osc.core.broker.service.DSConformService;
-import org.osc.core.broker.service.MCConformService;
-import org.osc.core.broker.service.SGConformService;
-import org.osc.core.broker.service.VCConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -132,19 +132,20 @@ public class Server implements ServerApi {
     private boolean devMode = false;
 
     @Reference
-    private DAConformService daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<DeploymentSpecConformJobFactory> dsConformJobFactoryCSO;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     @Reference
-    private DSConformService dsConformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Reference
-    private SGConformService sgConformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
-    private VCConformService vcConformService;
-
-    @Reference
-    private MCConformService mcConformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -364,11 +365,11 @@ public class Server implements ServerApi {
 
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(ApiFactoryService.class.getName(), this.apiFactoryService);
-        jobDataMap.put(DAConformService.class.getName(), this.daConformService);
-        jobDataMap.put(DSConformService.class.getName(), this.dsConformService);
-        jobDataMap.put(SGConformService.class.getName(), this.sgConformService);
-        jobDataMap.put(VCConformService.class.getName(), this.vcConformService);
-        jobDataMap.put(MCConformService.class.getName(), this.mcConformService);
+        jobDataMap.put(DistributedApplianceConformJobFactory.class.getName(), this.daConformJobFactory);
+        jobDataMap.put(DeploymentSpecConformJobFactory.class.getName(), this.dsConformJobFactory);
+        jobDataMap.put(SecurityGroupConformJobFactory.class.getName(), this.sgConformJobFactory);
+        jobDataMap.put(VirtualizationConnectorConformJobFactory.class.getName(), this.vcConformJobFactory);
+        jobDataMap.put(ManagerConnectorConformJobFactory.class.getName(), this.mcConformJobFactory);
 
 
         JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).usingJobData(jobDataMap).build();

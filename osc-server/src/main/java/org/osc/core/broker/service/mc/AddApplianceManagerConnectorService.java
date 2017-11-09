@@ -29,7 +29,7 @@ import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.LockUtil;
-import org.osc.core.broker.service.MCConformService;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -71,7 +71,7 @@ implements AddApplianceManagerConnectorServiceApi {
     private ApiFactoryService apiFactoryService;
 
     @Reference
-    private MCConformService mcConformService;
+    private ManagerConnectorConformJobFactory mcConformService;
 
     @Reference
     private EncryptionApi encryption;

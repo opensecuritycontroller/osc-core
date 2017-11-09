@@ -30,7 +30,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.SGConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
@@ -43,17 +43,17 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(OsPortNotificationListener.class);
 
-    private final SGConformService sgConformService;
+    private final SecurityGroupConformJobFactory sgConformJobFactory;
 
     private final AlertGenerator alertGenerator;
 
     private final DBConnectionManager dbMgr;
 
     public OsPortNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, SGConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
-            DBConnectionManager dbMgr) {
+            List<String> objectIdList, BaseEntity entity, SecurityGroupConformJobFactory sgConformJobFactory,
+            AlertGenerator alertGenerator, RabbitMQRunner activeRunner, DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.PORT, objectIdList, entity, activeRunner);
-        this.sgConformService = conformService;
+        this.sgConformJobFactory = sgConformJobFactory;
         this.alertGenerator = alertGenerator;
         this.dbMgr = dbMgr;
         register(vc, objectType);
@@ -166,6 +166,6 @@ public class OsPortNotificationListener extends OsNotificationListener {
     private void triggerSGSync(SecurityGroup sg, EntityManager em) throws Exception {
         log.info("Running SG sync based on OS Port notification received.");
         // Message is related to registered Security Group. Trigger sync
-        this.sgConformService.startSecurityGroupConformanceJob(sg);
+        this.sgConformJobFactory.startSecurityGroupConformanceJob(sg);
     }
 }

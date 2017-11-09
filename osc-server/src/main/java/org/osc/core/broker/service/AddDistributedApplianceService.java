@@ -58,7 +58,7 @@ public class AddDistributedApplianceService
     private DistributedApplianceDtoValidator validatorFactory;
 
     @Reference
-    private DAConformService dsConformService;
+    private DistributedApplianceConformJobFactory daConformService;
 
     @Reference
     private EncryptionApi encrypter;
@@ -114,7 +114,7 @@ public class AddDistributedApplianceService
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
-        return this.dsConformService.startDAConformJob(em, da);
+        return this.daConformService.startDAConformJob(em, da);
     }
 
     List<VirtualSystem> getVirtualSystems(EntityManager em, DistributedApplianceDto daDto, DistributedAppliance da) throws Exception {

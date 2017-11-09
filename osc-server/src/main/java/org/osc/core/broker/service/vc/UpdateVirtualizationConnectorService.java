@@ -34,7 +34,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.VCConformService;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -79,7 +79,7 @@ implements UpdateVirtualizationConnectorServiceApi {
     private VirtualizationConnectorUtil util;
 
     @Reference
-    private VCConformService vcConformService;
+    private VirtualizationConnectorConformJobFactory vcConformService;
 
     @Reference
     private EncryptionApi encryption;

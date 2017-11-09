@@ -38,7 +38,7 @@ extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobRespons
 implements SyncDeploymentSpecServiceApi {
 
     @Reference
-    private DSConformService dsConformService;
+    private DeploymentSpecConformJobFactory dsConformService;
 
     private DeploymentSpec ds;
 

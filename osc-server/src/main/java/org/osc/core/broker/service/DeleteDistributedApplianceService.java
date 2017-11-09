@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This component exposes both the API and the implementation so that the
- * {@link DAConformService} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
+ * {@link DistributedApplianceConformJobFactory} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
  * method.
  */
 @Component(service = { DeleteDistributedApplianceServiceApi.class, DeleteDistributedApplianceService.class })

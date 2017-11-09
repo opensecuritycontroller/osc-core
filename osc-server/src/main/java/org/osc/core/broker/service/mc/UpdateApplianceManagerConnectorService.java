@@ -32,7 +32,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.LockUtil;
-import org.osc.core.broker.service.MCConformService;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -73,7 +73,7 @@ implements UpdateApplianceManagerConnectorServiceApi {
     static final Logger log = LoggerFactory.getLogger(UpdateApplianceManagerConnectorService.class);
 
     @Reference
-    private MCConformService mcConformService;
+    private ManagerConnectorConformJobFactory mcConformService;
 
     @Reference
     private AddApplianceManagerConnectorService addApplianceManagerConnectorService;

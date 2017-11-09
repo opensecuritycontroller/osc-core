@@ -67,7 +67,7 @@ public class UpdateDistributedApplianceService
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
     @Reference
-    private DAConformService daConformService;
+    private DistributedApplianceConformJobFactory daConformService;
 
     @Reference
     private EncryptionApi encrypter;

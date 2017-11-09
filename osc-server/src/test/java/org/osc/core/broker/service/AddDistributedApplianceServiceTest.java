@@ -75,7 +75,7 @@ public class AddDistributedApplianceServiceTest {
     private DistributedApplianceDtoValidator validatorMock;
 
     @Mock
-    private DAConformService daConformServiceMock;
+    private DistributedApplianceConformJobFactory daConformServiceMock;
 
     @Mock
     private UserContextApi userContext;

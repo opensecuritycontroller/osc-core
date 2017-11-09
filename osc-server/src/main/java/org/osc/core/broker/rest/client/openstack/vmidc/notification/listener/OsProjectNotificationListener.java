@@ -30,8 +30,8 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.DSConformService;
-import org.osc.core.broker.service.SGConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -44,18 +44,19 @@ public class OsProjectNotificationListener extends OsNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(OsProjectNotificationListener.class);
 
-    private final DSConformService dsConformService;
-    private final SGConformService sgConformService;
+    private final DeploymentSpecConformJobFactory dsConformJobFactory;
+    private final SecurityGroupConformJobFactory sgConformJobFactory;
     private final AlertGenerator alertGenerator;
 
     private final DBConnectionManager dbMgr;
 
     public OsProjectNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, DSConformService dsConformService, SGConformService sgConformService,
-            AlertGenerator alertGenerator, RabbitMQRunner activeRunner, DBConnectionManager dbMgr) {
+            List<String> objectIdList, BaseEntity entity, DeploymentSpecConformJobFactory dsConformJobFactory,
+            SecurityGroupConformJobFactory sgConformJobFactory, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
+            DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.PROJECT, objectIdList, entity, activeRunner);
-        this.dsConformService = dsConformService;
-        this.sgConformService = sgConformService;
+        this.dsConformJobFactory = dsConformJobFactory;
+        this.sgConformJobFactory = sgConformJobFactory;
         this.alertGenerator = alertGenerator;
         this.dbMgr = dbMgr;
         register(vc, objectType);
@@ -105,7 +106,7 @@ public class OsProjectNotificationListener extends OsNotificationListener {
         for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listByProjectId(em, keyValue)) {
             // trigger sync job for that SG
             if (securityGroup.getId().equals(((SecurityGroup) this.entity).getId())) {
-                this.sgConformService.startSecurityGroupConformanceJob(securityGroup);
+                this.sgConformJobFactory.startSecurityGroupConformanceJob(securityGroup);
             }
         }
     }
@@ -115,7 +116,7 @@ public class OsProjectNotificationListener extends OsNotificationListener {
         for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByProjectId(em, keyValue)) {
             // trigger sync job for that DS
             if (ds.getId().equals(((DeploymentSpec) this.entity).getId())) {
-                this.dsConformService.startDsConformanceJob(ds, null);
+                this.dsConformJobFactory.startDsConformanceJob(ds, null);
             }
         }
     }

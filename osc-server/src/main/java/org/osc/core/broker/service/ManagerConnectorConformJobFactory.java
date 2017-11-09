@@ -38,10 +38,10 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service = {MCConformService.class})
-public class MCConformService {
+@Component(service = {ManagerConnectorConformJobFactory.class})
+public class ManagerConnectorConformJobFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(MCConformService.class);
+    private static final Logger log = LoggerFactory.getLogger(ManagerConnectorConformJobFactory.class);
 
     @Reference
     MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
@@ -76,10 +76,10 @@ public class MCConformService {
             @Override
             public void completed(Job job) {
                 try {
-                    MCConformService.this.dbConnectionManager.getTransactionControl().required(() ->
+                    ManagerConnectorConformJobFactory.this.dbConnectionManager.getTransactionControl().required(() ->
                     new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class,
-                            MCConformService.this.txBroadcastUtil)
-                    .run(MCConformService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
+                            ManagerConnectorConformJobFactory.this.txBroadcastUtil)
+                    .run(ManagerConnectorConformJobFactory.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
                 } catch (Exception e) {
                     log.error("A serious error occurred in the Job Listener", e);
                     throw new RuntimeException("No Transactional resources are available", e);

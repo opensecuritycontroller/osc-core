@@ -22,7 +22,7 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.VCConformService;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
@@ -49,7 +49,7 @@ public class AddVirtualizationConnectorService
     private RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> validator;
 
     @Reference
-    private VCConformService vcConformService;
+    private VirtualizationConnectorConformJobFactory vcConformService;
 
     @Reference
     EncryptionApi encryption;

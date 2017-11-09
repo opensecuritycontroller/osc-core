@@ -24,9 +24,8 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import aQute.bnd.annotation.component.Component;
 
 @Component
 public class SyncDistributedApplianceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
@@ -35,7 +34,7 @@ public class SyncDistributedApplianceService extends ServiceDispatcher<BaseIdReq
     private DistributedAppliance da;
 
     @Reference
-    private DAConformService daConformService;
+    private DistributedApplianceConformJobFactory daConformService;
 
     @Override
     protected BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {

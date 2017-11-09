@@ -54,7 +54,7 @@ implements UpdateDeploymentSpecServiceApi {
     private static final Logger log = LoggerFactory.getLogger(UpdateDeploymentSpecService.class);
 
     @Reference
-    private DSConformService dsConformService;
+    private DeploymentSpecConformJobFactory dsConformService;
 
     private DeploymentSpec ds;
 

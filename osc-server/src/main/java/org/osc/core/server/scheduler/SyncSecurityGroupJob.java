@@ -23,7 +23,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.service.SGConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
@@ -47,7 +47,8 @@ public class SyncSecurityGroupJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
-        SGConformService sgConformService = (SGConformService) context.getMergedJobDataMap().get(SGConformService.class.getName());
+        SecurityGroupConformJobFactory sgConformJobFactory =
+                (SecurityGroupConformJobFactory) context.getMergedJobDataMap().get(SecurityGroupConformJobFactory.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
@@ -70,7 +71,7 @@ public class SyncSecurityGroupJob implements Job {
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     SecurityGroup found = em.find(SecurityGroup.class, sg.getId());
-                                    sgConformService.startSecurityGroupConformanceJob(found);
+                                    sgConformJobFactory.startSecurityGroupConformanceJob(found);
                                 } catch (Exception ex) {
                                     StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
                                             new LockObjectReference(sg),

@@ -41,9 +41,9 @@ import org.osgi.service.transaction.control.TransactionControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service = {SGConformService.class})
-public class SGConformService {
-    private static final Logger log = LoggerFactory.getLogger(SGConformService.class);
+@Component(service = {SecurityGroupConformJobFactory.class})
+public class SecurityGroupConformJobFactory {
+    private static final Logger log = LoggerFactory.getLogger(SecurityGroupConformJobFactory.class);
 
     @Reference
     protected DBConnectionManager dbConnectionManager;
@@ -139,7 +139,7 @@ public class SGConformService {
         return new JobCompletionListener() {
             @Override
             public void completed(Job job) {
-                SGConformService.this.updateSGJob(null, sg, job);
+                SecurityGroupConformJobFactory.this.updateSGJob(null, sg, job);
             }
         };
     }

@@ -22,8 +22,8 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.DAConformService;
-import org.osc.core.broker.service.MCConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -44,10 +44,10 @@ public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotif
     private static final Logger log = LoggerFactory.getLogger(MCChangeNotificationService.class);
 
     @Reference
-    private MCConformService mcConformService;
+    private ManagerConnectorConformJobFactory mcConformService;
 
     @Reference
-    private DAConformService daConformService;
+    private DistributedApplianceConformJobFactory daConformService;
 
     @Override
     public BaseJobResponse exec(MCChangeNotificationRequest request, EntityManager em) throws Exception {

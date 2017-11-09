@@ -19,7 +19,7 @@ package org.osc.core.broker.service.mc;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.MCConformService;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -34,7 +34,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
         implements SyncManagerConnectorServiceApi {
 
     @Reference
-    private MCConformService mcConformService;
+    private ManagerConnectorConformJobFactory mcConformService;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {

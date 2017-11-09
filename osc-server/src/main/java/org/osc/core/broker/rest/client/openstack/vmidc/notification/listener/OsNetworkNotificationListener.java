@@ -28,8 +28,8 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.DSConformService;
-import org.osc.core.broker.service.SGConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.slf4j.Logger;
@@ -39,20 +39,21 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(OsNetworkNotificationListener.class);
 
-    private final DSConformService dsConformService;
-    private final SGConformService sgConformService;
+    private final DeploymentSpecConformJobFactory dsConformJobFactory;
+    private final SecurityGroupConformJobFactory sgConformJobFactory;
 
     private final AlertGenerator alertGenerator;
 
     private final TransactionControl txControl;
 
     public OsNetworkNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, DSConformService dsConformService, SGConformService sgConformService,
-            AlertGenerator alertGenerator, RabbitMQRunner activeRunner, TransactionControl txControl) {
+            List<String> objectIdList, BaseEntity entity, DeploymentSpecConformJobFactory dsConformJobFactory,
+            SecurityGroupConformJobFactory sgConformJobFactory, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
+            TransactionControl txControl) {
 
         super(vc, OsNotificationObjectType.NETWORK, objectIdList, entity, activeRunner);
-        this.dsConformService = dsConformService;
-        this.sgConformService = sgConformService;
+        this.dsConformJobFactory = dsConformJobFactory;
+        this.sgConformJobFactory = sgConformJobFactory;
         this.alertGenerator = alertGenerator;
         this.txControl = txControl;
         register(vc, objectType);
@@ -71,11 +72,11 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
                 try {
                     this.txControl.required(() -> {
                         if (this.entity instanceof SecurityGroup) {
-                            this.sgConformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
+                            this.sgConformJobFactory.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
                         }
 
                         if (this.entity instanceof DeploymentSpec) {
-                            this.dsConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                            this.dsConformJobFactory.startDsConformanceJob((DeploymentSpec) this.entity, null);
                         }
                         return null;
                     });

@@ -62,7 +62,7 @@ public class UpdateSecurityGroupPropertiesService extends UpdateSecurityGroupSer
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = this.sgConformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                    Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
                     return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {

@@ -20,7 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.DAConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -42,7 +42,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
     private SecurityGroupInterface sgi = null;
 
     @Reference
-    private DAConformService daConformService;
+    private DistributedApplianceConformJobFactory daConformService;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {

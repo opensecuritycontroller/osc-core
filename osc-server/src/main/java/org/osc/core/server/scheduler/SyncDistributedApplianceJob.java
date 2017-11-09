@@ -23,7 +23,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.service.DAConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
@@ -47,7 +47,7 @@ public class SyncDistributedApplianceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
-        DAConformService daConformService = (DAConformService) context.getMergedJobDataMap().get(DAConformService.class.getName());
+        DistributedApplianceConformJobFactory daConformService = (DistributedApplianceConformJobFactory) context.getMergedJobDataMap().get(DistributedApplianceConformJobFactory.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 

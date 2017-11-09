@@ -51,9 +51,9 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service = {DAConformService.class})
-public class DAConformService {
-    private static final Logger log = LoggerFactory.getLogger(DAConformService.class);
+@Component(service = {DistributedApplianceConformJobFactory.class})
+public class DistributedApplianceConformJobFactory {
+    private static final Logger log = LoggerFactory.getLogger(DistributedApplianceConformJobFactory.class);
 
     @Reference
     protected DBConnectionManager dbConnectionManager;
@@ -143,10 +143,10 @@ public class DAConformService {
                 @Override
                 public void completed(Job job) {
                     try {
-                        DAConformService.this.dbConnectionManager.getTransactionControl().required(() ->
+                        DistributedApplianceConformJobFactory.this.dbConnectionManager.getTransactionControl().required(() ->
                         new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class,
-                                DAConformService.this.txBroadcastUtil)
-                        .run(DAConformService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
+                                DistributedApplianceConformJobFactory.this.txBroadcastUtil)
+                        .run(DistributedApplianceConformJobFactory.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
                     } catch (Exception e) {
                         log.error("A serious error occurred in the Job Listener", e);
                         throw new RuntimeException("No Transactional resources are available", e);

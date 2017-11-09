@@ -44,7 +44,6 @@ import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
-import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
@@ -82,27 +81,21 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private Endpoint endPoint;
     private TaskGraph tg;
     private Openstack4JNova novaApi;
-    @IgnoreCompare
-    private DSUpdateOrDeleteMetaTask factory;
-
-    @Override
-    protected void delayedInit() {
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTask;
-        this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
-        this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
-        this.deleteOSSecurityGroup = this.factory.deleteOSSecurityGroup;
-        this.deleteDsFromDb = this.factory.deleteDsFromDb;
-        this.dbConnectionManager = this.factory.dbConnectionManager;
-        this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask();
-        task.factory = this;
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
+
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.osDAIConformanceCheckMetaTask = this.osDAIConformanceCheckMetaTask;
+        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
+        task.deleteSvaServerAndDAIMetaTask = this.deleteSvaServerAndDAIMetaTask;
+        task.deleteOSSecurityGroup = this.deleteOSSecurityGroup;
+        task.deleteDsFromDb = this.deleteDsFromDb;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
 
         return task;
     }
@@ -115,7 +108,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        delayedInit();
         this.tg = new TaskGraph();
         OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());

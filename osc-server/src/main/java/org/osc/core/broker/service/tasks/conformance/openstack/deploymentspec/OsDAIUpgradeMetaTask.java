@@ -25,9 +25,8 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.SGConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,35 +42,25 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
-    private SGConformService sgConformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
     @Reference
     private DeleteSvaServerTask deleteSvaServerTask;
 
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
     private TaskGraph tg;
-    @IgnoreCompare
-    private OsDAIUpgradeMetaTask factory;
-
-    @Override
-    protected void delayedInit() {
-        this.deleteSvaServerTask = this.factory.deleteSvaServerTask;
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.sgConformService = this.factory.sgConformService;
-        this.dbConnectionManager = this.factory.dbConnectionManager;
-        this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
 
     public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai,
             ApplianceSoftwareVersion upgradedSoftwareVersion) {
+
         OsDAIUpgradeMetaTask task = new OsDAIUpgradeMetaTask();
-        task.factory = this;
         task.dai = dai;
         task.upgradedSoftwareVersion = upgradedSoftwareVersion;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
         task.deleteSvaServerTask = this.deleteSvaServerTask;
         task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.sgConformJobFactory = this.sgConformJobFactory;
 
         return task;
     }
@@ -90,7 +79,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         this.tg.appendTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
         this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformService);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformJobFactory);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
 implements DeleteDeploymentSpecServiceApi {
 
     @Reference
-    private DSConformService dsConformService;
+    private DeploymentSpecConformJobFactory dsConformService;
 
     @Reference
     private ForceDeleteDSTask forceDeleteDSTask;

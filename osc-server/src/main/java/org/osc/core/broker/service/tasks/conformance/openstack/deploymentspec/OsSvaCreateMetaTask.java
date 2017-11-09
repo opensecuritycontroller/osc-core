@@ -27,7 +27,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.SGConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
@@ -58,7 +58,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
     @Reference
     private OsSvaCheckNetworkInfoTask osSvaCheckNetworkInfoTask;
     @Reference
-    private SGConformService sgConformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     private TaskGraph tg;
     private DeploymentSpec ds;
@@ -84,7 +84,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
         task.osSvaEnsureActiveTask = this.osSvaEnsureActiveTask;
         task.osSvaCheckFloatingIpTask = this.osSvaCheckFloatingIpTask;
         task.osSvaCheckNetworkInfoTask = this.osSvaCheckNetworkInfoTask;
-        task.sgConformService = this.sgConformService;
+        task.sgConformJobFactory = this.sgConformJobFactory;
 
         task.ds = ds;
         task.hypervisorHostName = hypervisorHostName;
@@ -135,7 +135,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
             }
         }
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformService);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformJobFactory);
     }
 
     /**
