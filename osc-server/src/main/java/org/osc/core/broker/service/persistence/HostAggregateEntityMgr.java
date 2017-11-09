@@ -31,6 +31,7 @@ public class HostAggregateEntityMgr {
     public static void fromEntity(HostAggregate entity, HostAggregateDto dto) {
         dto.setId(entity.getId());
         dto.setOpenstackId(entity.getOpenstackId());
+        dto.setName(entity.getName());
     }
 
     public static void toEntity(HostAggregate entity, HostAggregateDto dto) {

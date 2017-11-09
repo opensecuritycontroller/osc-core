@@ -17,15 +17,21 @@
 package org.osc.core.broker.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -78,17 +84,64 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
                 throw new VmidcBrokerValidationException("Invalid count " + dto.getCount()
                 + " specified for Deployment Specification. Only valid value is 1.");
             }
+            validateSelectionCriteria(this.vs, dto);
         }
     }
 
-    protected void throwInvalidUpdateActionException(String attributeType, String dsName)
+	private void validateSelectionCriteria(VirtualSystem vs, DeploymentSpecDto dto) throws Exception {
+		try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vs.getVirtualizationConnector()))) {
+
+			// validate availability zones
+			if (!dto.getAvailabilityZones().isEmpty()) {
+				List<? extends org.openstack4j.model.compute.ext.AvailabilityZone> azList = novaApi
+						.listAvailabilityZones(dto.getRegion());
+				Set<String> zones = CollectionUtils.isEmpty(azList) ? null
+						: azList.stream().map(org.openstack4j.model.compute.ext.AvailabilityZone::getZoneName)
+								.collect(Collectors.toSet());
+				for (AvailabilityZoneDto az : dto.getAvailabilityZones()) {
+					if (!zones.contains(az.getZone())) {
+						throw new VmidcBrokerValidationException(String
+								.format("Invalid availability zones provided for Deployment Spec '%s'", dto.getName()));
+					}
+				}
+			}
+
+			// validate host aggregates
+			if (!dto.getHostAggregates().isEmpty()) {
+				List<? extends org.openstack4j.model.compute.HostAggregate> hostAggrList = novaApi
+						.listHostAggregates(dto.getRegion());
+				Set<String> hostAggr = CollectionUtils.isEmpty(hostAggrList) ? null
+						: hostAggrList.stream().map(org.openstack4j.model.compute.HostAggregate::getId)
+								.collect(Collectors.toSet());
+				for (HostAggregateDto hostAggrDto : dto.getHostAggregates()) {
+					if (!hostAggr.contains(hostAggrDto.getOpenstackId())) {
+						throw new VmidcBrokerValidationException(String
+								.format("Invalid host aggregates provided for Deployment Spec '%s'", dto.getName()));
+					}
+				}
+			}
+
+			// validate hosts
+			if (!dto.getHosts().isEmpty()) {
+				Set<String> hosts = novaApi.getComputeHosts(dto.getRegion());
+				for (HostDto host : dto.getHosts()) {
+					if (!hosts.contains(host.getName())) {
+						throw new VmidcBrokerValidationException(
+								String.format("Invalid hosts provided for Deployment Spec '%s'", dto.getName()));
+					}
+				}
+			}
+		}
+	}
+
+	protected void throwInvalidUpdateActionException(String attributeType, String dsName)
             throws VmidcBrokerValidationException {
         throw new VmidcBrokerValidationException(String.format(
                 "'%s' attribute cannot be updated for Deployment Spec '%s'", attributeType, dsName));
     }
 
     protected HostAggregate createHostAggregate(EntityManager em, HostAggregateDto haDto, DeploymentSpec ds) {
-        HostAggregate ha = new HostAggregate(ds, haDto.getOpenstackId());
+        HostAggregate ha = new HostAggregate(ds, haDto.getOpenstackId(), haDto.getName());
         HostAggregateEntityMgr.toEntity(ha, haDto);
         return OSCEntityManager.create(em, ha, this.txBroadcastUtil);
     }
@@ -105,7 +158,7 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
     }
 
     private void validateVirtualizationTypeSpecificNullFields(DeploymentSpecDto dto) throws VmidcBrokerInvalidEntryException {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
 
         if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
             map.put("Project Name", dto.getProjectName());

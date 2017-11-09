@@ -42,9 +42,10 @@ public class HostAggregate extends BaseEntity {
             foreignKey = @ForeignKey(name = "FK_HOST_AGGREGATE_DS"))
     private DeploymentSpec deploymentSpec;
 
-    public HostAggregate(DeploymentSpec deploymentSpec, String openstackId) {
+    public HostAggregate(DeploymentSpec deploymentSpec, String openstackId, String name) {
         this.deploymentSpec = deploymentSpec;
         this.openstackId = openstackId;
+        this.name = name;
     }
 
     public HostAggregate() {
