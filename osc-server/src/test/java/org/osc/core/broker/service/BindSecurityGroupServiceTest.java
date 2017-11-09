@@ -501,6 +501,30 @@ public class BindSecurityGroupServiceTest {
         this.bindSecurityGroupService.dispatch(request);
     }
 
+    @Test
+    public void testValidate_WhenSfcVirtualSystemListIsEmpty_ThrowsValidationException() throws Exception {
+        // Arrange
+        BindSecurityGroupRequest request = createRequest(VALID_ID, VALID_ID, VALID_ID);
+        ServiceFunctionChain sfc = createSFC(VALID_ID, VALID_ID);
+        List<VirtualSystem> vsList = new ArrayList<VirtualSystem>();
+        sfc.setVirtualSystems(vsList);
+        VirtualSystemPolicyBindingDto serviceToBindTo = createRequestWithService(INVALID_ID);
+        request.addServiceToBindTo(serviceToBindTo);
+        request.setBindSfc(true);
+
+        Mockito.when(this.em.find(Mockito.eq(VirtualizationConnector.class), Mockito.eq(VALID_ID)))
+                .thenReturn(VALID_SG.getVirtualizationConnector());
+        Mockito.when(this.em.find(Mockito.eq(ServiceFunctionChain.class), Mockito.eq(VALID_ID))).thenReturn(sfc);
+        Mockito.when(this.bindSecurityGroupService.apiFactoryService.supportsNeutronSFC(VALID_SG)).thenReturn(true);
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(String.format(
+                "Service Function Chain : %s has no Virtual System references, cannot be binded",
+                sfc.getName()));
+
+        // Act
+        this.bindSecurityGroupService.dispatch(request);
+    }
+
     private static SecurityGroup createSecurityGroup(Long id, boolean markedFOrDeletion) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setId(id);
