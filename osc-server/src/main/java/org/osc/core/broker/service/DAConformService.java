@@ -33,12 +33,8 @@ import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.api.ConformServiceApi;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.request.ConformRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.DAConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.DowngradeLockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -47,15 +43,23 @@ import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckM
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(service = {ConformServiceApi.class, DAConformService.class})
-public class DAConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
+@Component(service = {DAConformService.class})
+public class DAConformService {
     private static final Logger log = LoggerFactory.getLogger(DAConformService.class);
+
+    @Reference
+    protected DBConnectionManager dbConnectionManager;
+
+    @Reference
+    protected TransactionalBroadcastUtil txBroadcastUtil;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -74,32 +78,6 @@ public class DAConformService extends ServiceDispatcher<ConformRequest, BaseJobR
 
     @Reference
     private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
-
-    @Override
-    public BaseJobResponse exec(ConformRequest request, EntityManager em) throws Exception {
-
-        OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                em, this.txBroadcastUtil);
-        DistributedAppliance da = emgr.findByPrimaryKey(request.getDaId());
-
-        if (da == null) {
-            throw new VmidcBrokerValidationException(
-                    "Distributed Appliance with ID: " + request.getDaId() + ") was not found.");
-        }
-
-        if (da.getMarkedForDeletion()) {
-            throw new VmidcBrokerValidationException(
-                    "Syncing Distributed Appliance which is marked for deletion is not allowed.");
-        }
-
-        Long jobId = startDAConformJob(em, da);
-
-        BaseJobResponse response = new BaseJobResponse();
-        response.setJobId(jobId);
-
-        return response;
-    }
-
 
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);

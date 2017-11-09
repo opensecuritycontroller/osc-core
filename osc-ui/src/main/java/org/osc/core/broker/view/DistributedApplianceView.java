@@ -26,7 +26,6 @@ import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
-import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
@@ -50,6 +49,7 @@ import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtua
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.SyncDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
@@ -61,8 +61,8 @@ import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
+import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.ConformRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -74,12 +74,12 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddDistributedApplianceWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.broker.window.update.UpdateDistributedApplianceWindow;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -164,7 +164,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListProjectServiceApi listProjectService;
 
     @Reference
-    private ConformServiceApi conformService;
+    private SyncDistributedApplianceServiceApi syncDistributedApplianceService;
 
     @Reference
     private AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
@@ -299,12 +299,11 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
 
     public void conformDistributedAppliace(Long daId) {
         log.info("Syncing DA " + daId.toString());
-        ConformRequest request = new ConformRequest();
-        request.setDaId(daId);
+        BaseIdRequest request = new BaseIdRequest(daId);
         BaseJobResponse response = new BaseJobResponse();
 
         try {
-            response = this.conformService.dispatch(request);
+            response = this.syncDistributedApplianceService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId(), this.server);
         } catch (Exception e) {
             log.error("Error!", e);
