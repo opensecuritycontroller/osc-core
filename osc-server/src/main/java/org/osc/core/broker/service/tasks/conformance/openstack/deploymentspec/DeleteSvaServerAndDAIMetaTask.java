@@ -26,7 +26,6 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osgi.service.component.annotations.Component;
@@ -40,8 +39,10 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
     @Reference
     private DeleteInspectionPortTask deleteInspectionPort;
+
     @Reference
     private DeleteSvaServerTask deleteSvaServer;
+
     @Reference
     private OsSvaDeleteFloatingIpTask osSvadeleteFloatingIp;
 
@@ -51,20 +52,6 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     private DistributedApplianceInstance dai;
     private String region;
     private TaskGraph tg;
-    @IgnoreCompare
-    private DeleteSvaServerAndDAIMetaTask factory;
-
-    @Override
-    protected void delayedInit() {
-        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
-        this.deleteInspectionPort = this.factory.deleteInspectionPort;
-        this.deleteSvaServer = this.factory.deleteSvaServer;
-        this.osSvadeleteFloatingIp = this.factory.osSvadeleteFloatingIp;
-        this.apiFactoryService = this.factory.apiFactoryService;
-
-        this.dbConnectionManager = this.factory.dbConnectionManager;
-        this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
 
     /**
      * Deletes the SVA associated with the DAI from openstack and deletes the DAI from the DB
@@ -79,16 +66,23 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
      */
     public DeleteSvaServerAndDAIMetaTask create(String region, DistributedApplianceInstance dai) {
         DeleteSvaServerAndDAIMetaTask task = new DeleteSvaServerAndDAIMetaTask();
-        task.factory = this;
         task.region = region;
         task.dai = dai;
+
+        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
+        task.deleteInspectionPort = this.deleteInspectionPort;
+        task.deleteSvaServer = this.deleteSvaServer;
+        task.osSvadeleteFloatingIp = this.osSvadeleteFloatingIp;
+        task.apiFactoryService = this.apiFactoryService;
+
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
 
         return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        delayedInit();
         this.tg = new TaskGraph();
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 

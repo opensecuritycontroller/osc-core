@@ -134,8 +134,7 @@ public class Server implements ServerApi {
     @Reference
     private DistributedApplianceConformJobFactory daConformJobFactory;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<DeploymentSpecConformJobFactory> dsConformJobFactoryCSO;
+    @Reference
     private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     @Reference
