@@ -47,7 +47,7 @@ public class SyncDistributedApplianceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
-        DistributedApplianceConformJobFactory daConformService = (DistributedApplianceConformJobFactory) context.getMergedJobDataMap().get(DistributedApplianceConformJobFactory.class.getName());
+        DistributedApplianceConformJobFactory daConformJobFactory = (DistributedApplianceConformJobFactory) context.getMergedJobDataMap().get(DistributedApplianceConformJobFactory.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
@@ -69,7 +69,7 @@ public class SyncDistributedApplianceJob implements Job {
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     DistributedAppliance found = em.find(DistributedAppliance.class, da.getId());
-                                    daConformService.startDAConformJob(em, found, null, false);
+                                    daConformJobFactory.startDAConformJob(em, found, null, false);
                                 } catch (Exception ex) {
                                     StaticRegistry.alertGenerator().processSystemFailureEvent(
                                             SystemFailureType.SCHEDULER_FAILURE,

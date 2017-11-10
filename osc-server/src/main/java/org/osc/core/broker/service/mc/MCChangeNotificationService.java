@@ -44,10 +44,10 @@ public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotif
     private static final Logger log = LoggerFactory.getLogger(MCChangeNotificationService.class);
 
     @Reference
-    private ManagerConnectorConformJobFactory mcConformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
-    private DistributedApplianceConformJobFactory daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(MCChangeNotificationRequest request, EntityManager em) throws Exception {
@@ -64,14 +64,14 @@ public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotif
                 em, mc);
 
         if (distributedAppliances.isEmpty()) {
-            response.setJobId(this.mcConformService.startMCConformJob(mc, em).getId());
+            response.setJobId(this.mcConformJobFactory.startMCConformJob(mc, em).getId());
         } else if (request.notification.getObjectType() == MgrObjectType.DOMAIN) {
             // TODO: Future. Need to make this more efficient. Create a job that only
             // update domain/policy
         } else if (request.notification.getObjectType() == MgrObjectType.POLICY) {
 
             for (DistributedAppliance da : distributedAppliances) {
-                Long jobId = this.daConformService.startDAConformJob(em, da);
+                Long jobId = this.daConformJobFactory.startDAConformJob(em, da);
                 response.setJobId(jobId);
                 log.info("Sync DA '" + da.getName() + "' job " + jobId + " triggered.");
             }

@@ -43,7 +43,7 @@ public class AddSecurityGroupInterfaceService
     private static final Logger log = LoggerFactory.getLogger(AddSecurityGroupInterfaceService.class);
 
     @Reference
-    private DistributedApplianceConformJobFactory daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
@@ -62,7 +62,7 @@ public class AddSecurityGroupInterfaceService
         OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
         chain(() -> {
-            Long jobId = this.daConformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+            Long jobId = this.daConformJobFactory.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
 
             BaseJobResponse response = new BaseJobResponse(sgi.getId());
             response.setJobId(jobId);

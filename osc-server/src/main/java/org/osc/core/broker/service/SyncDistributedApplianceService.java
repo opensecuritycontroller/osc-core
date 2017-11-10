@@ -34,7 +34,7 @@ public class SyncDistributedApplianceService extends ServiceDispatcher<BaseIdReq
     private DistributedAppliance da;
 
     @Reference
-    private DistributedApplianceConformJobFactory daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     protected BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -42,7 +42,7 @@ public class SyncDistributedApplianceService extends ServiceDispatcher<BaseIdReq
 
         validate(em, request.getId());
 
-        Long jobId = this.daConformService.startDAConformJob(em, this.da);
+        Long jobId = this.daConformJobFactory.startDAConformJob(em, this.da);
 
         BaseJobResponse response = new BaseJobResponse();
         response.setJobId(jobId);

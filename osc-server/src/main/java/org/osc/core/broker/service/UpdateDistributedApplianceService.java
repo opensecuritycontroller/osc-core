@@ -67,7 +67,7 @@ public class UpdateDistributedApplianceService
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
     @Reference
-    private DistributedApplianceConformJobFactory daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Reference
     private EncryptionApi encrypter;
@@ -136,7 +136,7 @@ public class UpdateDistributedApplianceService
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
-        return this.daConformService.startDAConformJob(em, da, this.ult);
+        return this.daConformJobFactory.startDAConformJob(em, da, this.ult);
     }
 
     /**

@@ -34,7 +34,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
         implements SyncManagerConnectorServiceApi {
 
     @Reference
-    private ManagerConnectorConformJobFactory mcConformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
@@ -42,7 +42,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getId());
         validate(request, mc);
-        Long jobId = this.mcConformService.startMCConformJob(mc, em).getId();
+        Long jobId = this.mcConformJobFactory.startMCConformJob(mc, em).getId();
         return new BaseJobResponse(mc.getId(), jobId);
     }
 

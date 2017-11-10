@@ -80,7 +80,7 @@ public class AddVirtualizationConnectorServiceTest {
     private AddVirtualizationConnectorServiceRequestValidator validatorMock;
 
     @Mock
-    private VirtualizationConnectorConformJobFactory vcConformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Mock
     private UserContextApi userContext;
@@ -123,7 +123,7 @@ public class AddVirtualizationConnectorServiceTest {
 
         when(this.job.getId()).thenReturn(5L);
         //PowerMockito.mockStatic(ConformService.class);
-        when(this.vcConformService.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
+        when(this.vcConformJobFactory.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
     }
 
     @After

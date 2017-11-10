@@ -50,7 +50,7 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
 implements DeleteDeploymentSpecServiceApi {
 
     @Reference
-    private DeploymentSpecConformJobFactory dsConformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     @Reference
     private ForceDeleteDSTask forceDeleteDSTask;
@@ -82,7 +82,7 @@ implements DeleteDeploymentSpecServiceApi {
                 UnlockObjectMetaTask forLambda = dsUnlock;
                 chain(() -> {
                     try {
-                        Job job = this.dsConformService.startDsConformanceJob(em, this.ds, forLambda);
+                        Job job = this.dsConformJobFactory.startDsConformanceJob(em, this.ds, forLambda);
                         response.setJobId(job.getId());
                         return response;
                     } catch (Exception e) {

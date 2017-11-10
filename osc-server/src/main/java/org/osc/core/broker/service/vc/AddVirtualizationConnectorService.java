@@ -49,7 +49,7 @@ public class AddVirtualizationConnectorService
     private RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> validator;
 
     @Reference
-    private VirtualizationConnectorConformJobFactory vcConformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
     EncryptionApi encryption;
@@ -86,7 +86,7 @@ public class AddVirtualizationConnectorService
 
         vcEntityMgr.update(vc);
 
-        Job job = this.vcConformService.startVCSyncJob(vc, em);
+        Job job = this.vcConformJobFactory.startVCSyncJob(vc, em);
         return new BaseJobResponse(vc.getId(), job.getId());
     }
 

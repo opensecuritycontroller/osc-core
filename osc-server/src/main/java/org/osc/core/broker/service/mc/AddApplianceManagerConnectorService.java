@@ -71,7 +71,7 @@ implements AddApplianceManagerConnectorServiceApi {
     private ApiFactoryService apiFactoryService;
 
     @Reference
-    private ManagerConnectorConformJobFactory mcConformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private EncryptionApi encryption;
@@ -104,7 +104,7 @@ implements AddApplianceManagerConnectorServiceApi {
         // Commit the changes early so that the entity is available for the job engine
         chain(() -> {
             UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
-            Job job = this.mcConformService.startMCConformJob(mc, mcUnlock, em);
+            Job job = this.mcConformJobFactory.startMCConformJob(mc, mcUnlock, em);
             return new BaseJobResponse(mc.getId(), job.getId());
         });
 

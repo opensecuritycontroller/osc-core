@@ -73,7 +73,7 @@ implements UpdateApplianceManagerConnectorServiceApi {
     static final Logger log = LoggerFactory.getLogger(UpdateApplianceManagerConnectorService.class);
 
     @Reference
-    private ManagerConnectorConformJobFactory mcConformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
@@ -138,7 +138,7 @@ implements UpdateApplianceManagerConnectorServiceApi {
             UnlockObjectTask forLambda = mcUnlock;
             chain(() -> {
                 try {
-                    Long jobId = this.mcConformService.startMCConformJob(mc, forLambda, em).getId();
+                    Long jobId = this.mcConformJobFactory.startMCConformJob(mc, forLambda, em).getId();
                     return new BaseJobResponse(mc.getId(), jobId);
                 } catch (Exception e) {
                     // If we experience any failure, unlock MC.

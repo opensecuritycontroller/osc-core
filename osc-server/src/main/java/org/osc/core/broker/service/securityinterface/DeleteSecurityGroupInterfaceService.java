@@ -42,7 +42,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
     private SecurityGroupInterface sgi = null;
 
     @Reference
-    private DistributedApplianceConformJobFactory daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -53,7 +53,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
         OSCEntityManager.delete(em, this.sgi, this.txBroadcastUtil);
 
         chain(() -> {
-            Long jobId = this.daConformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
+            Long jobId = this.daConformJobFactory.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
 
             BaseJobResponse response = new BaseJobResponse(this.sgi.getId());
             response.setJobId(jobId);

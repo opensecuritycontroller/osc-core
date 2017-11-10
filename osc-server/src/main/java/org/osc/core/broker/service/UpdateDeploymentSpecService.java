@@ -54,7 +54,7 @@ implements UpdateDeploymentSpecServiceApi {
     private static final Logger log = LoggerFactory.getLogger(UpdateDeploymentSpecService.class);
 
     @Reference
-    private DeploymentSpecConformJobFactory dsConformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     private DeploymentSpec ds;
 
@@ -90,7 +90,7 @@ implements UpdateDeploymentSpecServiceApi {
             UnlockObjectMetaTask forLambda = dsUnlock;
             chain(() -> {
                 try {
-                    Job job = this.dsConformService.startDsConformanceJob(em, this.ds, forLambda);
+                    Job job = this.dsConformJobFactory.startDsConformanceJob(em, this.ds, forLambda);
                     return new BaseJobResponse(this.ds.getId(), job.getId());
                 } catch (Exception e) {
                     LockUtil.releaseLocks(forLambda);

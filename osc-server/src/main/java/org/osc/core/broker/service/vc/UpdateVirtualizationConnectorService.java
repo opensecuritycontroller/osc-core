@@ -79,7 +79,7 @@ implements UpdateVirtualizationConnectorServiceApi {
     private VirtualizationConnectorUtil util;
 
     @Reference
-    private VirtualizationConnectorConformJobFactory vcConformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
     private EncryptionApi encryption;
@@ -147,7 +147,7 @@ implements UpdateVirtualizationConnectorServiceApi {
             LockUtil.releaseLocks(vcUnlock);
         }
 
-        Long jobId = this.vcConformService.startVCSyncJob(vc, em).getId();
+        Long jobId = this.vcConformJobFactory.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
     }
 

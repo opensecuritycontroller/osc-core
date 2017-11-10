@@ -42,7 +42,7 @@ public class UpdateSecurityGroupInterfaceService
     private static final Logger log = LoggerFactory.getLogger(UpdateSecurityGroupInterfaceService.class);
 
     @Reference
-    private DistributedApplianceConformJobFactory daConformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
@@ -59,7 +59,7 @@ public class UpdateSecurityGroupInterfaceService
         log.info("Updating SecurityGroupInterface: " + sgi.toString());
         OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
         chain(() -> {
-            Long jobId = this.daConformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+            Long jobId = this.daConformJobFactory.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
             return new BaseJobResponse(sgi.getId(), jobId);
         });
         return null;

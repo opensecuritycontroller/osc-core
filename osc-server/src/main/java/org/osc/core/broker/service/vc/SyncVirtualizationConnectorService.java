@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
 public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse>
         implements SyncVirtualizationConnectorServiceApi {
     @Reference
-    private VirtualizationConnectorConformJobFactory vcConformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
@@ -41,7 +41,7 @@ public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJo
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
         validate(request, vc);
-        Long jobId = this.vcConformService.startVCSyncJob(vc, em).getId();
+        Long jobId = this.vcConformJobFactory.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
     }
 
