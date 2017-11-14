@@ -14,26 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.request;
+package org.osc.core.broker.service.api;
 
-import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.service.response.BaseJobResponse;
 
-public class ConformRequest extends BaseRequest<BaseDto> {
-    private Long daId;
-
-    public ConformRequest() {
-    }
-
-    public ConformRequest(Long daId) {
-        setDaId(daId);
-    }
-
-    public Long getDaId() {
-        return this.daId;
-    }
-
-    public void setDaId(Long daId) {
-        this.daId = daId;
-    }
-
+public interface SyncDistributedApplianceServiceApi
+    extends ServiceDispatcherApi<BaseIdRequest, BaseJobResponse> {
 }

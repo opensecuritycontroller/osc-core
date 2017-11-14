@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static java.util.stream.Collectors.*;
-import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+import static java.util.stream.Collectors.toSet;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.NO_CONTROLLER_TYPE;
 
 import java.util.List;
 import java.util.Set;
@@ -31,9 +32,9 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -78,7 +79,7 @@ implements UpdateVirtualizationConnectorServiceApi {
     private VirtualizationConnectorUtil util;
 
     @Reference
-    private ConformService conformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
     private EncryptionApi encryption;
@@ -146,7 +147,7 @@ implements UpdateVirtualizationConnectorServiceApi {
             LockUtil.releaseLocks(vcUnlock);
         }
 
-        Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
+        Long jobId = this.vcConformJobFactory.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
     }
 

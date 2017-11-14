@@ -41,10 +41,10 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateDeploymentSpecService
@@ -54,7 +54,7 @@ implements UpdateDeploymentSpecServiceApi {
     private static final Logger log = LoggerFactory.getLogger(UpdateDeploymentSpecService.class);
 
     @Reference
-    private ConformService conformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     private DeploymentSpec ds;
 
@@ -90,7 +90,7 @@ implements UpdateDeploymentSpecServiceApi {
             UnlockObjectMetaTask forLambda = dsUnlock;
             chain(() -> {
                 try {
-                    Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
+                    Job job = this.dsConformJobFactory.startDsConformanceJob(em, this.ds, forLambda);
                     return new BaseJobResponse(this.ds.getId(), job.getId());
                 } catch (Exception e) {
                     LockUtil.releaseLocks(forLambda);

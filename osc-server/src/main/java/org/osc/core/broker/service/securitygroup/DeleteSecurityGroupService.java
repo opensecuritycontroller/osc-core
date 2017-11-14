@@ -24,8 +24,8 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -49,7 +49,7 @@ implements DeleteSecurityGroupServiceApi {
     private static final Logger log = LoggerFactory.getLogger(DeleteSecurityGroupService.class);
 
     @Reference
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Reference
     ForceDeleteSecurityGroupTask forceDeleteSecurityGroupTask;
@@ -83,7 +83,7 @@ implements DeleteSecurityGroupServiceApi {
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {
-                        Job job = this.conformService.startSecurityGroupConformanceJob(em, securityGroup,
+                        Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(em, securityGroup,
                                 forLambda, false);
                         response.setJobId(job.getId());
                         return response;

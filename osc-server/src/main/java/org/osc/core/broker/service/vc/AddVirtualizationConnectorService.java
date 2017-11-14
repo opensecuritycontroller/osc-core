@@ -21,8 +21,8 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
@@ -49,7 +49,7 @@ public class AddVirtualizationConnectorService
     private RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> validator;
 
     @Reference
-    private ConformService conformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
     EncryptionApi encryption;
@@ -86,7 +86,7 @@ public class AddVirtualizationConnectorService
 
         vcEntityMgr.update(vc);
 
-        Job job = this.conformService.startVCSyncJob(vc, em);
+        Job job = this.vcConformJobFactory.startVCSyncJob(vc, em);
         return new BaseJobResponse(vc.getId(), job.getId());
     }
 

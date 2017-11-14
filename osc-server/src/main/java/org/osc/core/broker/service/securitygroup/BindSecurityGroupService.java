@@ -33,8 +33,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.broadcast.EventType;
@@ -68,7 +68,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 	private static final Logger log = LoggerFactory.getLogger(BindSecurityGroupService.class);
 
 	@Reference
-	private ConformService conformService;
+	private SecurityGroupConformJobFactory sgConformJobFactory;
 
 	@Reference
 	public ApiFactoryService apiFactoryService;
@@ -201,7 +201,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 			this.txBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
 					this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
 
-			Job job = this.conformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
+			Job job = this.sgConformJobFactory.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
 
 			response = new BaseJobResponse(job.getId());
 

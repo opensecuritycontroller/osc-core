@@ -49,11 +49,11 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.util.crypto.PKIUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateDistributedApplianceService
@@ -67,7 +67,7 @@ public class UpdateDistributedApplianceService
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Reference
     private EncryptionApi encrypter;
@@ -136,7 +136,7 @@ public class UpdateDistributedApplianceService
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
-        return this.conformService.startDAConformJob(em, da, this.ult);
+        return this.daConformJobFactory.startDAConformJob(em, da, this.ult);
     }
 
     /**

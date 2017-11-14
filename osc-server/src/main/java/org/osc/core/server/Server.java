@@ -41,7 +41,11 @@ import org.osc.core.broker.rest.client.RestBaseClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsSecurityGroupNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -128,7 +132,19 @@ public class Server implements ServerApi {
     private boolean devMode = false;
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
+
+    @Reference
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
+
+    @Reference
+    private SecurityGroupConformJobFactory sgConformJobFactory;
+
+    @Reference
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
+
+    @Reference
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -348,7 +364,12 @@ public class Server implements ServerApi {
 
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(ApiFactoryService.class.getName(), this.apiFactoryService);
-        jobDataMap.put(ConformService.class.getName(), this.conformService);
+        jobDataMap.put(DistributedApplianceConformJobFactory.class.getName(), this.daConformJobFactory);
+        jobDataMap.put(DeploymentSpecConformJobFactory.class.getName(), this.dsConformJobFactory);
+        jobDataMap.put(SecurityGroupConformJobFactory.class.getName(), this.sgConformJobFactory);
+        jobDataMap.put(VirtualizationConnectorConformJobFactory.class.getName(), this.vcConformJobFactory);
+        jobDataMap.put(ManagerConnectorConformJobFactory.class.getName(), this.mcConformJobFactory);
+
 
         JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).usingJobData(jobDataMap).build();
         JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class).usingJobData(jobDataMap).build();

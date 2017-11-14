@@ -32,24 +32,23 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.osc.core.broker.rest.server.ApiUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
-import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.SyncDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
+import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.ConformRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -57,6 +56,7 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -79,7 +79,7 @@ public class DistributedApplianceApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private ConformServiceApi conformService;
+    private SyncDistributedApplianceServiceApi syncDistributedApplianceService;
 
     @Reference
     private AddDistributedApplianceServiceApi addDistributedApplianceService;
@@ -214,7 +214,7 @@ public class DistributedApplianceApis {
                                                      required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Sync Distributed Appliance " + distributedApplianceId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(this.conformService, new ConformRequest(distributedApplianceId));
+        return this.apiUtil.getResponseForBaseRequest(this.syncDistributedApplianceService, new BaseIdRequest(distributedApplianceId));
     }
 
 }

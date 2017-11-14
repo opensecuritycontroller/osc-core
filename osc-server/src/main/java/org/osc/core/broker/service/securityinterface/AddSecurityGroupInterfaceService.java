@@ -21,7 +21,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -30,10 +30,10 @@ import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class AddSecurityGroupInterfaceService
@@ -43,7 +43,7 @@ public class AddSecurityGroupInterfaceService
     private static final Logger log = LoggerFactory.getLogger(AddSecurityGroupInterfaceService.class);
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
@@ -62,7 +62,7 @@ public class AddSecurityGroupInterfaceService
         OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
         chain(() -> {
-            Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+            Long jobId = this.daConformJobFactory.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
 
             BaseJobResponse response = new BaseJobResponse(sgi.getId());
             response.setJobId(jobId);

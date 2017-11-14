@@ -19,8 +19,8 @@ package org.osc.core.broker.service.vc;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
 public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse>
         implements SyncVirtualizationConnectorServiceApi {
     @Reference
-    private ConformService conformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
@@ -41,7 +41,7 @@ public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJo
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
         validate(request, vc);
-        Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
+        Long jobId = this.vcConformJobFactory.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
     }
 

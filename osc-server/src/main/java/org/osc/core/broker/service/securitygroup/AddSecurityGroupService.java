@@ -24,8 +24,8 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -36,10 +36,10 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The implementation is advertised so that it can be used in
@@ -53,7 +53,7 @@ implements AddSecurityGroupServiceApi {
     private static final Logger LOG = LoggerFactory.getLogger(AddSecurityGroupService.class);
 
     @Reference
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Override
     public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception,
@@ -100,7 +100,7 @@ implements AddSecurityGroupServiceApi {
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                    Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
                     return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {

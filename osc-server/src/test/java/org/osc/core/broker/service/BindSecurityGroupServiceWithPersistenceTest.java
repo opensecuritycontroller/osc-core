@@ -87,7 +87,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
     protected TransactionalBroadcastUtil txBroadcastUtil;
 
     @Mock
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Mock
     protected UserContextApi userContext;
@@ -130,7 +130,7 @@ public class BindSecurityGroupServiceWithPersistenceTest {
         Job job = jobEngine.submit("testJob", new TaskGraph(), false);
         this.job_id = job.getId();
 
-        Mockito.when(this.conformService.startBindSecurityGroupConformanceJob(Mockito.any(EntityManager.class),
+        Mockito.when(this.sgConformJobFactory.startBindSecurityGroupConformanceJob(Mockito.any(EntityManager.class),
                 Mockito.any(), Mockito.any(UnlockObjectMetaTask.class))).thenReturn(job);
 
         PowerMockito.mockStatic(LockUtil.class);

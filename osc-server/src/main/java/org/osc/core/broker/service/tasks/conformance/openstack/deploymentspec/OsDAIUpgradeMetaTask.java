@@ -17,7 +17,6 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -26,16 +25,11 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Deletes existing SVA corresponding to the DAI and recreates the SVA with the new version. This task also schedules
@@ -44,61 +38,36 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 @Component(service = OsDAIUpgradeMetaTask.class)
 public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
-    // optional+dynamic to break circular DS dependency
-    // TODO: remove circularity and use mandatory references
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
+    @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
     @Reference
     private DeleteSvaServerTask deleteSvaServerTask;
 
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
     private TaskGraph tg;
-    @IgnoreCompare
-    private OsDAIUpgradeMetaTask factory;
-    @IgnoreCompare
-    private AtomicBoolean initDone = new AtomicBoolean();
-
-    @Override
-    protected void delayedInit() {
-        if (this.factory.initDone.compareAndSet(false, true)) {
-            this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-        }
-        this.deleteSvaServerTask = this.factory.deleteSvaServerTask;
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.conformService = this.factory.conformService;
-        this.dbConnectionManager = this.factory.dbConnectionManager;
-        this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
-        }
-    }
 
     public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai,
             ApplianceSoftwareVersion upgradedSoftwareVersion) {
+
         OsDAIUpgradeMetaTask task = new OsDAIUpgradeMetaTask();
-        task.factory = this;
         task.dai = dai;
         task.upgradedSoftwareVersion = upgradedSoftwareVersion;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
         task.deleteSvaServerTask = this.deleteSvaServerTask;
         task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.sgConformJobFactory = this.sgConformJobFactory;
 
         return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        delayedInit();
+
         this.tg = new TaskGraph();
 
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
@@ -110,7 +79,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         this.tg.appendTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
         this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformJobFactory);
     }
 
     @Override

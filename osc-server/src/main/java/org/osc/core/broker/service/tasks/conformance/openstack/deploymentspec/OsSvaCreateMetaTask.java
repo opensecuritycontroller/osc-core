@@ -27,15 +27,15 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates an SVA on openstack
@@ -58,7 +58,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
     @Reference
     private OsSvaCheckNetworkInfoTask osSvaCheckNetworkInfoTask;
     @Reference
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     private TaskGraph tg;
     private DeploymentSpec ds;
@@ -84,7 +84,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
         task.osSvaEnsureActiveTask = this.osSvaEnsureActiveTask;
         task.osSvaCheckFloatingIpTask = this.osSvaCheckFloatingIpTask;
         task.osSvaCheckNetworkInfoTask = this.osSvaCheckNetworkInfoTask;
-        task.conformService = this.conformService;
+        task.sgConformJobFactory = this.sgConformJobFactory;
 
         task.ds = ds;
         task.hypervisorHostName = hypervisorHostName;
@@ -135,7 +135,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
             }
         }
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.sgConformJobFactory);
     }
 
     /**

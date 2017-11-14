@@ -82,7 +82,7 @@ public class UpdateDistributedApplianceServiceTest {
     private DistributedApplianceDtoValidator validatorMock;
 
     @Mock
-    private ConformService conformServiceMock;
+    private DistributedApplianceConformJobFactory daConformJobFactoryMock;
 
     @Mock
     private UserContextApi userContext;
@@ -170,7 +170,7 @@ public class UpdateDistributedApplianceServiceTest {
         }).when(this.validatorMock)
         .validateForUpdate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.daDto.getName())));
 
-        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class),
+        Mockito.when(this.daConformJobFactoryMock.startDAConformJob(Mockito.any(EntityManager.class),
                 (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)),
                 Mockito.any(UnlockObjectMetaTask.class))).thenReturn(JOB_ID);
 
