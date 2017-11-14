@@ -67,7 +67,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        delayedInit();
+
         this.tg = new TaskGraph();
 
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(

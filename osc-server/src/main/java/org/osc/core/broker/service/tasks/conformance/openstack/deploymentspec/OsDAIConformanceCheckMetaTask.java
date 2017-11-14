@@ -94,16 +94,6 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @IgnoreCompare
     private OsDAIConformanceCheckMetaTask factory;
 
-    @Override
-    protected void delayedInit() {
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTask;
-        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
-        this.apiFactoryService = this.factory.apiFactoryService;
-        this.dbConnectionManager = this.factory.dbConnectionManager;
-        this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
-
     public OsDAIConformanceCheckMetaTask create(DistributedApplianceInstance dai, boolean doesOSHostExist) {
         OsDAIConformanceCheckMetaTask task = new OsDAIConformanceCheckMetaTask();
         task.factory = this;
@@ -123,7 +113,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        delayedInit();
+
         this.tg = new TaskGraph();
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
                 DistributedApplianceInstance.class, em, this.txBroadcastUtil);

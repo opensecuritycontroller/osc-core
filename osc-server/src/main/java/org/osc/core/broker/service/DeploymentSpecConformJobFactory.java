@@ -67,6 +67,14 @@ public class DeploymentSpecConformJobFactory {
     @Reference
     protected TransactionalBroadcastUtil txBroadcastUtil;
 
+    @Reference
+    private ConformK8sDeploymentSpecMetaTask conformK8sDeploymentSpecMetaTask;
+
+    // optional+dynamic to resolve circular reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
+    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+
     private void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.dsConformanceCheckMetaTask = this.context.getService(this.dsConformanceCheckMetaTaskSR);
@@ -84,14 +92,6 @@ public class DeploymentSpecConformJobFactory {
             context.ungetService(this.dsConformanceCheckMetaTaskSR);
         }
     }
-
-    @Reference
-    private ConformK8sDeploymentSpecMetaTask conformK8sDeploymentSpecMetaTask;
-
-    // optional+dynamic to resolve circular reference
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
-    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
 
     public Job startDsConformanceJob(DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask) throws Exception {
         return startDsConformanceJob(null, ds, dsUnlockTask, false);
