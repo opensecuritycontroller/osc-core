@@ -108,6 +108,11 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         task.txBroadcastUtil = this.txBroadcastUtil;
         task.deleteInspectionPortTask = this.deleteInspectionPortTask;
 
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.osDAIUpgradeMetaTask = this.osDAIUpgradeMetaTask;
+        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
+        task.apiFactoryService = this.apiFactoryService;
+
         return task;
     }
 
