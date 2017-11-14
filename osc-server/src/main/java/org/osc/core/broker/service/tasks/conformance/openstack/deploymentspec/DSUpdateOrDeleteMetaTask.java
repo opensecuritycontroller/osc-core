@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -109,7 +110,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
+        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
         if (this.ds.getMarkedForDeletion() || virtualSystem.getMarkedForDeletion()
@@ -179,7 +180,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private Set<String> getHostsFromHostAggregateSelection(EntityManager em, Openstack4JNova novaApi,
                                                            Set<HostAggregate> dsHostAggr) throws IOException {
         Set<String> hostsToDeployTo = new HashSet<>();
-        Iterator<HostAggregate> dsHostAggrIter = dsHostAggr.iterator();
+        Set<HostAggregate> dsHostAggrSet = new HashSet<>(dsHostAggr);
+        Iterator<HostAggregate> dsHostAggrIter = dsHostAggrSet.iterator();
         while (dsHostAggrIter.hasNext()) {
             HostAggregate dsHostAggrInstance = dsHostAggrIter.next();
             org.openstack4j.model.compute.HostAggregate osHostAggr = novaApi.getHostAggregateById(this.ds.getRegion(),
@@ -194,10 +196,15 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
             } else {
                 // Host aggr has been deleted, delete the host aggr from ds
-                log.info(String.format("Host Aggregate %s(%s) has been deleted from openstack. Deleting from DS.",
-                        dsHostAggrInstance.getName(), dsHostAggrInstance.getId()));
+				this.tg.addTask(new FailedWithObjectInfoTask(
+						String.format("Create SVA for Host Aggregate %s(%s) in Region '%s'",
+								dsHostAggrInstance.getName(), dsHostAggrInstance.getId(), this.ds.getRegion()),
+						String.format(
+								"Host Aggregate %s(%s) has been deleted from openstack or invalid. Deleting from DS.",
+								dsHostAggrInstance.getName(), dsHostAggrInstance.getId()),
+						LockObjectReference.getObjectReferences(this.ds)));
                 OSCEntityManager.delete(em, dsHostAggrInstance, this.txBroadcastUtil);
-                dsHostAggrIter.remove();
+                dsHostAggr.remove(dsHostAggrInstance);
                 OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
             }
         }
@@ -207,6 +214,17 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     private void conformToHostsSelection(Collection<String> selectedHosts,
                                          HostAvailabilityZoneMapping hostAvailabilityZoneMap, Collection<String> osHostSet) {
+
+		List<String> invalidHosts = (List<String>) CollectionUtils.removeAll(selectedHosts, osHostSet);
+		if (!invalidHosts.isEmpty()) {
+			for (String invalidHost : invalidHosts) {
+				this.tg.addTask(new FailedWithObjectInfoTask(
+						String.format("Create SVA for host '%s' in Region '%s'", invalidHost, this.ds.getRegion()),
+						String.format("Host '%s' is not part of any Availability Zone", invalidHost),
+						LockObjectReference.getObjectReferences(this.ds)));
+			}
+		}
+
         List<String> hostsMissingSvas = new ArrayList<>();
 
         // TODO: Future. If instance count is decreased, remove least loaded dai's first
@@ -301,6 +319,10 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             boolean isAzStillAvailable = unConformedAzs.remove(az.getZone());
             if (!isAzStillAvailable) {
                 dsAzDeletedFromOpenstack.add(az.getZone());
+				this.tg.addTask(new FailedWithObjectInfoTask(
+						String.format("Create SVA for Availability Zone '%s' in Region '%s'", az.getZone(), this.ds.getRegion()),
+						String.format("Availability Zone '%s' is not available", az.getZone()),
+						LockObjectReference.getObjectReferences(this.ds)));
             }
 
             Set<String> hostsWithinAz = azHostMap.getHosts(az.getZone());
