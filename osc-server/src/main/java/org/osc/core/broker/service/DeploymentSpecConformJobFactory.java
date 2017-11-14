@@ -71,6 +71,14 @@ public class DeploymentSpecConformJobFactory {
     private ConformK8sDeploymentSpecMetaTask conformK8sDeploymentSpecMetaTask;
 
     // optional+dynamic to resolve circular reference
+    //
+    // Server needs DeploymentSpecConformJobFactory to come up, but Server is the one to register
+    // RabbitMQRunner with the "active=true" property, and DeploymentSpecConformJobFactory
+    // traces down to RabbitMQRunner"(active=true) dependency.
+    //
+    // The dependency chain is (as of today) Server -> DeploymentSpecConformJobFactory ->
+    // DSConformanceCheckMetaTask -> DSUpdateOrDeleteMetaTask -> OsSvaCreateMetaTask ->
+    // -> OsSvaServerCreateTask -> RabbitMQRunner.
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
     private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
