@@ -152,6 +152,9 @@ public class VirtualizationConnectorUtil {
                 if (!this.k8sStatusApi.isServiceReady()) {
                     errorTypeException = new ErrorTypeException("Kubernetes reported service NOT ready.", ErrorType.PROVIDER_EXCEPTION);
                 }
+            } finally {
+                // Reset status api for next call
+                this.k8sStatusApi = null;
             }
         }
 
@@ -188,15 +191,17 @@ public class VirtualizationConnectorUtil {
                     this.keystoneApi = new Openstack4jKeystone(endPoint);
                 }
 
-                try {
-                    this.keystoneApi.listProjects();
-                } finally {
-                    this.keystoneApi.close();
-                }
+                this.keystoneApi.listProjects();
+
             } catch (Exception exception) {
                 errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                 LOG.warn(
                         "Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
+            } finally {
+                if (this.keystoneApi != null) {
+                    this.keystoneApi.close();
+                }
+                this.keystoneApi = null;
             }
         }
 
