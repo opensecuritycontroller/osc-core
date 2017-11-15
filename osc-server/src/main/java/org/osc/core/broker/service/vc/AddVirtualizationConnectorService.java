@@ -18,11 +18,9 @@ package org.osc.core.broker.service.vc;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
@@ -31,7 +29,7 @@ import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
@@ -43,13 +41,10 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class AddVirtualizationConnectorService
-        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
+        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseResponse>
         implements AddVirtualizationConnectorServiceApi {
 
     private RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> validator;
-
-    @Reference
-    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
     EncryptionApi encryption;
@@ -61,7 +56,7 @@ public class AddVirtualizationConnectorService
     private ApiFactoryService apiFactoryService;
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
+    public BaseResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
         if (this.validator == null) {
             this.validator = new AddVirtualizationConnectorServiceRequestValidator(em, this.txBroadcastUtil,
                     this.virtualizationConnectorUtil, this.apiFactoryService);
@@ -86,8 +81,7 @@ public class AddVirtualizationConnectorService
 
         vcEntityMgr.update(vc);
 
-        Job job = this.vcConformJobFactory.startVCSyncJob(vc, em);
-        return new BaseJobResponse(vc.getId(), job.getId());
+        return new BaseResponse(vc.getId());
     }
 
     private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(

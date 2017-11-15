@@ -22,9 +22,8 @@ import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
-import org.osc.core.broker.view.util.ViewUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +36,6 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
     private final AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
 
-    private final ServerApi server;
-
     private static final Logger log = LoggerFactory.getLogger(AddVirtualizationConnectorWindow.class);
 
     public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
@@ -47,7 +44,6 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
         super(pluginService, validator, trustManager);
         this.vcView = vcView;
         this.addVirtualizationConnectorService = addVirtualizationConnectorService;
-        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -68,7 +64,7 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
                 // calling add VC service
 
                 log.info("adding virtualization connector - " + this.name.getValue().trim());
-                BaseJobResponse addResponse = this.addVirtualizationConnectorService.dispatch(addRequest);
+                BaseResponse addResponse = this.addVirtualizationConnectorService.dispatch(addRequest);
 
                 // adding returned ID to the request DTO object
                 addRequest.getDto().setId(addResponse.getId());
@@ -78,7 +74,6 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
                 this.vcView.parentTableClicked(addRequest.getDto().getId());
                 close();
 
-                ViewUtil.showJobNotification(addResponse.getJobId(), this.server);
             }
         } catch (Exception exception) {
             sslAwareHandleException(exception);

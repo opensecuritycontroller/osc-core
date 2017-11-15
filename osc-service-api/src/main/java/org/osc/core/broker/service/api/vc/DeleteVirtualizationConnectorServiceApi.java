@@ -18,8 +18,8 @@ package org.osc.core.broker.service.api.vc;
 
 import org.osc.core.broker.service.api.ServiceDispatcherApi;
 import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.EmptySuccessResponse;
 
 public interface DeleteVirtualizationConnectorServiceApi
-        extends ServiceDispatcherApi<BaseIdRequest, BaseJobResponse> {
+        extends ServiceDispatcherApi<BaseIdRequest, EmptySuccessResponse> {
 }
