@@ -27,27 +27,27 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OsHostAggregrateNotificationListener extends OsNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(OsHostAggregrateNotificationListener.class);
 
-    private final ConformService conformService;
+    private final DeploymentSpecConformJobFactory dsConformJobFactory;
 
     private final AlertGenerator alertGenerator;
 
     private final TransactionControl txControl;
 
     public OsHostAggregrateNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRuner,
-            TransactionControl txControl) {
+            List<String> objectIdList, BaseEntity entity, DeploymentSpecConformJobFactory dsConformJobFactory,
+            AlertGenerator alertGenerator, RabbitMQRunner activeRuner, TransactionControl txControl) {
         super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity, activeRuner);
-        this.conformService = conformService;
+        this.dsConformJobFactory = dsConformJobFactory;
         this.alertGenerator = alertGenerator;
         this.txControl = txControl;
         register(vc, objectType);
@@ -67,7 +67,7 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
                 try {
                     this.txControl.required(() -> {
                         // Trigger Sync for the related Deployment Spec
-                        this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                        this.dsConformJobFactory.startDsConformanceJob((DeploymentSpec) this.entity, null);
                         return null;
                     });
                 } catch (Exception e) {

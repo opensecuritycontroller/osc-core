@@ -19,7 +19,6 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -39,20 +38,16 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -84,18 +79,13 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    // optional+dynamic to break circular DS dependency
-    // TODO: remove circularity and use mandatory references
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
+    @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<OsDAIUpgradeMetaTask> osDAIUpgradeMetaTaskCSO;
+    @Reference
     private OsDAIUpgradeMetaTask osDAIUpgradeMetaTask;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
+    @Reference
     private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
@@ -103,32 +93,6 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private OsDAIConformanceCheckMetaTask factory;
-    @IgnoreCompare
-    private AtomicBoolean initDone = new AtomicBoolean();
-
-    @Override
-    protected void delayedInit() {
-        if (this.factory.initDone.compareAndSet(false, true)) {
-            this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-            this.factory.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
-            this.factory.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
-        }
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTask;
-        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
-        this.apiFactoryService = this.factory.apiFactoryService;
-        this.dbConnectionManager = this.factory.dbConnectionManager;
-        this.txBroadcastUtil = this.factory.txBroadcastUtil;
-    }
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
-            this.factory.osDAIUpgradeMetaTaskCSO.ungetService(this.osDAIUpgradeMetaTask);
-            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
-        }
-    }
 
     public OsDAIConformanceCheckMetaTask create(DistributedApplianceInstance dai, boolean doesOSHostExist) {
         OsDAIConformanceCheckMetaTask task = new OsDAIConformanceCheckMetaTask();
@@ -144,12 +108,17 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         task.txBroadcastUtil = this.txBroadcastUtil;
         task.deleteInspectionPortTask = this.deleteInspectionPortTask;
 
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.osDAIUpgradeMetaTask = this.osDAIUpgradeMetaTask;
+        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
+        task.apiFactoryService = this.apiFactoryService;
+
         return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        delayedInit();
+
         this.tg = new TaskGraph();
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
                 DistributedApplianceInstance.class, em, this.txBroadcastUtil);

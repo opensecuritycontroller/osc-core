@@ -31,8 +31,8 @@ import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -60,10 +60,10 @@ import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidat
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateApplianceManagerConnectorService
@@ -73,7 +73,7 @@ implements UpdateApplianceManagerConnectorServiceApi {
     static final Logger log = LoggerFactory.getLogger(UpdateApplianceManagerConnectorService.class);
 
     @Reference
-    private ConformService conformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
@@ -138,7 +138,7 @@ implements UpdateApplianceManagerConnectorServiceApi {
             UnlockObjectTask forLambda = mcUnlock;
             chain(() -> {
                 try {
-                    Long jobId = this.conformService.startMCConformJob(mc, forLambda, em).getId();
+                    Long jobId = this.mcConformJobFactory.startMCConformJob(mc, forLambda, em).getId();
                     return new BaseJobResponse(mc.getId(), jobId);
                 } catch (Exception e) {
                     // If we experience any failure, unlock MC.

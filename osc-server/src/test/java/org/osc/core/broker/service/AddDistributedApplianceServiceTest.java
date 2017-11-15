@@ -75,7 +75,7 @@ public class AddDistributedApplianceServiceTest {
     private DistributedApplianceDtoValidator validatorMock;
 
     @Mock
-    private ConformService conformServiceMock;
+    private DistributedApplianceConformJobFactory daConformJobFactoryMock;
 
     @Mock
     private UserContextApi userContext;
@@ -212,7 +212,7 @@ public class AddDistributedApplianceServiceTest {
         // Arrange.
         Long jobId = new Long(1234L);
 
-        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.daDto.getName())))).thenReturn(jobId);
+        Mockito.when(this.daConformJobFactoryMock.startDAConformJob(Mockito.any(EntityManager.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.daDto.getName())))).thenReturn(jobId);
 
         // Act.
         AddDistributedApplianceResponse response = this.service.dispatch(this.request);

@@ -19,7 +19,7 @@ package org.osc.core.broker.service.mc;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -34,7 +34,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
         implements SyncManagerConnectorServiceApi {
 
     @Reference
-    private ConformService conformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
@@ -42,7 +42,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getId());
         validate(request, mc);
-        Long jobId = this.conformService.startMCConformJob(mc, em).getId();
+        Long jobId = this.mcConformJobFactory.startMCConformJob(mc, em).getId();
         return new BaseJobResponse(mc.getId(), jobId);
     }
 

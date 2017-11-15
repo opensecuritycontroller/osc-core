@@ -28,8 +28,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -42,10 +42,10 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Component
 public class UpdateSecurityGroupService
 extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
@@ -55,7 +55,7 @@ implements UpdateSecurityGroupServiceApi {
 
     // this @Ref is used by sub-type UpdateSecurityGroupPropertiesService
     @Reference
-    protected ConformService conformService;
+    protected SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Override
     public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception {
@@ -106,7 +106,7 @@ implements UpdateSecurityGroupServiceApi {
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                    Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
                     return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {

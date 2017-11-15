@@ -40,8 +40,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -80,7 +80,7 @@ public class AddVirtualizationConnectorServiceTest {
     private AddVirtualizationConnectorServiceRequestValidator validatorMock;
 
     @Mock
-    private ConformService conformService;
+    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Mock
     private UserContextApi userContext;
@@ -123,7 +123,7 @@ public class AddVirtualizationConnectorServiceTest {
 
         when(this.job.getId()).thenReturn(5L);
         //PowerMockito.mockStatic(ConformService.class);
-        when(this.conformService.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
+        when(this.vcConformJobFactory.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
     }
 
     @After

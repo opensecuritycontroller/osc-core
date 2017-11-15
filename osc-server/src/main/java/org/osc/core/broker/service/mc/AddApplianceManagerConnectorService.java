@@ -28,8 +28,8 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -49,10 +49,10 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component exposes both the API and the implementation so that the
@@ -71,7 +71,7 @@ implements AddApplianceManagerConnectorServiceApi {
     private ApiFactoryService apiFactoryService;
 
     @Reference
-    private ConformService conformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private EncryptionApi encryption;
@@ -104,7 +104,7 @@ implements AddApplianceManagerConnectorServiceApi {
         // Commit the changes early so that the entity is available for the job engine
         chain(() -> {
             UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
-            Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
+            Job job = this.mcConformJobFactory.startMCConformJob(mc, mcUnlock, em);
             return new BaseJobResponse(mc.getId(), job.getId());
         });
 

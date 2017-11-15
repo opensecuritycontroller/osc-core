@@ -38,7 +38,7 @@ extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobRespons
 implements SyncDeploymentSpecServiceApi {
 
     @Reference
-    private ConformService conformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     private DeploymentSpec ds;
 
@@ -57,7 +57,7 @@ implements SyncDeploymentSpecServiceApi {
 
             // Lock the DS with a write lock and allow it to be unlocked at the end of the job
             unlockTask.addUnlockTask(LockUtil.tryLockDSOnly(this.ds));
-            Job job = this.conformService.startDsConformanceJob(em, this.ds, unlockTask);
+            Job job = this.dsConformJobFactory.startDsConformanceJob(em, this.ds, unlockTask);
 
             response.setJobId(job.getId());
 

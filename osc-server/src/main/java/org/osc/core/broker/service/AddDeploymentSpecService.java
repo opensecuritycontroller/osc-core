@@ -48,7 +48,7 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
 implements AddDeploymentSpecServiceApi {
 
     @Reference
-    private ConformService conformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
@@ -75,7 +75,7 @@ implements AddDeploymentSpecServiceApi {
                 try {
                     forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
 
-                    Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
+                    Job job = this.dsConformJobFactory.startDsConformanceJob(em, ds, forLambda);
 
                     return new BaseJobResponse(ds.getId(), job.getId());
                 } catch (Exception e) {

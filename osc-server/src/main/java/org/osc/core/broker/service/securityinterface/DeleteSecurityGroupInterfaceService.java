@@ -20,7 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -29,10 +29,10 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
@@ -42,7 +42,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
     private SecurityGroupInterface sgi = null;
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -53,7 +53,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
         OSCEntityManager.delete(em, this.sgi, this.txBroadcastUtil);
 
         chain(() -> {
-            Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
+            Long jobId = this.daConformJobFactory.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
 
             BaseJobResponse response = new BaseJobResponse(this.sgi.getId());
             response.setJobId(jobId);

@@ -23,7 +23,8 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -41,7 +42,10 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 public class NotificationListenerFactory {
 
     @Reference
-    private ConformService conformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
+
+    @Reference
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Reference
     private AlertGenerator alertGenerator;
@@ -73,20 +77,20 @@ public class NotificationListenerFactory {
 
         switch (objectType) {
         case PORT:
-            return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+            return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.sgConformJobFactory,
                     this.alertGenerator, this.activeRunner, this.dbMgr);
         case VM:
-            return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner, this.dbMgr);
+            return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.dsConformJobFactory,
+                    this.sgConformJobFactory, this.alertGenerator, this.activeRunner, this.dbMgr);
         case HOST_AGGREGRATE:
-            return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+            return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.dsConformJobFactory,
                     this.alertGenerator, this.activeRunner, this.dbMgr.getTransactionControl());
         case PROJECT:
-            return new OsProjectNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner, this.dbMgr);
+            return new OsProjectNotificationListener(vc, objectType, objectIdList, entity, this.dsConformJobFactory,
+                    this.sgConformJobFactory, this.alertGenerator, this.activeRunner, this.dbMgr);
         case NETWORK:
-            return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner, this.dbMgr.getTransactionControl());
+            return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.dsConformJobFactory,
+                    this.sgConformJobFactory, this.alertGenerator, this.activeRunner, this.dbMgr.getTransactionControl());
         default:
             break;
         }

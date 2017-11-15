@@ -38,15 +38,15 @@ import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.service.validator.RequestValidator;
-import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component exposes both the API and the implementation so that the
- * {@link ConformService} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
+ * {@link DistributedApplianceConformJobFactory} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
  * method.
  */
 @Component(service = { DeleteDistributedApplianceServiceApi.class, DeleteDistributedApplianceService.class })

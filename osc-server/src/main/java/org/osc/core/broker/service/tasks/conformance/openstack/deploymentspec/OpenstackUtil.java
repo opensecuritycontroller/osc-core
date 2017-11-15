@@ -51,7 +51,7 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.HostAvailabilityZoneMapping;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -59,10 +59,10 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.StaticRegistry;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpenstackUtil {
 
@@ -386,7 +386,7 @@ public class OpenstackUtil {
      *             end of the current job.
      */
     public static void scheduleSecurityGroupJobsRelatedToDai(EntityManager em, DistributedApplianceInstance dai,
-                                                             Task task, ConformService conformService) {
+                                                             Task task, SecurityGroupConformJobFactory sgConformJobFactory) {
         // Check if existing SG members
         Set<SecurityGroup> sgs = SecurityGroupEntityMgr.listByDai(em, dai);
 
@@ -394,7 +394,7 @@ public class OpenstackUtil {
             Job job = JobEngine.getEngine().getJobByTask(task);
             for (SecurityGroup sg : sgs) {
                 LOG.info("Scheduling SG job for sg: " + sg + " on behalf of DAI: " + dai);
-                job.addListener(new StartSecurityGroupJobListener(sg, conformService));
+                job.addListener(new StartSecurityGroupJobListener(sg, sgConformJobFactory));
             }
         }
     }
@@ -403,17 +403,17 @@ public class OpenstackUtil {
         private final Logger log = LoggerFactory.getLogger(StartSecurityGroupJobListener.class);
 
         private final SecurityGroup sg;
-        private final ConformService conformService;
+        private final SecurityGroupConformJobFactory sgConformJobFactory;
 
-        private StartSecurityGroupJobListener(SecurityGroup sg, ConformService conformService) {
+        private StartSecurityGroupJobListener(SecurityGroup sg, SecurityGroupConformJobFactory sgConformJobFactory) {
             this.sg = sg;
-            this.conformService = conformService;
+            this.sgConformJobFactory = sgConformJobFactory;
         }
 
         @Override
         public void completed(Job job) {
             try {
-                this.conformService.startSecurityGroupConformanceJob(this.sg);
+                this.sgConformJobFactory.startSecurityGroupConformanceJob(this.sg);
             } catch (Exception e) {
                 StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, new LockObjectReference(
                         this.sg), "Failed to submit a dependent Security Group sync job " + e.getMessage());
