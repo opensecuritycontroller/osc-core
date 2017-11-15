@@ -46,7 +46,7 @@ import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
 public interface ApiFactoryService {
-    String PLUGINS_DIRECTORY = "plugins";
+    String PLUGINS_DIRECTORY = "data/plugins";
 
     ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception;
 

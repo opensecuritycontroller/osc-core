@@ -48,7 +48,7 @@ hk2:\
 -runproperties: \
     org.osgi.framework.bootdelegation=sun.*,\
     org.apache.felix.http.enable=false,\
-    felix.fileinstall.dir='./config,./plugins', \
+    felix.fileinstall.dir='./config,./data/plugins', \
     logback.configurationFile=./logback.xml
 
 -runsystempackages:\

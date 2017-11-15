@@ -26,9 +26,9 @@
     <layout class="ch.qos.logback.classic.PatternLayout">
       <Pattern>%d [%-5p| %t| %c{1}]: %m%n</Pattern>
     </layout>
-    <file>./log/securityBroker.log</file>
+    <file>./data/log/securityBroker.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>./log/securityBroker.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>./data/log/securityBroker.%d{yyyy-MM-dd}.log</fileNamePattern>
       <maxHistory>10</maxHistory> 
       <totalSizeCap>100MB</totalSizeCap>
     </rollingPolicy>

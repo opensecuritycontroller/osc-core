@@ -55,7 +55,7 @@ upgrade_java() {
 upgrade_keystore() {
     old_keystore=$my_root/opt/vmidc/bin/vmidcKeyStore.jks
     old_truststore=$my_root/opt/vmidc/bin/vmidctruststore.jks
-    new_truststore=$my_root/opt/vmidc/bin/osctrustore.jks
+    new_truststore=$my_root/opt/vmidc/bin/data/osctrustore.jks
     keytool=$my_root/opt/vmidc/jre/bin/keytool
 
     if [ ! -f "$new_truststore" ]; then
