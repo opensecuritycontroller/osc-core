@@ -180,34 +180,28 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private Set<String> getHostsFromHostAggregateSelection(EntityManager em, Openstack4JNova novaApi,
                                                            Set<HostAggregate> dsHostAggr) throws IOException {
         Set<String> hostsToDeployTo = new HashSet<>();
-        Set<HostAggregate> dsHostAggrSet = new HashSet<>(dsHostAggr);
-        Iterator<HostAggregate> dsHostAggrIter = dsHostAggrSet.iterator();
-        while (dsHostAggrIter.hasNext()) {
-            HostAggregate dsHostAggrInstance = dsHostAggrIter.next();
-            org.openstack4j.model.compute.HostAggregate osHostAggr = novaApi.getHostAggregateById(this.ds.getRegion(),
-                    dsHostAggrInstance.getOpenstackId());
+		for (HostAggregate hostAggr : dsHostAggr) {
+			org.openstack4j.model.compute.HostAggregate osHostAggr = novaApi.getHostAggregateById(this.ds.getRegion(),
+					hostAggr.getOpenstackId());
 
-            if (osHostAggr != null) {
-                hostsToDeployTo.addAll(osHostAggr.getHosts());
-                // Pigiback to update Host Aggr name in case it changed
-                if (!osHostAggr.getName().equals(dsHostAggrInstance.getName())) {
-                    dsHostAggrInstance.setName(osHostAggr.getName());
-                    OSCEntityManager.update(em, dsHostAggrInstance, this.txBroadcastUtil);
-                }
-            } else {
-                // Host aggr has been deleted, delete the host aggr from ds
+			if (osHostAggr != null) {
+				hostsToDeployTo.addAll(osHostAggr.getHosts());
+				// Pigiback to update Host Aggr name in case it changed
+				if (!osHostAggr.getName().equals(hostAggr.getName())) {
+					hostAggr.setName(osHostAggr.getName());
+					OSCEntityManager.update(em, hostAggr, this.txBroadcastUtil);
+				}
+			} else {
+				// Host aggr has been deleted, fail the job with valid info
 				this.tg.addTask(new FailedWithObjectInfoTask(
-						String.format("Create SVA for Host Aggregate %s(%s) in Region '%s'",
-								dsHostAggrInstance.getName(), dsHostAggrInstance.getId(), this.ds.getRegion()),
+						String.format("Create SVA for Host Aggregate %s(%s) in Region '%s'", hostAggr.getName(),
+								hostAggr.getId(), this.ds.getRegion()),
 						String.format(
 								"Host Aggregate %s(%s) has been deleted from openstack or invalid. Deleting from DS.",
-								dsHostAggrInstance.getName(), dsHostAggrInstance.getId()),
+								hostAggr.getName(), hostAggr.getId()),
 						LockObjectReference.getObjectReferences(this.ds)));
-                OSCEntityManager.delete(em, dsHostAggrInstance, this.txBroadcastUtil);
-                dsHostAggr.remove(dsHostAggrInstance);
-                OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
-            }
-        }
+			}
+		}
 
         return hostsToDeployTo;
     }
