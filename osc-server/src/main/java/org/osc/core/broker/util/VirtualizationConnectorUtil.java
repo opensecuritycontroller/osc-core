@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_HTTPS;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,6 +60,8 @@ public class VirtualizationConnectorUtil {
     private X509TrustManagerFactory managerFactory = null;
 
     private KubernetesStatusApi k8sStatusApi = null;
+
+    private Openstack4jKeystone keystoneApi = null;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -178,12 +180,18 @@ public class VirtualizationConnectorUtil {
                 VirtualizationConnectorDto vcDto = request.getDto();
                 boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(), vcDto.getAdminProjectName(),
-                        vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
+                Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(),
+                        vcDto.getAdminProjectName(), vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
                         SslContextProvider.getInstance().getSSLContext());
 
-                try (Openstack4jKeystone keystoneAPi = new Openstack4jKeystone(endPoint)) {
-                    keystoneAPi.listProjects();
+                if (this.keystoneApi == null) {
+                    this.keystoneApi = new Openstack4jKeystone(endPoint);
+                }
+
+                try {
+                    this.keystoneApi.listProjects();
+                } finally {
+                    this.keystoneApi.close();
                 }
             } catch (Exception exception) {
                 errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);

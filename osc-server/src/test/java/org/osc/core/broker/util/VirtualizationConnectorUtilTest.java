@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
-import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_HTTPS;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,6 +73,9 @@ public class VirtualizationConnectorUtilTest {
 
     @Mock
     private KubernetesStatusApi k8sStatusApi;
+
+    @Mock
+    private Openstack4jKeystone keystoneApi;
 
     @Mock
     private SslContextProvider contextProvider;
@@ -266,6 +269,7 @@ public class VirtualizationConnectorUtilTest {
         DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
         request.getDto().getProviderAttributes().putIfAbsent(ATTRIBUTE_KEY_HTTPS, "true");
+        when(this.keystoneApi.listProjects()).thenThrow(new RuntimeException());
 
         // Act.
         this.util.checkConnection(spyRequest, vc);
@@ -278,7 +282,6 @@ public class VirtualizationConnectorUtilTest {
     @Test
     public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsSuccess_ReturnsSuccessful() throws Exception {
         // Arrange.
-        this.exception.expect(ErrorTypeException.class);
         DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
         List<ErrorType> errorList = new ArrayList<>();
@@ -287,8 +290,7 @@ public class VirtualizationConnectorUtilTest {
         request.addErrorsToIgnore(errorList);
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-        Openstack4jKeystone cloudKeyStone = mock(Openstack4jKeystone.class);
-        when(cloudKeyStone.listProjects()).thenReturn(null);
+        when(this.keystoneApi.listProjects()).thenReturn(null);
         request.getDto().getProviderAttributes().putIfAbsent(ATTRIBUTE_KEY_HTTPS, "true");
         DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
@@ -298,7 +300,7 @@ public class VirtualizationConnectorUtilTest {
         // Assert.
         verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
         verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
-        verify(cloudKeyStone, times(1)).listProjects();
+        verify(this.keystoneApi, times(1)).listProjects();
     }
 
     @Test
