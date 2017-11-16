@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -36,6 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
+import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -138,11 +140,11 @@ public class DSUpdateOrDeleteMetaTaskTestData {
                     "DELETE_DAINAME");
 
     private static DeploymentSpec createAllHostsInRegionData(String dsName, String region) {
-        return createDeploymentSpec(dsName, region);
+        return createDeploymentSpec(1L, dsName, region);
     }
 
     private static DeploymentSpec createDsWithDaiAndHostSelectedData(String dsName, String region, String daiHostName, String selectedHostName, String daiName) {
-        DeploymentSpec ds = createDeploymentSpec(dsName, region);
+        DeploymentSpec ds = createDeploymentSpec(1L, dsName, region);
         DistributedApplianceInstance dai = new DistributedApplianceInstance(ds.getVirtualSystem());
         dai.setDeploymentSpec(ds);
         dai.setOsHostName(daiHostName);
@@ -188,7 +190,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     }
 
     private static DeploymentSpec createDsWithAvailabilityZoneSelectedData(String dsName, String region, String daiHostName, String daiName, String selectedAzName, List<DistributedApplianceInstance> dais) {
-        DeploymentSpec ds = createDeploymentSpec(dsName, region);
+        DeploymentSpec ds = createDeploymentSpec(1L, dsName, region);
 
         AvailabilityZone az = new AvailabilityZone(ds, region, selectedAzName);
         ds.setAvailabilityZones(new HashSet<>(Arrays.asList(az)));
@@ -207,7 +209,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     }
 
     private static DeploymentSpec createDsWithHostAggregateSelectedData(String dsName, String region, String hostAggregateOSId) {
-        DeploymentSpec ds = createDeploymentSpec(dsName, region);
+        DeploymentSpec ds = createDeploymentSpec(1L, dsName, region);
 
         HostAggregate ha = new HostAggregate(ds, hostAggregateOSId);
         ha.setName(dsName + "_ha");
@@ -274,6 +276,13 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static TaskGraph createDAIHostAggregateNotSelectedGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
+		expectedGraph.addTask(new FailedWithObjectInfoTask(
+				String.format("Create SVA for Host Aggregate %s(%s) in Region '%s'", ds.getHostAggregates().iterator()
+						.next().getName(), ds.getHostAggregates().iterator().next().getId(), ds.getRegion()),
+				String.format("Host Aggregate %s(%s) has been deleted from openstack or invalid. Deleting from DS.",
+						ds.getHostAggregates().iterator().next().getName(),
+						ds.getHostAggregates().iterator().next().getId()),
+				LockObjectReference.getObjectReferences(ds)));
         expectedGraph.addTask(new DeleteSvaServerAndDAIMetaTask().create(ds.getRegion(),
                 ds.getDistributedApplianceInstances().iterator().next()));
         return expectedGraph;
@@ -299,6 +308,12 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         Task firstCreateTask = new OsDAIConformanceCheckMetaTask().create(UPDATE_OPENSTACK_AZ_NOT_SELECTED_DAIS.iterator().next(), false);
         expectedGraph.addTask(firstCreateTask);
+		expectedGraph.addTask(new FailedWithObjectInfoTask(
+				String.format("Create SVA for Availability Zone '%s' in Region '%s'",
+						ds.getAvailabilityZones().iterator().next().getZone(), ds.getRegion()),
+				String.format("Availability Zone '%s' is not available",
+						ds.getAvailabilityZones().iterator().next().getZone()),
+				LockObjectReference.getObjectReferences(ds)));
         expectedGraph.addTask(new DeleteSvaServerAndDAIMetaTask().create(ds.getRegion(), UPDATE_OPENSTACK_AZ_NOT_SELECTED_DAIS.iterator().next()),
                 firstCreateTask);
         return expectedGraph;
@@ -315,7 +330,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         return expectedGraph;
     }
 
-    private static DeploymentSpec createDeploymentSpec(String baseName, String region) {
+    private static DeploymentSpec createDeploymentSpec(Long dsId, String baseName, String region) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
         vc.setVirtualizationType(VirtualizationType.OPENSTACK);
@@ -359,6 +374,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
         DeploymentSpec ds = new DeploymentSpec(vs, region, baseName + "_projectId",
                 baseName + "_mnId",baseName + "_inId", null);
+        ds.setId(dsId);
         ds.setName(baseName + "_ds");
         ds.setProjectName(baseName + "_projectName");
         ds.setManagementNetworkName(baseName + "_mnName");
