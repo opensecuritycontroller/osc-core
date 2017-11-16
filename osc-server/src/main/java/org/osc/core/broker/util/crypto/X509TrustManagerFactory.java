@@ -61,16 +61,16 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private static final Logger LOG = LoggerFactory.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
-    // vmidctruststore stores public certificates needed to establish SSL connection
+    // osctrustore stores public certificates needed to establish SSL connection
+    // osctrustore also stores private certificate used by application to enable
+    // HTTPS - it's also used to establish connection internally
     public static final String TRUSTSTORE_FILE = "osctrustore.jks";
     // key entry to properties file that contains password
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
-    // vmidckeystore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String INTERNAL_KEYSTORE_PASSWORD_ENTRY = "internal.keystore.password";
-    private static final String INTERNAL_KEYSTORE_FILE = "osctrustore.jks";
-    private static final String INTERNAL_KEYSTORE_ALIAS = "vmidckeystore";
+    private static final String INTERNAL_KEY_ALIAS = "vmidckeystore";
 
     private static volatile X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
@@ -198,14 +198,14 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private X509Certificate loadInternalCertificate() throws Exception {
         KeyStore keystoreInternal = KeyStore.getInstance(KEYSTORE_TYPE);
         LOG.debug("Opening internal keystore file....");
-        try (InputStream inputStream = new FileInputStream(INTERNAL_KEYSTORE_FILE)) {
+        try (InputStream inputStream = new FileInputStream(TRUSTSTORE_FILE)) {
             keystoreInternal.load(inputStream, getInternalKeystorePassword());
         } catch (FileNotFoundException e) {
             throw new Exception("Failed to load internal keystore", e);
         } catch (CertificateException e) {
             throw new Exception("Failed to load certificate from internal keystore", e);
         }
-        return (X509Certificate) keystoreInternal.getCertificate(INTERNAL_KEYSTORE_ALIAS);
+        return (X509Certificate) keystoreInternal.getCertificate(INTERNAL_KEY_ALIAS);
     }
 
     @Override
