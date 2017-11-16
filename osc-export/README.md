@@ -13,11 +13,3 @@ Locally debugging the server is easier using `server-debug.bndrun`.
 
 ### Dependencies
 This project will list all dependencies needed to create an executable JAR of OSC.
-
-### Merging the two old truststores
-The merging was performed with the following command:
-
- `keytool -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore vmidcKeyStore.jks -destkeystore osctrustore.jks`
-
- For additional info, see [keytool documentation](https://docs.oracle.com/javase/6/docs/technotes/tools/windows/keytool.html),
- particularly the section on **Importing Keystore**. 
