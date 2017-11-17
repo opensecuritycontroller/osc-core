@@ -59,7 +59,8 @@ upgrade_keystore() {
     
     if [ ! -f "$new_truststore" ]; then
     cp $old_truststore $new_truststore
-    keytool -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore $old_keystore -destkeystore $new_truststore -srcstorepass=abc12345 -deststorepass=abc12345
+    keytool -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore $old_keystore -destkeystore $new_truststore -srcstorepass abc12345 -deststorepass abc12345 -noprompt
+    keytool -changealias -alias vmidckeystore -destalias internal -keystore $new_truststore -v -storepass abc12345 -noprompt
     fi
 }
 

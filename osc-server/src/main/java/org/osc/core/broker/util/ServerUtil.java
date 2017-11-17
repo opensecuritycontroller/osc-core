@@ -45,7 +45,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.osc.core.broker.rest.client.RestBaseClient;
 import org.osc.core.broker.util.VersionUtil.Version;
-import org.osc.core.broker.util.crypto.X509TrustStoreUpgradeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -530,8 +529,6 @@ public class ServerUtil {
             if (status != 0) {
                 throw new Exception("Upgrade script failed. exit=" + status);
             }
-
-            X509TrustStoreUpgradeUtil.upgradeTrustStore();
 
             log.info("Upgrade (pid:" + currentPid + "): Start new vmidc server.");
             boolean successStarted = startServerProcess(2000, null, true);
