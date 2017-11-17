@@ -69,6 +69,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
+    // osctrustore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String INTERNAL_KEYSTORE_PASSWORD_ENTRY = "internal.keystore.password";
     private static final String INTERNAL_KEY_ALIAS = "vmidckeystore";
 
