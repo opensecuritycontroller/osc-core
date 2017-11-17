@@ -18,7 +18,9 @@ package org.osc.core.broker.service.vc;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -27,6 +29,7 @@ import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osgi.service.component.annotations.Component;
 
 @Component
@@ -40,9 +43,16 @@ public class DeleteVirtualizationConnectorService extends ServiceDispatcher<Base
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getId());
 
-        SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
-        sslCertificateAttrEntityMgr.removeCertificateList(vc.getSslCertificateAttrSet());
-        vcEntityMgr.delete(request.getId());
+        UnlockObjectMetaTask vcUnlock = null;
+		try {
+			vcUnlock = LockUtil.tryLockVC(vc, LockType.WRITE_LOCK);
+
+			SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
+			sslCertificateAttrEntityMgr.removeCertificateList(vc.getSslCertificateAttrSet());
+			vcEntityMgr.delete(request.getId());
+		} finally {
+			LockUtil.releaseLocks(vcUnlock);
+		}
 
         return new EmptySuccessResponse();
     }
