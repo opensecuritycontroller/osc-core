@@ -496,7 +496,13 @@
 										<exclude name="opt/vmidc/bin/libts-jni.so" />
 										<exclude name="opt/vmidc/bin/quartz.properties" />
 										<exclude name="opt/vmidc/bin/vmidcServer.conf" />
-										<exclude name="opt/vmidc/bin/osctrustore.jks" />
+
+                                        <!-- We might be upgrading from the revision --> 
+                                        <!-- before or after the truststore merge -->
+                                        <exclude name="opt/vmidc/bin/osctrustore.jks" />
+                                        <exclude name="opt/vmidc/bin/vmidcKeyStore.jks" />
+                                        <exclude name="opt/vmidc/bin/vmidctruststore.jks" />
+
 										<exclude name="opt/vmidc/bin/*.iml" />
 										<exclude name="opt/vmidc/bin/*.bnd" />
 										<exclude name="opt/vmidc/bin/*.backup" />
