@@ -24,5 +24,4 @@
 <!--- Go over all the following points, and put an `x` in all the boxes that apply like this: [X] -->
 <!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 - [ ] My code follows the [Code style guidelines](https://github.com/opensecuritycontroller/community/blob/master/development/eclipse.md) of this project
-- [ ] I have added tests to cover my change
-- [ ] All new and existing tests passed
+- [ ] Unit test coverage percentage is maintained(increased/remains the same but not decreased)
