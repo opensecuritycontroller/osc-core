@@ -480,7 +480,6 @@
 								</unjar>
 								<copy todir="${basedir}/../osc-server-bom/root/opt/vmidc/bin">
 									<fileset dir="${basedir}">
-										<include name="vmidcKeyStore.jks" />
 										<include name="config/**" />
 										<include name="plugins/**" />
 										<include name="webapp/**" />
@@ -496,12 +495,11 @@
 										<exclude name="opt/vmidc/bin/libts-jni.so" />
 										<exclude name="opt/vmidc/bin/quartz.properties" />
 										<exclude name="opt/vmidc/bin/vmidcServer.conf" />
-										<exclude name="opt/vmidc/bin/vmidcKeyStore.jks" />
+                                        <exclude name="opt/vmidc/bin/osctrustore.jks" />
 										<exclude name="opt/vmidc/bin/*.iml" />
 										<exclude name="opt/vmidc/bin/*.bnd" />
 										<exclude name="opt/vmidc/bin/*.backup" />
 										<exclude name="opt/vmidc/bin/mainKeyStore.p12" />
-										<exclude name="opt/vmidc/bin/vmidctruststore.jks" />
 										<exclude name="opt/vmidc/bin/server.pid" />
 										<exclude name="opt/vmidc/bin/vmiDCDB.*" />
 									</fileset>

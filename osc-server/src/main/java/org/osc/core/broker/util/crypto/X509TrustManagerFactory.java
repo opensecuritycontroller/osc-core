@@ -48,29 +48,28 @@ import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service = X509TrustManagerApi.class, immediate=true)
 public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
-    // vmidctruststore stores public certificates needed to establish SSL connection
-    public static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
+    // osctrustore stores public certificates needed to establish SSL connection
+    // osctrustore also stores private certificate used by application to enable
+    // HTTPS - it's also used to establish connection internally
+    public static final String TRUSTSTORE_FILE = "osctrustore.jks";
     // key entry to properties file that contains password
+    // osctrustore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
-    // vmidckeystore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
-    private static final String INTERNAL_KEYSTORE_PASSWORD_ENTRY = "internal.keystore.password";
-    private static final String INTERNAL_KEYSTORE_FILE = "vmidcKeyStore.jks";
-    private static final String INTERNAL_KEYSTORE_ALIAS = "vmidckeystore";
 
     private static volatile X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
@@ -179,8 +178,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             throw new Exception("Failed to load certificate from trust store", e);
         }
 
-        this.keyStore.setCertificateEntry("internal", loadInternalCertificate());
-
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
         trustManagerFactory.init(this.keyStore);
 
@@ -193,19 +190,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
         throw new NoSuchAlgorithmException("No X509TrustManager in TrustManagerFactory");
 
-    }
-
-    private X509Certificate loadInternalCertificate() throws Exception {
-        KeyStore keystoreInternal = KeyStore.getInstance(KEYSTORE_TYPE);
-        LOG.debug("Opening internal keystore file....");
-        try (InputStream inputStream = new FileInputStream(INTERNAL_KEYSTORE_FILE)) {
-            keystoreInternal.load(inputStream, getInternalKeystorePassword());
-        } catch (FileNotFoundException e) {
-            throw new Exception("Failed to load internal keystore", e);
-        } catch (CertificateException e) {
-            throw new Exception("Failed to load certificate from internal keystore", e);
-        }
-        return (X509Certificate) keystoreInternal.getCertificate(INTERNAL_KEYSTORE_ALIAS);
     }
 
     @Override
@@ -237,11 +221,13 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     @Override
     public void addEntry(File file) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        try (FileInputStream inputStream = new FileInputStream(file);
-                FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
-            X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
-            String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
-            this.keyStore.setCertificateEntry(newAlias, certificate);
+        String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
+        X509Certificate certificate;
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            certificate = (X509Certificate) cf.generateCertificate(inputStream);
+        }
+        this.keyStore.setCertificateEntry(newAlias, certificate);
+        try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             this.keyStore.store(outputStream, getTruststorePassword());
         }
         reloadTrustManager();
@@ -330,10 +316,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         // password to keystore to retrieve truststore manager password
         String passwordPassword = getSecurityProperty(TRUSTSTORE_PASSWORD_ENTRY_KEY);
         return KeyStoreProvider.getInstance().getPassword(TRUSTSTORE_PASSWORD_ALIAS,passwordPassword).toCharArray();
-    }
-
-    private char[] getInternalKeystorePassword() throws Exception {
-        return getSecurityProperty(INTERNAL_KEYSTORE_PASSWORD_ENTRY).toCharArray();
     }
 
     private String getSecurityProperty(String entryKey) throws Exception {
