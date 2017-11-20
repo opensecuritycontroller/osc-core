@@ -31,25 +31,21 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.job.JobRecord;
-import org.osc.core.broker.model.entities.job.LastJobContainer;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
-public class VirtualizationConnector extends BaseEntity implements LastJobContainer {
+public class VirtualizationConnector extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -85,13 +81,13 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     private String controllerType = NO_CONTROLLER_TYPE;
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY)
-    private Set<VirtualSystem> virtualSystems = new HashSet<VirtualSystem>();
+    private Set<VirtualSystem> virtualSystems = new HashSet<>();
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<SecurityGroup> securityGroups = new HashSet<SecurityGroup>();
+    private Set<SecurityGroup> securityGroups = new HashSet<>();
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<ServiceFunctionChain> serviceFunctionChains = new HashSet<ServiceFunctionChain>();
+    private Set<ServiceFunctionChain> serviceFunctionChains = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "key")
@@ -104,10 +100,6 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
     inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_VC_LAST_JOB"))
-    private JobRecord lastJob;
 
     @Column(name = "admin_project_name")
     private String adminProjectName;
@@ -141,7 +133,6 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
         this.providerAttributes = originalVc.providerAttributes;
         this.adminProjectName = originalVc.adminProjectName;
         this.adminDomainId = originalVc.adminDomainId;
-        this.lastJob = originalVc.lastJob;
     }
 
     public String getName() {
@@ -289,15 +280,5 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     public String getRabbitMQIP() {
         String rabbitMQIP = getProviderAttributes() != null ? getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_IP) : null;
         return rabbitMQIP == null || rabbitMQIP.isEmpty() ? getProviderIpAddress() : rabbitMQIP;
-    }
-
-    @Override
-    public JobRecord getLastJob() {
-        return this.lastJob;
-    }
-
-    @Override
-    public void setLastJob(JobRecord lastJob) {
-        this.lastJob = lastJob;
     }
 }

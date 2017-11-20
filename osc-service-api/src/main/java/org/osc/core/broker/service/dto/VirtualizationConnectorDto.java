@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.NO_CONTROLLER_TYPE;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -82,15 +83,6 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     private Set<SslCertificateAttrDto> sslCertificateAttrSet = new HashSet<>();
-
-    @ApiModelProperty(readOnly = true)
-    private String lastJobState;
-
-    @ApiModelProperty(readOnly = true)
-    private String lastJobStatus;
-
-    @ApiModelProperty(readOnly = true)
-    private Long lastJobId;
 
     /**
      * Gets the controller type
@@ -191,30 +183,6 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttrDto> sslCertificateAttrSet) {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
-    }
-
-    public String getLastJobStatus() {
-        return this.lastJobStatus;
-    }
-
-    public Long getLastJobId() {
-        return this.lastJobId;
-    }
-
-    public void setLastJobId(Long lastJobId) {
-        this.lastJobId = lastJobId;
-    }
-
-    public void setLastJobStatus(String lastJobStatus) {
-        this.lastJobStatus = lastJobStatus;
-    }
-
-    public String getLastJobState() {
-        return this.lastJobState;
-    }
-
-    public void setLastJobState(String lastJobState) {
-        this.lastJobState = lastJobState;
     }
 
     public String getAdminProjectName() {

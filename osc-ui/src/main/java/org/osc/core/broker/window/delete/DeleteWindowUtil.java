@@ -44,8 +44,8 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.button.OkCancelForceDeleteModel;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -230,8 +230,7 @@ public class DeleteWindowUtil {
                 try {
                     delRequest.setId(dto.getId());
                     log.info("deleting Virtualization Connector - " + dto.getName());
-                    BaseJobResponse response = deleteVcService.dispatch(delRequest);
-                    ViewUtil.showJobNotification(response.getJobId(), server);
+                    deleteVcService.dispatch(delRequest);
                     deleteWindow.close();
                 } catch (Exception e) {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);

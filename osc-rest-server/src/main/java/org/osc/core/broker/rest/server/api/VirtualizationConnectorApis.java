@@ -75,6 +75,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.UpdateSecurityGroupMemberRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.BindSecurityGroupResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
@@ -212,7 +213,7 @@ public class VirtualizationConnectorApis {
             notes = "Creates a Virtualization Connector<br/>"
                     + "If we are unable to connect to the endpoint using the credentials provided, this call will fail.<br/>"
                     + "To skip validation of IP and credentials 'skipRemoteValidation' flag can be used.",
-                    response = BaseJobResponse.class)
+                    response = BaseResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @POST
@@ -238,7 +239,7 @@ public class VirtualizationConnectorApis {
                     + "For all other cases (current-type->NONE, current-type->new-type), there should not be any"
                     + "virtual systems using it.<br/> Password information is Optional for update requests as OSC will use "
                     + "the current password information.",
-                    response = BaseJobResponse.class)
+                    response = BaseResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}")
@@ -261,8 +262,7 @@ public class VirtualizationConnectorApis {
      * @return
      */
     @ApiOperation(value = "Deletes a Virtualization Connector",
-            notes = "Deletes a Virtualization Connector if not referenced by any Virtual Systems",
-            response = BaseJobResponse.class)
+            notes = "Deletes a Virtualization Connector if not referenced by any Virtual Systems")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}")

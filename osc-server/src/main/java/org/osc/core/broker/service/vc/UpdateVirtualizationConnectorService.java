@@ -34,7 +34,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -54,7 +53,7 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -70,7 +69,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateVirtualizationConnectorService
-extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
+extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseResponse>
 implements UpdateVirtualizationConnectorServiceApi {
 
     private static final Logger log = LoggerFactory.getLogger(UpdateVirtualizationConnectorService.class);
@@ -79,16 +78,13 @@ implements UpdateVirtualizationConnectorServiceApi {
     private VirtualizationConnectorUtil util;
 
     @Reference
-    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
-
-    @Reference
     private EncryptionApi encryption;
 
     @Reference
     private ApiFactoryService apiFactoryService;
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
+    public BaseResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
@@ -147,8 +143,7 @@ implements UpdateVirtualizationConnectorServiceApi {
             LockUtil.releaseLocks(vcUnlock);
         }
 
-        Long jobId = this.vcConformJobFactory.startVCSyncJob(vc, em).getId();
-        return new BaseJobResponse(vc.getId(), jobId);
+        return new BaseResponse(vc.getId());
     }
 
     private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(
