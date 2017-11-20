@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_HTTPS;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,6 +60,8 @@ public class VirtualizationConnectorUtil {
     private X509TrustManagerFactory managerFactory = null;
 
     private KubernetesStatusApi k8sStatusApi = null;
+
+    private Openstack4jKeystone keystoneApi = null;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -150,6 +152,9 @@ public class VirtualizationConnectorUtil {
                 if (!this.k8sStatusApi.isServiceReady()) {
                     errorTypeException = new ErrorTypeException("Kubernetes reported service NOT ready.", ErrorType.PROVIDER_EXCEPTION);
                 }
+            } finally {
+                // Reset status api for next call
+                this.k8sStatusApi = null;
             }
         }
 
@@ -178,17 +183,25 @@ public class VirtualizationConnectorUtil {
                 VirtualizationConnectorDto vcDto = request.getDto();
                 boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(), vcDto.getAdminProjectName(),
-                        vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
+                Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(),
+                        vcDto.getAdminProjectName(), vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
                         SslContextProvider.getInstance().getSSLContext());
 
-                try (Openstack4jKeystone keystoneAPi = new Openstack4jKeystone(endPoint)) {
-                    keystoneAPi.listProjects();
+                if (this.keystoneApi == null) {
+                    this.keystoneApi = new Openstack4jKeystone(endPoint);
                 }
+
+                this.keystoneApi.listProjects();
+
             } catch (Exception exception) {
                 errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                 LOG.warn(
                         "Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
+            } finally {
+                if (this.keystoneApi != null) {
+                    this.keystoneApi.close();
+                }
+                this.keystoneApi = null;
             }
         }
 
