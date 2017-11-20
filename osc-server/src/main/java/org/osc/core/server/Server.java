@@ -45,7 +45,6 @@ import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
 import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.SecurityGroupConformJobFactory;
-import org.osc.core.broker.service.VirtualizationConnectorConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -139,9 +138,6 @@ public class Server implements ServerApi {
 
     @Reference
     private SecurityGroupConformJobFactory sgConformJobFactory;
-
-    @Reference
-    private VirtualizationConnectorConformJobFactory vcConformJobFactory;
 
     @Reference
     private ManagerConnectorConformJobFactory mcConformJobFactory;
@@ -367,7 +363,6 @@ public class Server implements ServerApi {
         jobDataMap.put(DistributedApplianceConformJobFactory.class.getName(), this.daConformJobFactory);
         jobDataMap.put(DeploymentSpecConformJobFactory.class.getName(), this.dsConformJobFactory);
         jobDataMap.put(SecurityGroupConformJobFactory.class.getName(), this.sgConformJobFactory);
-        jobDataMap.put(VirtualizationConnectorConformJobFactory.class.getName(), this.vcConformJobFactory);
         jobDataMap.put(ManagerConnectorConformJobFactory.class.getName(), this.mcConformJobFactory);
 
 

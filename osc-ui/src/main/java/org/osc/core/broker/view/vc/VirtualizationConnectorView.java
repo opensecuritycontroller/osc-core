@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.NO_CONTROLLER_TYPE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +37,6 @@ import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
-import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
@@ -49,7 +48,6 @@ import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
@@ -120,9 +118,6 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private SyncSecurityGroupServiceApi syncSecurityGroupService;
 
     @Reference
-    private SyncVirtualizationConnectorServiceApi syncVirtualizationConnectorService;
-
-    @Reference
     private AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
 
     @Reference
@@ -155,7 +150,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Activate
     void activate() {
         createView("Virtualization Connectors",
-                Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE, ToolbarButtons.CONFORM_VC),
+                Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE),
                 "Security Groups",
                 Arrays.asList(ToolbarButtons.ADD_CHILD, ToolbarButtons.EDIT_CHILD, ToolbarButtons.DELETE_CHILD,
                         ToolbarButtons.CONFORM, ToolbarButtons.BIND_SECURITY_GROUP, ToolbarButtons.SECURITY_GROUP_MEMBERSHIP));
@@ -165,12 +160,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     public void initParentTable() {
         this.parentContainer = new BeanContainer<>(VirtualizationConnectorDto.class);
         this.parentTable.setContainerDataSource(this.parentContainer);
-        this.parentTable.setVisibleColumns("name", "type", "controllerIP", "providerIP", "lastJobStatus");
-
-        this.parentTable.addGeneratedColumn("lastJobStatus", (ColumnGenerator) (source, itemId, columnId) -> {
-            VirtualizationConnectorDto vcDto = VirtualizationConnectorView.this.parentContainer.getItem(itemId).getBean();
-            return ViewUtil.generateJobLink(vcDto.getLastJobStatus(), vcDto.getLastJobState(), vcDto.getLastJobId(), this.server);
-        });
+        this.parentTable.setVisibleColumns("name", "type", "controllerIP", "providerIP");
 
         this.parentTable.addGeneratedColumn("providerIP", (ColumnGenerator) (source, itemId, columnId) -> {
             VirtualizationConnectorDto vcDto = VirtualizationConnectorView.this.parentContainer.getItem(itemId).getBean();
@@ -183,7 +173,6 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         this.parentTable.setColumnHeader("type", "Type");
         this.parentTable.setColumnHeader("controllerIP", "Controller IP");
         this.parentTable.setColumnHeader("providerIP", "Provider IP");
-        this.parentTable.setColumnHeader("lastJobStatus", "Last Job Status");
     }
 
     @Override
@@ -210,7 +199,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Override
     public void initChildTable() {
-        this.childContainer = new BeanContainer<Long, SecurityGroupDto>(SecurityGroupDto.class);
+        this.childContainer = new BeanContainer<>(SecurityGroupDto.class);
         this.childTable.setContainerDataSource(this.childContainer);
         this.childTable.setVisibleColumns("name", "projectName", "memberDescription", "servicesDescription",
                 "markForDeletion", "lastJobStatus");
@@ -339,21 +328,6 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             conformSecurityGroup(getChildItemId(), getParentItemId());
         }
 
-        if (event.getButton().getId().equals(ToolbarButtons.CONFORM_VC.getId())) {
-            conformVirtualConnector(getParentItemId());
-        }
-    }
-
-    private void conformVirtualConnector(Long vcId) {
-        log.info("Syncing VC " + vcId.toString());
-        BaseJobRequest request = new BaseJobRequest(vcId);
-
-        try {
-            BaseJobResponse response = this.syncVirtualizationConnectorService.dispatch(request);
-            ViewUtil.showJobNotification(response.getJobId(), this.server);
-        } catch (Exception e) {
-            ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-        }
     }
 
     private void conformSecurityGroup(Long sgId, Long vcId) {
