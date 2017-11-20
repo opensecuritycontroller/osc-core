@@ -18,40 +18,43 @@ package org.osc.core.broker.service.vc;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.job.Job;
-import org.osc.core.broker.job.JobEngine;
-import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.VCDeleteMetaTask;
-import org.slf4j.LoggerFactory;
+import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.slf4j.Logger;
 
 @Component
-public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
+public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
     implements DeleteVirtualizationConnectorServiceApi {
 
-    private static final Logger log = LoggerFactory.getLogger(DeleteVirtualizationConnectorService.class);
-
-    @Reference
-    VCDeleteMetaTask deleteMetaTask;
-
     @Override
-    public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
+    public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
         validate(em, request);
 
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getId());
-        return new BaseJobResponse(startJob(vc));
+
+        UnlockObjectMetaTask vcUnlock = null;
+		try {
+			vcUnlock = LockUtil.tryLockVC(vc, LockType.WRITE_LOCK);
+
+			SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
+			sslCertificateAttrEntityMgr.removeCertificateList(vc.getSslCertificateAttrSet());
+			vcEntityMgr.delete(request.getId());
+		} finally {
+			LockUtil.releaseLocks(vcUnlock);
+		}
+
+        return new EmptySuccessResponse();
     }
 
     void validate(EntityManager em, BaseIdRequest request) throws Exception {
@@ -63,18 +66,6 @@ public class DeleteVirtualizationConnectorService extends ServiceDispatcher<Base
         }
 
         VirtualizationConnectorEntityMgr.validateCanBeDeleted(em, vc);
-    }
-
-    private Long startJob(VirtualizationConnector vc) throws Exception {
-
-        log.info("Start VC (id:" + vc.getId() + ") delete Job");
-
-        TaskGraph tg = new TaskGraph();
-
-        tg.addTask(this.deleteMetaTask.create(vc));
-        Job job = JobEngine.getEngine().submit("Delete Virtualization Connector '" + vc.getName() + "'", tg,
-                LockObjectReference.getObjectReferences(vc));
-        return job.getId();
     }
 
 }

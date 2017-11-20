@@ -23,7 +23,6 @@ public enum ToolbarButtons {
     EDIT("Edit", "Edit", "img/edit.png"),
     DELETE("Delete", "Delete", "img/delete.png"),
     CONFORM("Sync", "Sync", "img/conform.png"),
-    CONFORM_VC("Sync", "SyncVc", "img/conform.png"),
     JOB_VIEW("Job Graph", "Job_Graph", "img/job-graph.png"),
     JOB_ABORT("Abort", "Abort", "img/cancel.png"),
     APPLIANCE_STATUS("Appliance Status", "Appliance_Status", "img/status.png"),
