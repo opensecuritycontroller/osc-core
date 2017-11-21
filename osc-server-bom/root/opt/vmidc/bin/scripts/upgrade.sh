@@ -48,7 +48,7 @@ upgrade_java() {
     jre_tgz=$tmp_root/jre-8u112-linux-x64.tar.gz
     jre_dir=$my_root/opt/vmidc/jre
     if [ -f "$jre_tgz" ]; then
-    tar -xz --directory=$jre_dir -f $jre_tgz --strip 1
+	tar -xz --directory=$jre_dir -f $jre_tgz --strip 1
     fi
 }
 
@@ -56,12 +56,12 @@ upgrade_keystore() {
     old_keystore=$my_root/opt/vmidc/bin/vmidcKeyStore.jks
     old_truststore=$my_root/opt/vmidc/bin/vmidctruststore.jks
     new_truststore=$my_root/opt/vmidc/bin/osctrustore.jks
-    KEYTOOL=$my_root/opt/vmidc/jre/bin/keytool
-    
+    keytool=/opt/vmidc/jre/bin/keytool
+
     if [ ! -f "$new_truststore" ]; then
     cp $old_truststore $new_truststore
-    $KEYTOOL -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore $old_keystore -destkeystore $new_truststore -srcstorepass abc12345 -deststorepass abc12345 -noprompt
-    $KEYTOOL -changealias -alias vmidckeystore -destalias internal -keystore $new_truststore -v -storepass abc12345 -noprompt
+    $keytool -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore $old_keystore -destkeystore $new_truststore -srcstorepass abc12345 -deststorepass abc12345 -noprompt
+    $keytool -changealias -alias vmidckeystore -destalias internal -keystore $new_truststore -v -storepass abc12345 -noprompt
     fi
 }
 
