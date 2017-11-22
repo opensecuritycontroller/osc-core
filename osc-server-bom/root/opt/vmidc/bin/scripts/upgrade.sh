@@ -56,12 +56,12 @@ upgrade_keystore() {
     old_keystore=$my_root/opt/vmidc/bin/vmidcKeyStore.jks
     old_truststore=$my_root/opt/vmidc/bin/vmidctruststore.jks
     new_truststore=$my_root/opt/vmidc/bin/osctrustore.jks
-    KEYTOOL=$my_root/opt/vmidc/jre/bin/keytool
-    
+    keytool=$my_root/opt/vmidc/jre/bin/keytool
+
     if [ ! -f "$new_truststore" ]; then
     cp $old_truststore $new_truststore
-    $KEYTOOL -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore $old_keystore -destkeystore $new_truststore -srcstorepass abc12345 -deststorepass abc12345 -noprompt
-    $KEYTOOL -changealias -alias vmidckeystore -destalias internal -keystore $new_truststore -v -storepass abc12345 -noprompt
+    $keytool -importkeystore -srcstoretype JKS -deststoretype JKS -srckeystore $old_keystore -destkeystore $new_truststore -srcstorepass abc12345 -deststorepass abc12345 -noprompt
+    $keytool -changealias -alias vmidckeystore -destalias internal -keystore $new_truststore -v -storepass abc12345 -noprompt
     fi
 }
 
