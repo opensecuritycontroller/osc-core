@@ -67,7 +67,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     public static final String TRUSTSTORE_FILE = "osctrustore.jks";
     // key entry to properties file that contains password
     // osctrustore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
-    private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
+    private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "internal.keystore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
 
@@ -314,8 +314,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private char[] getTruststorePassword() throws Exception {
         // password to keystore to retrieve truststore manager password
-        String passwordPassword = getSecurityProperty(TRUSTSTORE_PASSWORD_ENTRY_KEY);
-        return KeyStoreProvider.getInstance().getPassword(TRUSTSTORE_PASSWORD_ALIAS,passwordPassword).toCharArray();
+        return getSecurityProperty(TRUSTSTORE_PASSWORD_ENTRY_KEY).toCharArray();
     }
 
     private String getSecurityProperty(String entryKey) throws Exception {
