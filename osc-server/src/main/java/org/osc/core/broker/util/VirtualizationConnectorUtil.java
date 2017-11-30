@@ -19,7 +19,6 @@ package org.osc.core.broker.util;
 import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_HTTPS;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -197,8 +196,10 @@ public class VirtualizationConnectorUtil {
                 this.keystoneApi.listProjects();
 
             } catch (Exception exception) {
-				if (exception instanceof ConnectionException || exception instanceof AuthenticationException) {
-					errorTypeException = new ErrorTypeException(new ConnectException(), ErrorType.PROVIDER_EXCEPTION);
+				if (exception instanceof ConnectionException) {
+					errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_CONNECT_EXCEPTION);
+				} else if (exception instanceof AuthenticationException) {
+					errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_AUTH_EXCEPTION);
 				} else {
 					errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
 				}
