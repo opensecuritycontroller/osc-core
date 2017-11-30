@@ -30,7 +30,7 @@ public interface X509TrustManagerApi {
 
     void addEntry(X509Certificate certificate, String newAlias) throws Exception;
 
-    void replaceInternalCertificate(File file) throws Exception;
+    void replaceInternalCertificate(File file, String alias, String certPass, String storePass) throws Exception;
 
     List<CertificateBasicInfoModel> getCertificateInfoList() throws Exception;
 

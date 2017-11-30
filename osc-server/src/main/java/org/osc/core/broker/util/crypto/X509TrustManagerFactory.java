@@ -73,6 +73,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
+    private static final String INTERNAL_ALIAS = "internal";
 
     private static volatile X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
@@ -246,6 +247,11 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     }
 
     public void setOrUpdateCertificate(X509Certificate certificate, String newAlias) throws Exception {
+
+        if (INTERNAL_ALIAS.equals(newAlias)) {
+            throw new Exception("Certificate alias " + INTERNAL_ALIAS + " is reserved! Change alias supplied or file name.");
+        }
+
         this.keyStore.setCertificateEntry(newAlias, certificate);
         try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             this.keyStore.store(outputStream, getTruststorePassword());
@@ -256,18 +262,18 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     }
 
     @Override
-    public void replaceInternalCertificate(File file) throws Exception {
+    public void replaceInternalCertificate(File file, String alias, String certPass, String storePass) throws Exception {
         KeyStore internalCertKeeper  = KeyStore.getInstance(KEYSTORE_TYPE);
 
         Certificate[] internalCertificateChain;
         Key internalKey;
 
         try (FileInputStream inputStream = new FileInputStream(file)) {
-            internalCertKeeper.load(inputStream, getTruststorePassword());
+            internalCertKeeper.load(inputStream, storePass.toCharArray());
             try {
-                 internalKey = internalCertKeeper.getKey("internal", getTruststorePassword());
-                 internalCertificateChain = internalCertKeeper.getCertificateChain("internal");
-                 this.keyStore.setKeyEntry("internal", internalKey, getTruststorePassword(), internalCertificateChain);
+                 internalKey = internalCertKeeper.getKey(alias, certPass.toCharArray());
+                 internalCertificateChain = internalCertKeeper.getCertificateChain(alias);
+                 this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
             } catch (ClassCastException e) {
                 throw new Exception("Internal certificate file does not contain expected certificate!", e);
             } catch (KeyStoreException e) {
@@ -276,7 +282,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         }
 
         try {
-            this.keyStore.setKeyEntry("internal", internalKey, getTruststorePassword(), internalCertificateChain);
+            this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
         } catch (KeyStoreException e) {
             throw new Exception("Failed to add persist the new internal certificate!", e);
         }

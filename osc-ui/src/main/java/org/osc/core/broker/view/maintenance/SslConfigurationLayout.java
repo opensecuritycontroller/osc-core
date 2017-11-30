@@ -138,7 +138,7 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
                     this.server.restart();
                 }
             });
-            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Replace internal certificate", null));
+            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Replace internal key pair from key store.", null));
             sslUploadContainer.addComponent(certificateUploader);
         } catch (Exception e) {
             log.error("Cannot add upload component. Trust manager factory failed to initialize", e);

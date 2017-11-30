@@ -38,9 +38,12 @@ import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 @RunWith(MockitoJUnitRunner.class)
 public class X509TrustManagerFactoryTest {
     private static final String TEST_CERT_FILE_NAME = "testcertificate.crt";
-    private static final String TEST_INTERNAL_CERT_FILE_NAME = "testinternalcert.jks";
     private static final String TEST_TRUSTSTORE_FILE_NAME = "osctrustore.jks";
     private static final String TEST_CERT_ALIAS = "testcertificate";
+    private static final String TEST_INTERNAL_CERT_FILE_NAME = "testinternalcert.jks";
+    private static final String TEST_INTERNAL_CERT_ALIAS = "oscx509test";
+    private static final String TEST_INTERNAL_CERT_PASS = "admin123";
+
     private File testCertFile;
     private File testTrustStoreFile;
     private File testInternalCertFile;
@@ -81,7 +84,7 @@ public class X509TrustManagerFactoryTest {
     }
 
     @Test
-    public void testAddEntry_WithFile_ShouldAddCertificate() throws Exception {
+    public void testAddEntry_WithJksFile_ShouldAddCertificate() throws Exception {
         assertFalse(this.factory.exists(TEST_CERT_ALIAS));
         this.factory.addEntry(this.testCertFile);
         assertTrue(this.factory.exists(TEST_CERT_ALIAS));
@@ -100,13 +103,14 @@ public class X509TrustManagerFactoryTest {
         try (FileInputStream fis = new FileInputStream(this.testInternalCertFile)) {
             KeyStore keystore = KeyStore.getInstance("JKS");
             keystore.load(fis, null);
-            X509Certificate replacementCert = (X509Certificate) keystore.getCertificate("internal");
+            X509Certificate replacementCert = (X509Certificate) keystore.getCertificate(TEST_INTERNAL_CERT_ALIAS);
             assertNotNull(replacementCert);
             replaceFingerprint = this.factory.getSha1Fingerprint(replacementCert);
         }
 
         // Act.
-        this.factory.replaceInternalCertificate(this.testInternalCertFile);
+        this.factory.replaceInternalCertificate(this.testInternalCertFile, TEST_INTERNAL_CERT_ALIAS,
+                                                TEST_INTERNAL_CERT_PASS, TEST_INTERNAL_CERT_PASS);
 
         // Assert.
         internalCertInfo = this.factory.getCertificateInfoList().stream()

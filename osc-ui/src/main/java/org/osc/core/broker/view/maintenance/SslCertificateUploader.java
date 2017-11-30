@@ -51,11 +51,11 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
 
     private static final String UPLOAD_DIR = "/tmp/";
     private static final long serialVersionUID = 1L;
-
-    private Upload upload;
     private File file;
-    private final VerticalLayout verLayout = new VerticalLayout();
-    private UploadNotifier uploadNotifier = null;
+    private UploadNotifier uploadNotifier;
+
+    protected Upload upload;
+    protected final VerticalLayout verLayout = new VerticalLayout();
 
     protected X509TrustManagerApi x509TrustManager;
 
@@ -66,15 +66,21 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         if (!uploadFolder.exists() && !uploadFolder.mkdir()) {
             log.error("Error creating upload folder");
         }
+
+        Panel panel = new Panel();
+        layout(panel);
+        setCompositionRoot(panel);
+    }
+
+    protected void layout(Panel panel) {
         createUpload();
         this.verLayout.setSpacing(true);
-        Panel panel = new Panel();
+
         panel.setWidth("100%");
         panel.setContent(this.verLayout);
 
         this.verLayout.addComponent(this.upload);
         this.verLayout.addStyleName(StyleConstants.COMPONENT_SPACING);
-        setCompositionRoot(panel);
     }
 
     public void setUploadNotifier(UploadNotifier uploadNotifier) {
