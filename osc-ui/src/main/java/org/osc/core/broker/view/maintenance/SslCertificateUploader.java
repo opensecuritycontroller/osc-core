@@ -29,8 +29,8 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -56,7 +56,8 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     private File file;
     private final VerticalLayout verLayout = new VerticalLayout();
     private UploadNotifier uploadNotifier = null;
-    private X509TrustManagerApi x509TrustManager;
+
+    protected X509TrustManagerApi x509TrustManager;
 
     public SslCertificateUploader(X509TrustManagerApi x509TrustManager) {
         this.x509TrustManager = x509TrustManager;
@@ -126,10 +127,7 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     public void uploadSucceeded(SucceededEvent event) {
         boolean succeeded = true;
         try {
-            log.info("================ SSL certificate upload completed");
-            log.info("================ Adding new entry to truststore...");
-
-            addNewCertificate(this.file);
+            processCertificateFile(this.file);
             ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
                     null, Notification.Type.TRAY_NOTIFICATION);
             log.info("=============== Upload certificate succeeded");
@@ -146,7 +144,10 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         }
     }
 
-    private void addNewCertificate(File file) throws Exception {
+    protected void processCertificateFile(File file) throws Exception {
+        log.info("================ SSL certificate upload completed");
+        log.info("================ Adding new entry to truststore...");
+
         this.x509TrustManager.addEntry(file);
         removeUploadedFile();
     }
@@ -172,7 +173,7 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         removeUploadedFile();
     }
 
-    private void removeUploadedFile() {
+    protected void removeUploadedFile() {
         if (this.file != null && this.file.exists()) {
             try {
                 FileUtils.forceDelete(this.file);

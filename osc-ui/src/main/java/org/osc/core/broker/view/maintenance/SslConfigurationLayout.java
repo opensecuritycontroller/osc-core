@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
@@ -36,10 +37,10 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.slf4j.LoggerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ThemeResource;
@@ -62,32 +63,22 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
     private Table sslConfigTable;
     private VmidcWindow<OkCancelButtonModel> deleteWindow;
 
+    private ServerApi server;
     private DeleteSslCertificateServiceApi deleteSslCertificateService;
     private ListSslCertificatesServiceApi listSslCertificateService;
     private ServiceRegistration<TruststoreChangedListener> registration;
 
-    public SslConfigurationLayout(DeleteSslCertificateServiceApi deleteSslCertificate,
+    public SslConfigurationLayout(ServerApi server, DeleteSslCertificateServiceApi deleteSslCertificate,
             ListSslCertificatesServiceApi listSslCertificateService,
             X509TrustManagerApi trustManager, BundleContext ctx) {
         super();
+        this.server = server;
         this.deleteSslCertificateService = deleteSslCertificate;
         this.listSslCertificateService = listSslCertificateService;
-        VerticalLayout sslUploadContainer = new VerticalLayout();
-        try {
-            SslCertificateUploader certificateUploader = new SslCertificateUploader(trustManager);
-            certificateUploader.setSizeFull();
-            certificateUploader.setUploadNotifier(uploadStatus -> {
-                if (uploadStatus) {
-                    buildSslConfigurationTable();
-                }
-            });
-            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Upload certificate", null));
-            sslUploadContainer.addComponent(certificateUploader);
-        } catch (Exception e) {
-            log.error("Cannot add upload component. Trust manager factory failed to initialize", e);
-            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD_INIT_FAILED, new Date()),
-                    null, Notification.Type.TRAY_NOTIFICATION);
-        }
+
+
+        VerticalLayout sslUploadContainer = makeSslUploadContainer(trustManager);
+        VerticalLayout sslReplaceInternalContainer = makeInternalCertReplaceContainer(trustManager);
 
         VerticalLayout sslListContainer = new VerticalLayout();
         sslListContainer.addComponent(createHeaderForSslList());
@@ -109,10 +100,52 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
         sslConfigTablePanel.setContent(this.sslConfigTable);
         sslListContainer.addComponent(sslConfigTablePanel);
 
+        addComponent(sslReplaceInternalContainer);
         addComponent(sslUploadContainer);
         addComponent(sslListContainer);
 
         this.registration = ctx.registerService(TruststoreChangedListener.class, this, null);
+    }
+
+    private VerticalLayout makeSslUploadContainer(X509TrustManagerApi trustManager) {
+        VerticalLayout sslUploadContainer = new VerticalLayout();
+        try {
+            SslCertificateUploader certificateUploader = new SslCertificateUploader(trustManager);
+            certificateUploader.setSizeFull();
+            certificateUploader.setUploadNotifier(uploadStatus -> {
+                if (uploadStatus) {
+                    buildSslConfigurationTable();
+                }
+            });
+            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Upload certificate", null));
+            sslUploadContainer.addComponent(certificateUploader);
+        } catch (Exception e) {
+            log.error("Cannot add upload component. Trust manager factory failed to initialize", e);
+            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD_INIT_FAILED, new Date()),
+                    null, Notification.Type.TRAY_NOTIFICATION);
+        }
+        return sslUploadContainer;
+    }
+
+    private VerticalLayout makeInternalCertReplaceContainer(X509TrustManagerApi trustManager) {
+        VerticalLayout sslUploadContainer = new VerticalLayout();
+        try {
+            SslCertificateUploader certificateUploader = new InternalCertReplacementUploader(trustManager);
+            certificateUploader.setSizeFull();
+            certificateUploader.setUploadNotifier(uploadStatus -> {
+                if (uploadStatus) {
+                    buildSslConfigurationTable();
+                    this.server.restart();
+                }
+            });
+            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Replace internal certificate", null));
+            sslUploadContainer.addComponent(certificateUploader);
+        } catch (Exception e) {
+            log.error("Cannot add upload component. Trust manager factory failed to initialize", e);
+            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD_INIT_FAILED, new Date()),
+                    null, Notification.Type.TRAY_NOTIFICATION);
+        }
+        return sslUploadContainer;
     }
 
     private HorizontalLayout createHeaderForSslList() {

@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.security.Key;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -220,31 +223,66 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     @Override
     public void addEntry(File file) throws Exception {
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
         String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
+        addEntry(file, newAlias);
+    }
+
+    public void addEntry(File file, String newAlias) throws Exception {
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate certificate;
         try (FileInputStream inputStream = new FileInputStream(file)) {
             certificate = (X509Certificate) cf.generateCertificate(inputStream);
         }
+        setOrUpdateCertificate(certificate, newAlias);
+    }
+
+    @Override
+    public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
+        if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
+            setOrUpdateCertificate(certificate, newAlias);
+        } else {
+            throw new Exception("Given certificate fingerprint already exists in trust store");
+        }
+    }
+
+    public void setOrUpdateCertificate(X509Certificate certificate, String newAlias) throws Exception {
         this.keyStore.setCertificateEntry(newAlias, certificate);
         try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             this.keyStore.store(outputStream, getTruststorePassword());
         }
         reloadTrustManager();
         notifyTruststoreChanged();
+
     }
 
     @Override
-    public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
-        if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
-            this.keyStore.setCertificateEntry(newAlias, certificate);
-            try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
-                this.keyStore.store(outputStream, getTruststorePassword());
+    public void replaceInternalCertificate(File file) throws Exception {
+        KeyStore internalCertKeeper  = KeyStore.getInstance(KEYSTORE_TYPE);
+
+        Certificate[] internalCertificateChain;
+        Key internalKey;
+
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            internalCertKeeper.load(inputStream, getTruststorePassword());
+            try {
+                 internalKey = internalCertKeeper.getKey("internal", getTruststorePassword());
+                 internalCertificateChain = internalCertKeeper.getCertificateChain("internal");
+                 this.keyStore.setKeyEntry("internal", internalKey, getTruststorePassword(), internalCertificateChain);
+            } catch (ClassCastException e) {
+                throw new Exception("Internal certificate file does not contain expected certificate!", e);
+            } catch (KeyStoreException e) {
+                throw new Exception("Internal certificate file is corrupted!", e);
             }
-            reloadTrustManager();
-            notifyTruststoreChanged();
-        } else {
-            throw new Exception("Given certificate fingerprint already exists in trust store");
+        }
+
+        try {
+            this.keyStore.setKeyEntry("internal", internalKey, getTruststorePassword(), internalCertificateChain);
+        } catch (KeyStoreException e) {
+            throw new Exception("Failed to add persist the new internal certificate!", e);
+        }
+
+        try(FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
+            this.keyStore.store(outputStream, getTruststorePassword());
         }
     }
 

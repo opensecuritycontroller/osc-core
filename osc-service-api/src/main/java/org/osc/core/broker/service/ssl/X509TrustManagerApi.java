@@ -30,11 +30,11 @@ public interface X509TrustManagerApi {
 
     void addEntry(X509Certificate certificate, String newAlias) throws Exception;
 
+    void replaceInternalCertificate(File file) throws Exception;
+
     List<CertificateBasicInfoModel> getCertificateInfoList() throws Exception;
 
     String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException, IllegalArgumentException;
 
     String certificateToString(X509Certificate certificate);
-
-
 }
