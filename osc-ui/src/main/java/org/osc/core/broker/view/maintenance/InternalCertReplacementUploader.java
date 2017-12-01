@@ -31,7 +31,8 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
     private static final long serialVersionUID = 5863055568539605300L;
     private static final Logger log = LoggerFactory.getLogger(InternalCertReplacementUploader.class);
 
-    private static final String UPLOAD_DESCR = "Upload file containing the key pair.<br/>Currently only JKS format is supported.<br/>"
+    private static final String UPLOAD_DESCR = "Upload file containing the zip file with privatre key (PKCS8,PEM, no passwd).<br/>"
+                                                + "and the PKI Path file with associated certificate chain.<br/>"
                                                 + "Will result in server restart ! ! !<br/>";
     private static final String WARNING = "WARNING: Replacing the internal key pair results in server restart!";
 
@@ -56,7 +57,7 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
         this.verLayout.addComponent(this.storePassword);
 
         super.layout(panel);
-        this.upload.setButtonCaption("Upload JKS");
+        this.upload.setButtonCaption("Upload ZIP");
         this.upload.setDescription(UPLOAD_DESCR);
     }
 
@@ -64,8 +65,7 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
     protected void processCertificateFile(File file) throws Exception {
         log.info("================ SSL certificate upload completed");
         log.info("================ Replacing internal certificate in truststore...");
-        this.x509TrustManager.replaceInternalCertificate(file, this.alias.getValue(), this.certPassword.getValue(),
-                                                         this.storePassword.getValue());
+        this.x509TrustManager.replaceInternalCertificate(file, true);
         removeUploadedFile();
     }
 }

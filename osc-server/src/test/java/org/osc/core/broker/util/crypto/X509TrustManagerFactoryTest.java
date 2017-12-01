@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -35,26 +33,21 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 
 @RunWith(MockitoJUnitRunner.class)
 public class X509TrustManagerFactoryTest {
     private static final String TEST_CERT_FILE_NAME = "testcertificate.crt";
     private static final String TEST_TRUSTSTORE_FILE_NAME = "osctrustore.jks";
     private static final String TEST_CERT_ALIAS = "testcertificate";
-    private static final String TEST_INTERNAL_CERT_FILE_NAME = "testinternalcert.jks";
-    private static final String TEST_INTERNAL_CERT_ALIAS = "oscx509test";
-    private static final String TEST_INTERNAL_CERT_PASS = "admin123";
 
     private File testCertFile;
     private File testTrustStoreFile;
-    private File testInternalCertFile;
-
+    private File testZipFile;
+    private static final String TEST_ZIP_FILE = "oscx509test.zip";
     private static final String TEST_PRIVATE_KEY_FILE = "oscx509test.pem";
     private static final String TEST_CHAIN_FILE = "oscx509test.pkipath";
     private File testPrivateKeyFile;
@@ -73,10 +66,6 @@ public class X509TrustManagerFactoryTest {
         tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_TRUSTSTORE_FILE_NAME);
         FileUtils.copyToFile(tmpInputStream, this.testTrustStoreFile);
 
-        this.testInternalCertFile = new File(TEST_INTERNAL_CERT_FILE_NAME);
-        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_INTERNAL_CERT_FILE_NAME);
-        FileUtils.copyToFile(tmpInputStream, this.testInternalCertFile);
-
         this.testPrivateKeyFile = new File(TEST_PRIVATE_KEY_FILE);
         tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_PRIVATE_KEY_FILE);
         FileUtils.copyToFile(tmpInputStream, this.testPrivateKeyFile);
@@ -84,6 +73,10 @@ public class X509TrustManagerFactoryTest {
         this.testChainFile = new File(TEST_CHAIN_FILE);
         tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_CHAIN_FILE);
         FileUtils.copyToFile(tmpInputStream, this.testChainFile);
+
+        this.testZipFile = new File(TEST_ZIP_FILE);
+        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_ZIP_FILE);
+        FileUtils.copyToFile(tmpInputStream, this.testZipFile);
 
         this.factory = X509TrustManagerFactory.getInstance();
     }
@@ -98,16 +91,16 @@ public class X509TrustManagerFactoryTest {
             this.testTrustStoreFile.delete();
         }
 
-        if (this.testInternalCertFile != null) {
-            this.testInternalCertFile.delete();
-        }
-
         if (this.testPrivateKeyFile != null) {
             this.testPrivateKeyFile.delete();
         }
 
         if (this.testChainFile != null) {
             this.testChainFile.delete();
+        }
+
+        if (this.testZipFile != null) {
+            this.testZipFile.delete();
         }
     }
 
@@ -119,42 +112,9 @@ public class X509TrustManagerFactoryTest {
     }
 
     @Test
-    public void testReplaceInternal_WithInternalCert_ShouldReplace() throws Exception{
-
-        // Arrange.
-        Optional<CertificateBasicInfoModel> internalCertInfo = this.factory.getCertificateInfoList().stream()
-                                                                .filter(m -> m.getAlias().equals("internal"))
-                                                                .findFirst();
-
-        assertTrue("Bad test setup. No internal certificate in test truststore!", internalCertInfo.isPresent());
-        String replaceFingerprint = null;
-        try (FileInputStream fis = new FileInputStream(this.testInternalCertFile)) {
-            KeyStore keystore = KeyStore.getInstance("JKS");
-            keystore.load(fis, null);
-            X509Certificate replacementCert = (X509Certificate) keystore.getCertificate(TEST_INTERNAL_CERT_ALIAS);
-            assertNotNull(replacementCert);
-            replaceFingerprint = this.factory.getSha1Fingerprint(replacementCert);
-        }
-
-        // Act.
-        this.factory.replaceInternalCertificate(this.testInternalCertFile, TEST_INTERNAL_CERT_ALIAS,
-                                                TEST_INTERNAL_CERT_PASS, TEST_INTERNAL_CERT_PASS);
-
-        // Assert.
-        internalCertInfo = this.factory.getCertificateInfoList().stream()
-                .filter(m -> m.getAlias().equals("internal"))
-                .findFirst();
-
-        assertTrue("Internal certificate missing after replace call!", internalCertInfo.isPresent());
-        Assert.assertEquals("Internal certificate not replaced!", replaceFingerprint,
-                                internalCertInfo.get().getSha1Fingerprint());
-    }
-
-    @Test
-    public void testCerts() throws Exception {
+    public void testAddKeyPair_FromZip_ShouldSucceed() throws Exception {
         // Arrange.
         BufferedReader br = new BufferedReader(new FileReader(this.testPrivateKeyFile));
-        // Security.addProvider(new BouncyCastleProvider());
         PEMParser pp = new PEMParser(br);
         PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
         PrivateKey pKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
@@ -174,7 +134,7 @@ public class X509TrustManagerFactoryTest {
                          ArrayUtils.hashCode(origInternalEncoded), ArrayUtils.hashCode(pKeyEncoded));
 
         // Act.
-        this.factory.replaceInternalCertificate(this.testPrivateKeyFile, this.testChainFile, "oscx509test", "admin123");
+        this.factory.replaceInternalCertificate(this.testZipFile, false);
 
         // Assert.
         KeyStore resultingKeystore = KeyStore.getInstance("JKS");

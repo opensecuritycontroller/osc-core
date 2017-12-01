@@ -16,13 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,9 +48,24 @@ public class FileUtilTest {
 
     private File homeDirectory;
     private File regularFile;
+    private File zipFile;
     private final int numberOfFilesInDirectory = 4;
-    private final String sampleConfigFile = "server.port=8666\nh2db.connection.url.extraArgs=AUTO_SERVER=TRUE;\ndevMode=true\nserver.reboots=0";
-    private final String CONFIG_FILE = "vmidcServerMocked.conf";
+    private final static String sampleConfigFile = "server.port=8666\nh2db.connection.url.extraArgs=AUTO_SERVER=TRUE;\ndevMode=true\nserver.reboots=0";
+    private final static String CONFIG_FILE = "vmidcServerMocked.conf";
+    private final static String ZIP_FILE_NAME = "testzip.zip";
+
+    private final static File AA_DIR = new File("aa");
+    private final static File CC_DIR = new File("cc");
+    private final static File CC_BB_DIR = Paths.get("cc", "bb").toFile();
+    private final static File A_TXT = new File("a.txt");
+    private final static File B_TXT = new File("b.txt");
+    private final static File F_TXT = new File("f.txt");
+    private final static File AA_A_TXT = Paths.get("aa", "a.txt").toFile();
+    private final static File CC_A_TXT = Paths.get("cc", "a.txt").toFile();
+    private final static File CC_BB_A_TXT = Paths.get("cc", "bb", "a.txt").toFile();
+    private final static File CC_BB_D_TXT = Paths.get("cc", "bb", "f.txt").toFile();
+    private final static File[] ZIP_CONTENTS = {AA_DIR, CC_DIR, CC_BB_DIR, A_TXT, B_TXT, F_TXT, AA_A_TXT, CC_A_TXT,
+                                                CC_BB_A_TXT, CC_BB_D_TXT};
 
     @Before
     public void init() throws IOException {
@@ -69,6 +91,12 @@ public class FileUtilTest {
         if(this.regularFile.exists()){
             boolean isDeleted = this.regularFile.delete();
             Assert.assertTrue(isDeleted);
+        }
+    }
+
+    private void cleanZipFile() {
+        if (this.zipFile.exists()) {
+            Assert.assertTrue(this.zipFile.delete());
         }
     }
 
@@ -139,6 +167,26 @@ public class FileUtilTest {
 
         // Assert.
         Assert.assertEquals("Different size of loaded properties file", 0, prop.size());
+    }
+
+    @Test
+    public void testUnzip_WithZipFile_ExtractsAll() throws IOException {
+
+        // Arrange.
+        this.zipFile = new File(this.ZIP_FILE_NAME);
+        Arrays.stream(ZIP_CONTENTS).forEach(FileUtils::deleteQuietly);
+
+        InputStream tmpInputStream = getClass().getClassLoader().getResourceAsStream(this.ZIP_FILE_NAME);
+        FileUtils.copyToFile(tmpInputStream, this.zipFile);
+
+        // Act.
+        List<File> files = FileUtil.unzip(this.zipFile);
+
+        // Assert.
+        assertTrue("Some files were not unzipped!", Arrays.stream(ZIP_CONTENTS).allMatch(f -> f.exists()));
+
+        Arrays.stream(ZIP_CONTENTS).forEach(FileUtils::deleteQuietly);
+        cleanZipFile();
     }
 
     private void populateTemporaryFolder() throws IOException {
