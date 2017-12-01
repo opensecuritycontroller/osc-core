@@ -303,13 +303,20 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             exception = originalException.getCause();
 
             // TODO this exception leaks large amounts of implementation detail out of the API
-            if (errorType == ErrorType.PROVIDER_EXCEPTION) {
-                if (RestClientException.isConnectException(exception) && isOpenstack()) {
-                    // Keystone Connect Exception
-                    contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, KEYSTONE_CAPTION);
-                }
-            } else if (errorType == ErrorType.CONTROLLER_EXCEPTION) {
-                if (RestClientException.isCredentialError(exception)) {
+			if (errorType == ErrorType.PROVIDER_EXCEPTION) {
+				if (RestClientException.isConnectException(exception) && isOpenstack()) {
+					// Keystone Connect Exception
+					contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, KEYSTONE_CAPTION);
+				}
+			} else if (errorType == ErrorType.PROVIDER_CONNECT_EXCEPTION && isOpenstack()) {
+				// Keystone Connect Exception
+				// Handle ConnectionException(Not a standard exception) thrown by OpenStack4j
+				contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, KEYSTONE_CAPTION);
+			} else if (errorType == ErrorType.PROVIDER_AUTH_EXCEPTION && isOpenstack()) {
+				// Keystone Authentication Exception
+				contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS, KEYSTONE_CAPTION);
+			} else if (errorType == ErrorType.CONTROLLER_EXCEPTION) {
+				if (RestClientException.isCredentialError(exception)) {
                     if (isOpenstack()) {
                         // SDN Invalid Credential Exception
                         contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS,
