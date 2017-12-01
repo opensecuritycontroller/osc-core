@@ -18,15 +18,22 @@ package org.osc.core.broker.util.crypto;
 
 import static org.junit.Assert.*;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,6 +55,11 @@ public class X509TrustManagerFactoryTest {
     private File testTrustStoreFile;
     private File testInternalCertFile;
 
+    private static final String TEST_PRIVATE_KEY_FILE = "oscx509test.pem";
+    private static final String TEST_CHAIN_FILE = "oscx509test.pkipath";
+    private File testPrivateKeyFile;
+    private File testChainFile;
+
     private X509TrustManagerFactory factory;
 
     @Before
@@ -65,6 +77,14 @@ public class X509TrustManagerFactoryTest {
         tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_INTERNAL_CERT_FILE_NAME);
         FileUtils.copyToFile(tmpInputStream, this.testInternalCertFile);
 
+        this.testPrivateKeyFile = new File(TEST_PRIVATE_KEY_FILE);
+        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_PRIVATE_KEY_FILE);
+        FileUtils.copyToFile(tmpInputStream, this.testPrivateKeyFile);
+
+        this.testChainFile = new File(TEST_CHAIN_FILE);
+        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_CHAIN_FILE);
+        FileUtils.copyToFile(tmpInputStream, this.testChainFile);
+
         this.factory = X509TrustManagerFactory.getInstance();
     }
 
@@ -80,6 +100,14 @@ public class X509TrustManagerFactoryTest {
 
         if (this.testInternalCertFile != null) {
             this.testInternalCertFile.delete();
+        }
+
+        if (this.testPrivateKeyFile != null) {
+            this.testPrivateKeyFile.delete();
+        }
+
+        if (this.testChainFile != null) {
+            this.testChainFile.delete();
         }
     }
 
@@ -120,5 +148,42 @@ public class X509TrustManagerFactoryTest {
         assertTrue("Internal certificate missing after replace call!", internalCertInfo.isPresent());
         Assert.assertEquals("Internal certificate not replaced!", replaceFingerprint,
                                 internalCertInfo.get().getSha1Fingerprint());
+    }
+
+    @Test
+    public void testCerts() throws Exception {
+        // Arrange.
+        BufferedReader br = new BufferedReader(new FileReader(this.testPrivateKeyFile));
+        // Security.addProvider(new BouncyCastleProvider());
+        PEMParser pp = new PEMParser(br);
+        PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
+        PrivateKey pKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
+        pp.close();
+
+        byte[] pKeyEncoded = pKey.getEncoded();
+
+        KeyStore origKeystore = KeyStore.getInstance("JKS");
+        char[] password = "abc12345".toCharArray();
+        try (FileInputStream inputStream = new FileInputStream(this.testTrustStoreFile)) {
+            origKeystore.load(inputStream, password);
+        }
+
+        byte[] origInternalEncoded = origKeystore.getKey("internal", password).getEncoded();
+
+        assertNotEquals("Bad test setup. Replacement key already in original truststore.",
+                         ArrayUtils.hashCode(origInternalEncoded), ArrayUtils.hashCode(pKeyEncoded));
+
+        // Act.
+        this.factory.replaceInternalCertificate(this.testPrivateKeyFile, this.testChainFile, "oscx509test", "admin123");
+
+        // Assert.
+        KeyStore resultingKeystore = KeyStore.getInstance("JKS");
+        try (FileInputStream inputStream = new FileInputStream(this.testTrustStoreFile)) {
+            resultingKeystore.load(inputStream, password);
+        }
+
+        assertNotNull("Private key missing from resulting truststore", resultingKeystore.getKey("internal", password));
+        assertArrayEquals("Private key not replaced in resulting truststore", pKey.getEncoded(),
+                          resultingKeystore.getKey("internal", password).getEncoded());
     }
 }

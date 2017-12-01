@@ -16,10 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -29,6 +31,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -47,6 +50,9 @@ import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FilenameUtils;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
@@ -273,7 +279,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             try {
                  internalKey = internalCertKeeper.getKey(alias, certPass.toCharArray());
                  internalCertificateChain = internalCertKeeper.getCertificateChain(alias);
-                 this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
             } catch (ClassCastException e) {
                 throw new Exception("Internal certificate file does not contain expected certificate!", e);
             } catch (KeyStoreException e) {
@@ -290,6 +295,38 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         try(FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             this.keyStore.store(outputStream, getTruststorePassword());
         }
+
+        reloadTrustManager();
+    }
+
+    public void replaceInternalCertificate(File pKeyFile, File chainFile, String alias, String certPass) throws Exception {
+        Certificate[] internalCertificateChain;
+        Key internalKey;
+        // Loads the .pkipath certificate chain file
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        try (FileInputStream inputStream = new FileInputStream(chainFile)) {
+            CertPath certPath = cf.generateCertPath(inputStream);
+            List<? extends Certificate> certList = certPath.getCertificates();
+            internalCertificateChain = certList.toArray(new Certificate[]{});
+        }
+
+        BufferedReader br = new BufferedReader(new FileReader(pKeyFile));
+        PEMParser pp = new PEMParser(br);
+        PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
+        internalKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
+        pp.close();
+
+        try {
+            this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
+        } catch (KeyStoreException e) {
+            throw new Exception("Failed to add persist the new internal certificate!", e);
+        }
+
+        try(FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
+            this.keyStore.store(outputStream, getTruststorePassword());
+        }
+
+        reloadTrustManager();
     }
 
     public boolean exists(String alias) throws Exception {
