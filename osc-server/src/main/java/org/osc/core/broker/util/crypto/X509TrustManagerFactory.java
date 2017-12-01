@@ -314,8 +314,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private char[] getTruststorePassword() throws Exception {
         // password to keystore to retrieve truststore manager password
-        String passwordPassword = getSecurityProperty(TRUSTSTORE_PASSWORD_ENTRY_KEY);
-        return KeyStoreProvider.getInstance().getPassword(TRUSTSTORE_PASSWORD_ALIAS,passwordPassword).toCharArray();
+        return getSecurityProperty(TRUSTSTORE_PASSWORD_ENTRY_KEY).toCharArray();
     }
 
     private String getSecurityProperty(String entryKey) throws Exception {
