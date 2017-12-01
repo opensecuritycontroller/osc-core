@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.openstack4j.api.exceptions.AuthenticationException;
+import org.openstack4j.api.exceptions.ConnectionException;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.k8s.KubernetesClient;
@@ -177,7 +179,7 @@ public class VirtualizationConnectorUtil {
         errorTypeException = this.checkSDNControllerConnection(request, certificateResolverModels, vc);
 
         // Check Connectivity with Key stone if https response exception is not to be ignored
-        if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
+		if (errorTypeException == null && !request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
             initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstackkeystone");
             try {
                 VirtualizationConnectorDto vcDto = request.getDto();
@@ -194,7 +196,13 @@ public class VirtualizationConnectorUtil {
                 this.keystoneApi.listProjects();
 
             } catch (Exception exception) {
-                errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
+				if (exception instanceof ConnectionException) {
+					errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_CONNECT_EXCEPTION);
+				} else if (exception instanceof AuthenticationException) {
+					errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_AUTH_EXCEPTION);
+				} else {
+					errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
+				}
                 LOG.warn(
                         "Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
             } finally {
@@ -205,7 +213,7 @@ public class VirtualizationConnectorUtil {
             }
         }
 
-        if (!request.isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION)) {
+        if (errorTypeException == null && !request.isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION)) {
             initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "rabbitmq");
             try {
                 OsRabbitMQClient rabbitClient = new OsRabbitMQClient(vc);
