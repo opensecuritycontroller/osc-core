@@ -31,7 +31,7 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
     private static final long serialVersionUID = 5863055568539605300L;
     private static final Logger log = LoggerFactory.getLogger(InternalCertReplacementUploader.class);
 
-    private static final String UPLOAD_DESCR = "Upload file containing the zip file with privatre key (PKCS8,PEM, no passwd).<br/>"
+    private static final String UPLOAD_DESCR = "Create a zip file with your private key (PKCS8,PEM, no passwd).<br/>"
                                                 + "and the PKI Path file with associated certificate chain.<br/>"
                                                 + "Will result in server restart ! ! !<br/>";
     private static final String WARNING = "WARNING: Replacing the internal key pair results in server restart!";

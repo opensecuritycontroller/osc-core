@@ -110,5 +110,5 @@ x-runproperties.debug: \
 	io.fabric8.zjsonpatch;version='[0.3.0,0.3.1)',\
 	org.apache.felix.http.api;version='[3.0.0,3.0.1)',\
 	osc-uber-kubernetes;version='[1.0.0,1.0.1)',\
-    bcpkix-jdk15on;version='[1.58,1.60)',\
-    bcprov-jdk15on;version='[1.58,1.60)'
+	bcpkix;version='[1.58,1.60)',\
+	bcprov;version='[1.58,1.60)'
