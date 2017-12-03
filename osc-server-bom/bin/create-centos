@@ -5,6 +5,7 @@ apt-get install schroot yum rpm
 #
 # Build the centos env for install
 #
+mkdir -p /var/www/
 mkdir -p $BUILDDIR-bootstrap/proc
 mkdir -p $BUILDDIR-bootstrap/sys
 mkdir -p $BUILDDIR-bootstrap/mnt/sysimage
@@ -32,6 +33,7 @@ mount --bind /var/www $BUILDDIR-bootstrap/var/www/
 mount --bind $BUILDDIR $BUILDDIR-bootstrap/mnt/sysimage
 cp centos-6.yum.conf $BUILDDIR-bootstrap/
 cp /etc/resolv.conf $BUILDDIR-bootstrap/etc/
+cp /etc/profile.d/proxy.sh $BUILDDIR-bootstrap/etc/profile.d/
 
 chroot $BUILDDIR-bootstrap rpmdb --root /mnt/sysimage --initdb
 chroot $BUILDDIR-bootstrap rpm --root=/mnt/sysimage --import /RPM-GPG-KEY-CENTOS6.pub
@@ -60,6 +62,7 @@ find $BUILDDIR/var/lib/yum -type d -exec chmod 755 {} \;
 # 
 #
 install -o root -g root -m 644 /etc/resolv.conf $BUILDDIR/etc/
+install -o root -g root -m 777 /etc/profile.d/proxy.sh $BUILDDIR/etc/profile.d/
 install -o root -g root -m 600 /etc/sudoers $BUILDDIR/etc/
 getent passwd > $BUILDDIR/etc/passwd
 getent group > $BUILDDIR/etc/group
@@ -77,6 +80,9 @@ root-groups=sudo
 users=jenkins
 groups=vmidc
 EOF
+
+mkdir -p /var/lib/jenkins
+chmod 400 /etc/schroot/chroot.d/centos.conf
 
 cat >> /etc/schroot/default/fstab << EOF
 /var/lib/jenkins/ /var/lib/jenkins/ none rw,bind        0       0
