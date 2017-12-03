@@ -19,6 +19,7 @@ package org.osc.core.broker.util.crypto;
 import static java.lang.String.format;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -56,6 +57,8 @@ import javax.xml.bind.DatatypeConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.openssl.PEMException;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
@@ -75,8 +78,8 @@ import org.slf4j.LoggerFactory;
 @Component(service = X509TrustManagerApi.class, immediate=true)
 public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
 
-    private static final String CERT_CHAIN = "PKI";
-    private static final String KEY = "PEM";
+    private static final String CERT_CHAIN = "CERTCHAIN";
+    private static final String KEY = "KEY";
     private static final Logger LOG = LoggerFactory.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
     // osctrustore stores public certificates needed to establish SSL connection
@@ -87,7 +90,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     // osctrustore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
-    private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
     private static final String INTERNAL_ALIAS = "internal";
     private static final String BAD_KEY_PAIR_ZIP_FILE = "The zip file is expected to contain a PKCS8 PEM file (PEM Extension)"
             + "and a corresponding PKI Certificate path file!";
@@ -110,7 +112,8 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
                 try {
                     m = loader.getClass().getMethod("getBundle");
                 } catch (Exception e) {
-                    // ClassLoader is not an OSGi classloader
+                    // ClassLoader is not an OSGi class loader
+                    LOG.info("ClassLoader is not an OSGi classloader.", e);
                 }
                 if(m != null && "org.osgi.framework.Bundle".equals(m.getReturnType().getName())) {
                     throw new IllegalStateException("X509TrustManager component is not yet started");
@@ -209,7 +212,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         }
 
         throw new NoSuchAlgorithmException("No X509TrustManager in TrustManagerFactory");
-
     }
 
     @Override
@@ -294,7 +296,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         replaceInternalCertificate(pKeyFile, chainFile, doReboot);
     }
 
-    public void replaceInternalCertificate(File pKeyFile, File chainFile, boolean doReboot) throws Exception {
+    private void replaceInternalCertificate(File pKeyFile, File chainFile, boolean doReboot) throws Exception {
         if (pKeyFile == null || chainFile == null) {
             throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
         }
@@ -302,21 +304,8 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         LOG.info(format("Replacing internal private/public keys from files %s and %s.",
                  pKeyFile.getName(), chainFile.getName()));
 
-        Certificate[] internalCertificateChain;
-        Key internalKey;
-        // Loads the .pkipath certificate chain file
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        try (FileInputStream inputStream = new FileInputStream(chainFile)) {
-            CertPath certPath = cf.generateCertPath(inputStream);
-            List<? extends Certificate> certList = certPath.getCertificates();
-            internalCertificateChain = certList.toArray(new Certificate[]{});
-        }
-
-        BufferedReader br = new BufferedReader(new FileReader(pKeyFile));
-        PEMParser pp = new PEMParser(br);
-        PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
-        internalKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
-        pp.close();
+        Certificate[] internalCertificateChain = tryParseCertificateChain(chainFile);
+        Key internalKey = tryParsePKCS8PemPrivateKey(pKeyFile);
 
         try {
             this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
@@ -336,6 +325,85 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             LOG.info("Replaced internal private/public key! Rebooting system ! ! !");
             ServerUtil.execWithLog("/sbin/reboot");
         }
+    }
+
+    private Key tryParsePKCS8PemPrivateKey(File pKeyFile) throws FileNotFoundException, IOException, PEMException {
+        LOG.info("Trying to parse as PKCS8 private key file:" + pKeyFile.getName());
+
+        Key internalKey;
+        BufferedReader br = new BufferedReader(new FileReader(pKeyFile));
+        PEMParser pp = new PEMParser(br);
+
+        PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
+        internalKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
+
+        pp.close();
+        return internalKey;
+    }
+
+    private Certificate[] tryParseCertificateChain(File chainFile) throws Exception {
+        Certificate[] internalCertificateChain;
+
+        LOG.info("Trying to parse as X509PEM Path chain file:" + chainFile.getName());
+        internalCertificateChain = tryParseX509PEMChain(chainFile);
+
+        if (internalCertificateChain == null || internalCertificateChain.length == 0) {
+            LOG.info("Trying to parse as PKI Path chain file:" + chainFile.getName());
+            internalCertificateChain = tryParsePKIPathChain(chainFile);
+        }
+
+        if (internalCertificateChain == null || internalCertificateChain.length == 0) {
+            throw new Exception("Certificate chain file is neither in PKI Path nor X509 PEM formats.");
+        }
+
+        return internalCertificateChain;
+    }
+
+    private Certificate[] tryParseX509PEMChain(File chainFile) throws Exception {
+        Certificate[] internalCertificateChain;
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(chainFile));
+        PEMParser pemParser = new PEMParser(bufferedReader);
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+        // Decent initial capacity. Nobody needs more.
+        List<Certificate> certChainList = new ArrayList<>(10);
+
+        Object holderObj;
+        X509CertificateHolder holder;
+
+        try {
+            while ((holderObj = pemParser.readObject()) != null) {
+                holder = (X509CertificateHolder) holderObj;
+                Certificate currCert = cf.generateCertificate(new ByteArrayInputStream(holder.getEncoded()));
+                certChainList.add(currCert);
+            }
+        } catch (Exception e){
+            LOG.info("Certificate chain file not in X509+PEM format! : ", e);
+            pemParser.close();
+            return null;
+        } finally {
+            pemParser.close();
+        }
+
+        internalCertificateChain = certChainList.toArray(new Certificate[0]);
+        return internalCertificateChain;
+    }
+
+    private Certificate[] tryParsePKIPathChain(File chainFile)
+            throws IOException, FileNotFoundException, CertificateException {
+
+        Certificate[] internalCertificateChain = null;
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+        try (FileInputStream inputStream = new FileInputStream(chainFile)) {
+            CertPath certPath = cf.generateCertPath(inputStream);
+            List<? extends Certificate> certList = certPath.getCertificates();
+            internalCertificateChain = certList.toArray(new Certificate[]{});
+        } catch (CertificateException e){
+            LOG.info("Tried and failed to parse file as a PKI :" + chainFile.getName(), e);
+        }
+
+        return internalCertificateChain;
     }
 
     public boolean exists(String alias) throws Exception {
@@ -465,7 +533,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
         Map<String, File> retVal = new HashMap<>();
         for (File file : keyPairFiles) {
-            if (file.getName().toUpperCase().endsWith(KEY)) {
+            if (file.getName().toUpperCase().startsWith(KEY)) {
                 retVal.put(KEY, file);
             } else {
                 retVal.put(CERT_CHAIN, file);

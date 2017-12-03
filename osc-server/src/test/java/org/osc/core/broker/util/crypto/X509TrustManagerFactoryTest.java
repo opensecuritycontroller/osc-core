@@ -35,23 +35,22 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
 public class X509TrustManagerFactoryTest {
+
     private static final String TEST_CERT_FILE_NAME = "testcertificate.crt";
     private static final String TEST_TRUSTSTORE_FILE_NAME = "osctrustore.jks";
     private static final String TEST_CERT_ALIAS = "testcertificate";
 
+    private static final String TEST_X509PEM_ZIP_FILE = "oscx509test_x509pem.zip";
+    private static final String TEST_PKICHAIN_ZIP_FILE_NAME = "oscx509test.zip";
+    private static final String TEST_PRIVATE_KEY_FILE_NAME = "oscx509test.pem";
+
     private File testCertFile;
     private File testTrustStoreFile;
-    private File testZipFile;
-    private static final String TEST_ZIP_FILE = "oscx509test.zip";
-    private static final String TEST_PRIVATE_KEY_FILE = "oscx509test.pem";
-    private static final String TEST_CHAIN_FILE = "oscx509test.pkipath";
+    private File testPKIChainZipFile;
+    private File testX509PEMZipFile;
     private File testPrivateKeyFile;
-    private File testChainFile;
 
     private X509TrustManagerFactory factory;
 
@@ -66,41 +65,41 @@ public class X509TrustManagerFactoryTest {
         tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_TRUSTSTORE_FILE_NAME);
         FileUtils.copyToFile(tmpInputStream, this.testTrustStoreFile);
 
-        this.testPrivateKeyFile = new File(TEST_PRIVATE_KEY_FILE);
-        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_PRIVATE_KEY_FILE);
+        this.testPrivateKeyFile = new File(TEST_PRIVATE_KEY_FILE_NAME);
+        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_PRIVATE_KEY_FILE_NAME);
         FileUtils.copyToFile(tmpInputStream, this.testPrivateKeyFile);
 
-        this.testChainFile = new File(TEST_CHAIN_FILE);
-        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_CHAIN_FILE);
-        FileUtils.copyToFile(tmpInputStream, this.testChainFile);
+        this.testPKIChainZipFile = new File(TEST_PKICHAIN_ZIP_FILE_NAME);
+        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_PKICHAIN_ZIP_FILE_NAME);
+        FileUtils.copyToFile(tmpInputStream, this.testPKIChainZipFile);
 
-        this.testZipFile = new File(TEST_ZIP_FILE);
-        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_ZIP_FILE);
-        FileUtils.copyToFile(tmpInputStream, this.testZipFile);
+        this.testX509PEMZipFile = new File(TEST_X509PEM_ZIP_FILE);
+        tmpInputStream = getClass().getClassLoader().getResourceAsStream(TEST_X509PEM_ZIP_FILE);
+        FileUtils.copyToFile(tmpInputStream, this.testX509PEMZipFile);
 
         this.factory = X509TrustManagerFactory.getInstance();
     }
 
     @After
     public void tearDown() {
-        if (this.testCertFile != null) {
+        if (this.testCertFile.exists()) {
             this.testCertFile.delete();
         }
 
-        if (this.testTrustStoreFile != null) {
+        if (this.testTrustStoreFile.exists()) {
             this.testTrustStoreFile.delete();
         }
 
-        if (this.testPrivateKeyFile != null) {
+        if (this.testPrivateKeyFile.exists()) {
             this.testPrivateKeyFile.delete();
         }
 
-        if (this.testChainFile != null) {
-            this.testChainFile.delete();
+        if (this.testPKIChainZipFile.exists()) {
+            this.testPKIChainZipFile.delete();
         }
 
-        if (this.testZipFile != null) {
-            this.testZipFile.delete();
+        if (this.testX509PEMZipFile.exists()) {
+            this.testX509PEMZipFile .delete();
         }
     }
 
@@ -112,7 +111,16 @@ public class X509TrustManagerFactoryTest {
     }
 
     @Test
-    public void testAddKeyPair_FromZip_ShouldSucceed() throws Exception {
+    public void testAddKeyPair_FromZipWithPKI_ShouldSucceed() throws Exception {
+        doTestAddKeyPair(this.testPKIChainZipFile);
+    }
+
+    @Test
+    public void testAddKeyPair_FromZipWithX509PEM_ShouldSucceed() throws Exception {
+        doTestAddKeyPair(this.testX509PEMZipFile);
+    }
+
+    private void doTestAddKeyPair(File zipFile) throws Exception {
         // Arrange.
         BufferedReader br = new BufferedReader(new FileReader(this.testPrivateKeyFile));
         PEMParser pp = new PEMParser(br);
@@ -134,7 +142,7 @@ public class X509TrustManagerFactoryTest {
                          ArrayUtils.hashCode(origInternalEncoded), ArrayUtils.hashCode(pKeyEncoded));
 
         // Act.
-        this.factory.replaceInternalCertificate(this.testZipFile, false);
+        this.factory.replaceInternalCertificate(zipFile, false);
 
         // Assert.
         KeyStore resultingKeystore = KeyStore.getInstance("JKS");
@@ -143,7 +151,8 @@ public class X509TrustManagerFactoryTest {
         }
 
         assertNotNull("Private key missing from resulting truststore", resultingKeystore.getKey("internal", password));
-        assertArrayEquals("Private key not replaced in resulting truststore", pKey.getEncoded(),
+        assertArrayEquals("Private key not replaced in resulting truststore", pKeyEncoded,
                           resultingKeystore.getKey("internal", password).getEncoded());
+
     }
 }
