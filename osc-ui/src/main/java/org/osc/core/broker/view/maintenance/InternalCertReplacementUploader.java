@@ -24,21 +24,17 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
 
 public class InternalCertReplacementUploader extends SslCertificateUploader {
     private static final long serialVersionUID = 5863055568539605300L;
     private static final Logger log = LoggerFactory.getLogger(InternalCertReplacementUploader.class);
 
-    private static final String UPLOAD_DESCR = "Create a zip file with your private key (PKCS8,PEM, no passwd).<br/>"
-                                                + "and the PKI Path file with associated certificate chain.<br/>"
-                                                + "Will result in server restart ! ! !<br/>";
+    private static final String UPLOAD_DESCR = "Create a zip file containing <i>two files</i>: your private key (PKCS8+PEM, no passwd)<br/>"
+                                                + "and the certificate chain file (either X509+PEM or PKI Path format).</br>"
+                                                + "The key file name should start with &quot;key&quot;.<br/>"
+                                                + "The certificate chain file name should <i>not</i> start with &quot;key&quot;.<br/>"
+                                                + "<b>This operation will result in server restart ! ! !</b><br/>";
     private static final String WARNING = "WARNING: Replacing the internal key pair results in server restart!";
-
-    private PasswordField certPassword;
-    private PasswordField storePassword;
-    private TextField alias;
 
     public InternalCertReplacementUploader(X509TrustManagerApi x509TrustManager) {
         super(x509TrustManager);
@@ -47,14 +43,8 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
     @Override
     protected void layout(Panel panel) {
         Label warningLabel = new Label(WARNING);
-        this.alias = new TextField("Alias");
-        this.certPassword = new PasswordField("Certificate Password");
-        this.storePassword = new PasswordField("Keystore Password");
 
         this.verLayout.addComponent(warningLabel);
-        this.verLayout.addComponent(this.alias);
-        this.verLayout.addComponent(this.certPassword);
-        this.verLayout.addComponent(this.storePassword);
 
         super.layout(panel);
         this.upload.setButtonCaption("Upload ZIP");

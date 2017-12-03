@@ -91,8 +91,10 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String INTERNAL_ALIAS = "internal";
-    private static final String BAD_KEY_PAIR_ZIP_FILE = "The zip file is expected to contain a PKCS8 PEM file (PEM Extension)"
+    private static final String BAD_KEY_PAIR_ZIP_FILE = "The zip file is expected to contain a PKCS8 PEM file (PEM Extension) "
             + "and a corresponding PKI Certificate path file!";
+    private static final String WRONG_FILE_COUNT_IN_ZIP = "Certificate chain zip file with exactly two files "
+            + "is expected: private key and certificate chain files.";
     private static volatile X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
     private X509TrustManager trustManager = null;
@@ -528,7 +530,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
         List<File> keyPairFiles = FileUtil.unzip(zipFile);
         if (keyPairFiles.size() != 2) {
-            throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
+            throw new Exception(WRONG_FILE_COUNT_IN_ZIP);
         }
 
         Map<String, File> retVal = new HashMap<>();
