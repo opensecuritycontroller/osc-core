@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
-import static java.lang.String.format;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -61,11 +59,11 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.openssl.PEMException;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.osc.core.broker.service.archive.ArchiveUtil;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
-import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.ServerUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -78,10 +76,15 @@ import org.slf4j.LoggerFactory;
 @Component(service = X509TrustManagerApi.class, immediate=true)
 public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
 
+    private static final String CERTCHAIN_PKI_FILE = "certchain.pkipath";
+    private static final String CERTCHAIN_PEM_FILE = "certchain.pem";
+    private static final String KEY_PEM_FILE = "key.pem";
     private static final String CERT_CHAIN = "CERTCHAIN";
     private static final String KEY = "KEY";
+
     private static final Logger LOG = LoggerFactory.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
+
     // osctrustore stores public certificates needed to establish SSL connection
     // osctrustore also stores private certificate used by application to enable
     // HTTPS - it's also used to establish connection internally
@@ -93,8 +96,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private static final String INTERNAL_ALIAS = "internal";
     private static final String BAD_KEY_PAIR_ZIP_FILE = "The zip file is expected to contain a PKCS8 PEM file (PEM Extension) "
             + "and a corresponding PKI Certificate path file!";
-    private static final String WRONG_FILE_COUNT_IN_ZIP = "Certificate chain zip file with exactly two files "
-            + "is expected: private key and certificate chain files.";
     private static volatile X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
     private X509TrustManager trustManager = null;
@@ -245,10 +246,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     @Override
     public void addEntry(File file) throws Exception {
         String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
-        addEntry(file, newAlias);
-    }
-
-    public void addEntry(File file, String newAlias) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate certificate;
         try (FileInputStream inputStream = new FileInputStream(file)) {
@@ -266,19 +263,23 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         }
     }
 
-    public void setOrUpdateCertificate(X509Certificate certificate, String newAlias) throws Exception {
+    private void setOrUpdateCertificate(X509Certificate certificate, String newAlias) throws Exception {
 
         if (INTERNAL_ALIAS.equals(newAlias)) {
             throw new Exception("Certificate alias " + INTERNAL_ALIAS + " is reserved! Change alias supplied or file name.");
         }
 
         this.keyStore.setCertificateEntry(newAlias, certificate);
+        saveTruststore();
+    }
+
+    private void saveTruststore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
+            Exception, FileNotFoundException {
         try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             this.keyStore.store(outputStream, getTruststorePassword());
         }
         reloadTrustManager();
         notifyTruststoreChanged();
-
     }
 
     @Override
@@ -303,8 +304,8 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
         }
 
-        LOG.info(format("Replacing internal private/public keys from files %s and %s.",
-                 pKeyFile.getName(), chainFile.getName()));
+        LOG.info("Replacing internal private/public keys from files %s and %s.",
+                 pKeyFile.getName(), chainFile.getName());
 
         Certificate[] internalCertificateChain = tryParseCertificateChain(chainFile);
         Key internalKey = tryParsePKCS8PemPrivateKey(pKeyFile);
@@ -313,15 +314,11 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
         } catch (KeyStoreException e) {
             throw new Exception("Failed to add persist the new internal certificate!", e);
+        } finally {
+            FileUtils.deleteQuietly(pKeyFile);
+            FileUtils.deleteQuietly(chainFile);
+            saveTruststore();
         }
-
-        try(FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
-            this.keyStore.store(outputStream, getTruststorePassword());
-        }
-
-        reloadTrustManager();
-        FileUtils.deleteQuietly(pKeyFile);
-        FileUtils.deleteQuietly(chainFile);
 
         if (doReboot) {
             LOG.info("Replaced internal private/public key! Rebooting system ! ! !");
@@ -434,11 +431,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     public void removeEntry(String alias) throws Exception {
         reloadTrustManager();
         this.keyStore.deleteEntry(alias);
-        try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
-            this.keyStore.store(outputStream, getTruststorePassword());
-        }
-        notifyTruststoreChanged();
-
+        saveTruststore();
     }
 
     /**
@@ -528,24 +521,24 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private Map<String, File> unzipFilePair(File zipFile) throws Exception {
 
-        List<File> keyPairFiles = FileUtil.unzip(zipFile);
-        if (keyPairFiles.size() != 2) {
-            throw new Exception(WRONG_FILE_COUNT_IN_ZIP);
-        }
+        new ArchiveUtil().unzip(zipFile.getAbsolutePath(), ".");
 
-        Map<String, File> retVal = new HashMap<>();
-        for (File file : keyPairFiles) {
-            if (file.getName().toUpperCase().startsWith(KEY)) {
-                retVal.put(KEY, file);
-            } else {
-                retVal.put(CERT_CHAIN, file);
-            }
-        }
-
-        if (retVal.size() != 2) {
+        File privateKeyFile = new File(KEY_PEM_FILE);
+        if (!privateKeyFile.exists()) {
             throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
         }
 
+        File certChainFile = new File(CERTCHAIN_PEM_FILE);
+        if (!certChainFile.exists()) {
+            certChainFile = new File(CERTCHAIN_PKI_FILE);
+        }
+        if (!certChainFile.exists()) {
+            throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
+        }
+
+        Map<String, File> retVal = new HashMap<>();
+        retVal.put(KEY, privateKeyFile);
+        retVal.put(CERT_CHAIN, certChainFile);
         return retVal;
     }
 }

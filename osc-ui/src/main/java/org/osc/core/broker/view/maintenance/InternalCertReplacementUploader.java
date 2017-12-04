@@ -31,8 +31,9 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
 
     private static final String UPLOAD_DESCR = "Create a zip file containing <i>two files</i>: your private key (PKCS8+PEM, no passwd)<br/>"
                                                 + "and the certificate chain file (either X509+PEM or PKI Path format).</br>"
-                                                + "The key file name should start with &quot;key&quot;.<br/>"
-                                                + "The certificate chain file name should <i>not</i> start with &quot;key&quot;.<br/>"
+                                                + "The key file name should be &quot;key.pem&quot;.<br/>"
+                                                + "The certificate chain file name should be &quot;certchain&quot;"
+                                                + "with .pem or .pkipath extension.<br/>"
                                                 + "<b>This operation will result in server restart ! ! !</b><br/>";
     private static final String WARNING = "WARNING: Replacing the internal key pair results in server restart!";
 

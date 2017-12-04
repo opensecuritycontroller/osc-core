@@ -224,7 +224,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.58</version>
-            <scope>provided</scope>
+            <scope>runtime</scope>
         </dependency>
 
 		<!-- OSGi runtime for JPA -->

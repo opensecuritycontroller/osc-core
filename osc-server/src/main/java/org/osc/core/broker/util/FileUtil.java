@@ -20,15 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import org.apache.commons.io.FileUtils;
 
 public class FileUtil {
 
@@ -67,31 +59,6 @@ public class FileUtil {
             prop.load(fileInputStream);
         }
         return prop;
-    }
-
-    public static List<File> unzip(File archiveFile) throws IOException {
-        return unzip(archiveFile, archiveFile.getParent());
-    }
-
-    public static List<File> unzip(File archiveFile, String directory) throws IOException {
-        List<File> retVal = new ArrayList<>();
-        directory = directory != null ? directory : ".";
-        try (ZipFile archive = new ZipFile(archiveFile)) {
-            Enumeration<? extends ZipEntry> entries = archive.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                File outFile = Paths.get(directory, entry.getName()).toFile();
-
-                if (entry.isDirectory()) {
-                    outFile.mkdirs();
-                } else {
-                    FileUtils.copyInputStreamToFile(archive.getInputStream(entry), outFile);
-                }
-
-                retVal.add(outFile);
-            }
-        }
-        return retVal;
     }
 
 }
