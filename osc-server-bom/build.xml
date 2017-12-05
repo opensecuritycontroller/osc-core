@@ -22,13 +22,7 @@
       <arg value="clean" />
     </exec>
     <exec executable="sudo" resultproperty="ovf.result">
-      <arg value="make" />
-      <arg value="image-format=${image-format}"/>
-      <arg value="buildNumber=${buildNumber}"/>
-      <arg value="-j" />
-      <arg value="--no-print-directory"/>
-      <arg value="-f" />
-      <arg value="makefiles/master.mk" />
+	    <arg value="./make-cmd-line.sh" />
     </exec>
   </target>
 
