@@ -35,6 +35,13 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.osc.core.broker.service.api.server.ArchiveApi;
+import org.osc.core.broker.service.api.server.LoggingApi;
+import org.osc.core.broker.service.archive.ArchiveUtil;
 
 public class X509TrustManagerFactoryTest {
 
@@ -52,6 +59,14 @@ public class X509TrustManagerFactoryTest {
     private File testX509PEMZipFile;
     private File testPrivateKeyFile;
 
+    @Mock
+    private LoggingApi loggingApi;
+
+    @Spy
+    @InjectMocks
+    private ArchiveApi archiveUtil = new ArchiveUtil();
+
+    @InjectMocks
     private X509TrustManagerFactory factory;
 
     @Before
@@ -78,6 +93,8 @@ public class X509TrustManagerFactoryTest {
         FileUtils.copyToFile(tmpInputStream, this.testX509PEMZipFile);
 
         this.factory = X509TrustManagerFactory.getInstance();
+
+        MockitoAnnotations.initMocks(this);
     }
 
     @After

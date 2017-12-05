@@ -59,7 +59,7 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.openssl.PEMException;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.osc.core.broker.service.archive.ArchiveUtil;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
@@ -97,13 +97,17 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private static final String BAD_KEY_PAIR_ZIP_FILE = "The zip file is expected to contain a PKCS8 PEM file (PEM Extension) "
             + "and a corresponding PKI Certificate path file!";
     private static volatile X509TrustManagerFactory instance = null;
-    private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
+    private static final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
+
     private X509TrustManager trustManager = null;
     private KeyStore keyStore;
     private CertificateInterceptor listener = null;
 
     /** Listeners for trust store changes (adding/removing/modifying trust store) */
     private LinkedHashSet<TruststoreChangedListener> truststoreChangedListeners = new LinkedHashSet<>();
+
+    @Reference
+    private ArchiveApi archiveApi;
 
     public static X509TrustManagerFactory getInstance() {
         if (instance == null) {
@@ -521,7 +525,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private Map<String, File> unzipFilePair(File zipFile) throws Exception {
 
-        new ArchiveUtil().unzip(zipFile.getAbsolutePath(), ".");
+        this.archiveApi.unzip(zipFile.getAbsolutePath(), ".");
 
         File privateKeyFile = new File(KEY_PEM_FILE);
         if (!privateKeyFile.exists()) {

@@ -135,7 +135,6 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
             certificateUploader.setUploadNotifier(uploadStatus -> {
                 if (uploadStatus) {
                     buildSslConfigurationTable();
-                    this.server.restart();
                 }
             });
             sslUploadContainer.addComponent(ViewUtil.createSubHeader("Replace internal key pair from key store.", null));
