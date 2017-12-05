@@ -303,44 +303,39 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             exception = originalException.getCause();
 
             // TODO this exception leaks large amounts of implementation detail out of the API
-			if (errorType == ErrorType.PROVIDER_EXCEPTION) {
-				if (RestClientException.isConnectException(exception) && isOpenstack()) {
-					// Keystone Connect Exception
+			if (isOpenstack()) {
+				switch (errorType) {
+				case PROVIDER_EXCEPTION:
+					if (RestClientException.isConnectException(exception)) {
+						// Keystone Connect Exception
+						contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, KEYSTONE_CAPTION);
+					} else {
+						contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
+								KEYSTONE_CAPTION, exception.getMessage());
+					}
+					break;
+				case PROVIDER_CONNECT_EXCEPTION:
 					contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, KEYSTONE_CAPTION);
+					break;
+				case PROVIDER_AUTH_EXCEPTION:
+					contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS, KEYSTONE_CAPTION);
+					break;
+				case CONTROLLER_EXCEPTION:
+					contentText = handleControllerException(exception);
+					break;
+				case RABBITMQ_EXCEPTION:
+					contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_RABBIT, exception.getMessage());
+					break;
+				case IP_CHANGED_EXCEPTION:
+					contentText = VmidcMessages.getString(VmidcMessages_.VC_WARNING_IPUPDATE);
+					break;
+				default:
+					contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
+							KEYSTONE_CAPTION, exception.getMessage());
+					break;
 				}
-			} else if (errorType == ErrorType.PROVIDER_CONNECT_EXCEPTION && isOpenstack()) {
-				// Keystone Connect Exception
-				// Handle ConnectionException(Not a standard exception) thrown by OpenStack4j
-				contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, KEYSTONE_CAPTION);
-			} else if (errorType == ErrorType.PROVIDER_AUTH_EXCEPTION && isOpenstack()) {
-				// Keystone Authentication Exception
-				contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS, KEYSTONE_CAPTION);
-			} else if (errorType == ErrorType.CONTROLLER_EXCEPTION) {
-				if (RestClientException.isCredentialError(exception)) {
-                    if (isOpenstack()) {
-                        // SDN Invalid Credential Exception
-                        contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS,
-                                this.controllerType.getValue().toString());
-                    }
-                } else if (RestClientException.isConnectException(exception)) {
-                    if (isOpenstack()) {
-                        // SDN Controller Connect Exception
-                        contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP,
-                                this.controllerType.getValue().toString());
-                    }
-                } else {
-                    if (isOpenstack()) {
-                        // SDN Controller Connect Exception
-                        contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
-                                this.controllerType.getValue().toString(), exception.getMessage());
-                    }
-                }
-            } else if (errorType == ErrorType.RABBITMQ_EXCEPTION) {
-                contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_RABBIT, exception.getMessage());
-            } else if (errorType == ErrorType.IP_CHANGED_EXCEPTION) {
-                contentText = VmidcMessages.getString(VmidcMessages_.VC_WARNING_IPUPDATE);
-            }
-        } else if (originalException instanceof RestClientException) {
+			}
+		} else if (originalException instanceof RestClientException) {
             RestClientException rce = (RestClientException) originalException;
             handleCatchAllException(new Exception(
                     VmidcMessages.getString(VmidcMessages_.GENERAL_REST_ERROR, rce.getHost(), rce.getMessage()),
@@ -375,6 +370,24 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private boolean isOpenstack() {
         return VirtualizationType.fromText(this.virtualizationType.getValue().toString()) == VirtualizationType.OPENSTACK;
     }
+
+	private String handleControllerException(Throwable exception) {
+		String contentText = null;
+		if (RestClientException.isCredentialError(exception)) {
+			// SDN Invalid Credential Exception
+			contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS,
+					this.controllerType.getValue().toString());
+		} else if (RestClientException.isConnectException(exception)) {
+			// SDN Controller Connect Exception
+			contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP,
+					this.controllerType.getValue().toString());
+		} else {
+			// SDN Controller Connect Exception
+			contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
+					this.controllerType.getValue().toString(), exception.getMessage());
+		}
+		return contentText;
+	}
 
     void sslAwareHandleException(final Exception originalException) {
         if (!(originalException instanceof SslCertificatesExtendedException)) {
