@@ -256,7 +256,7 @@ public class ServerMgmtApis {
             + "That is a private/public keypair used for secure connections by OSC. "
             + "The zip file should contain a  &quot;key.pem&quot; in PKCS8+PEM format (private key) and "
             + "certchain.pem or certchain.pkipath (the certificate chain). Pass the contents of the zip file in the body "
-            + "of the API call, as in <i>curl --data-binary '@somename.zip' -H \"content-type: application/octet-stream\" </i>"
+            + "of the API call, as in: curl --data-binary '@somename.zip' -H \"content-type: application/octet-stream\""
 ,
             response = BaseResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),

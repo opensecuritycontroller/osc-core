@@ -110,6 +110,10 @@ public class ReleaseUpgradeMgr {
         deleteUpgradeMarkerFile();
     }
 
+    public static boolean isLastUpgradeSucceeded() {
+        return !new File(DB_UPGRADE_IN_PROGRESS_MARKER_FILE).exists();
+    }
+
     private static void replaceDefaultDBPassword(DBConnectionParameters params,
             DBConnectionManager dbMgr) throws Exception {
         if (params.isDefaultPasswordSet()) {
@@ -2085,10 +2089,6 @@ public class ReleaseUpgradeMgr {
             }
         }
         return releaseInfo;
-    }
-
-    private static boolean isLastUpgradeSucceeded() {
-        return !new File(DB_UPGRADE_IN_PROGRESS_MARKER_FILE).exists();
     }
 
     private static void createUpgradeMarkerFile() {
