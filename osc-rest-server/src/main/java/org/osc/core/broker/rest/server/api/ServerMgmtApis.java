@@ -255,9 +255,7 @@ public class ServerMgmtApis {
             notes = "Overwrites the entry marked &quot;internal&quot; in the truststore. "
             + "That is a private/public keypair used for secure connections by OSC. "
             + "The zip file should contain a  &quot;key.pem&quot; in PKCS8+PEM format (private key) and "
-            + "certchain.pem or certchain.pkipath (the certificate chain). Pass the contents of the zip file in the body "
-            + "of the API call, as in: curl --data-binary '@somename.zip' -H \"content-type: application/octet-stream\""
-,
+            + "certchain.pem or certchain.pkipath (the certificate chain). This results in the server restart ! ! !",
             response = BaseResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })

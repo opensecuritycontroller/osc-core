@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
+import static org.osc.core.broker.service.common.VmidcMessages_.EXCEPTION_KEYPAIR_ZIP_MALFORMED;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -94,8 +96,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
     private static final String INTERNAL_ALIAS = "internal";
-    private static final String BAD_KEY_PAIR_ZIP_FILE = "The zip file is expected to contain a PKCS8 PEM file (PEM Extension) "
-            + "and a corresponding PKI Certificate path file!";
     private static volatile X509TrustManagerFactory instance = null;
     private static final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
 
@@ -291,7 +291,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         // Disabling reboot for testing.
 
         if (zipFile == null) {
-            throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
+            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
         }
 
         Map<String, File> files = unzipFilePair(zipFile);
@@ -305,7 +305,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private void replaceInternalCertificate(File pKeyFile, File chainFile, boolean doReboot) throws Exception {
         if (pKeyFile == null || chainFile == null) {
-            throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
+            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
         }
 
         LOG.info("Replacing internal private/public keys from files %s and %s.",
@@ -525,19 +525,21 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private Map<String, File> unzipFilePair(File zipFile) throws Exception {
 
-        this.archiveApi.unzip(zipFile.getAbsolutePath(), ".");
+        String unzipFolder = zipFile.getParent() != null ? zipFile.getParent() : ".";
 
-        File privateKeyFile = new File(KEY_PEM_FILE);
+        this.archiveApi.unzip(zipFile.getAbsolutePath(), unzipFolder);
+
+        File privateKeyFile = new File(unzipFolder, KEY_PEM_FILE);
         if (!privateKeyFile.exists()) {
-            throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
+            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
         }
 
-        File certChainFile = new File(CERTCHAIN_PEM_FILE);
+        File certChainFile = new File(unzipFolder, CERTCHAIN_PEM_FILE);
         if (!certChainFile.exists()) {
-            certChainFile = new File(CERTCHAIN_PKI_FILE);
+            certChainFile = new File(unzipFolder, CERTCHAIN_PKI_FILE);
         }
         if (!certChainFile.exists()) {
-            throw new Exception(BAD_KEY_PAIR_ZIP_FILE);
+            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
         }
 
         Map<String, File> retVal = new HashMap<>();

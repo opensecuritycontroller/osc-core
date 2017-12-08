@@ -49,7 +49,6 @@ import com.vaadin.ui.VerticalLayout;
 public class SslCertificateUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
     private static final Logger log = LoggerFactory.getLogger(SslCertificateUploader.class);
 
-    private static final String UPLOAD_DIR = "/tmp/";
     private static final long serialVersionUID = 1L;
     private File file;
     private UploadNotifier uploadNotifier;
@@ -61,11 +60,6 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
 
     public SslCertificateUploader(X509TrustManagerApi x509TrustManager) {
         this.x509TrustManager = x509TrustManager;
-        // Create vmidc upload folder
-        File uploadFolder = new File(SslCertificateUploader.UPLOAD_DIR);
-        if (!uploadFolder.exists() && !uploadFolder.mkdir()) {
-            log.error("Error creating upload folder");
-        }
 
         Panel panel = new Panel();
         layout(panel);
@@ -93,9 +87,9 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
             log.info("Start uploading certificate: " + filename);
 
             try {
-                this.file = new File(UPLOAD_DIR + filename);
+                this.file = File.createTempFile("tmp", filename);
                 return new FileOutputStream(this.file);
-            } catch (final java.io.FileNotFoundException e) {
+            } catch (final java.io.IOException e) {
                 log.error("Error opening certificate: " + filename, e);
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
                         Notification.Type.ERROR_MESSAGE);

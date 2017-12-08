@@ -37,7 +37,7 @@ implements ReplaceInternalKeypairServiceApi {
 
     @Override
     protected EmptySuccessResponse exec(UploadRequest request, EntityManager em) throws Exception {
-        File zipFile = new File("kepyair.zip");
+        File zipFile = File.createTempFile("repl_keystore", ".zip");
         FileUtils.copyInputStreamToFile(request.getUploadedInputStream(), zipFile);
         this.x509TrustManagerApi.replaceInternalCertificate(zipFile, true);
         return new EmptySuccessResponse();
