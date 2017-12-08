@@ -316,12 +316,12 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
         try {
             this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
+            saveTruststore();
         } catch (KeyStoreException e) {
             throw new Exception("Failed to add persist the new internal certificate!", e);
         } finally {
             FileUtils.deleteQuietly(pKeyFile);
             FileUtils.deleteQuietly(chainFile);
-            saveTruststore();
         }
 
         if (doReboot) {
@@ -334,13 +334,12 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         LOG.info("Trying to parse as PKCS8 private key file:" + pKeyFile.getName());
 
         Key internalKey;
-        BufferedReader br = new BufferedReader(new FileReader(pKeyFile));
-        PEMParser pp = new PEMParser(br);
+        try (BufferedReader br = new BufferedReader(new FileReader(pKeyFile));
+                PEMParser pp = new PEMParser(br);) {
+            PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
+            internalKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
+        }
 
-        PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
-        internalKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
-
-        pp.close();
         return internalKey;
     }
 
@@ -364,28 +363,26 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private Certificate[] tryParseX509PEMChain(File chainFile) throws Exception {
         Certificate[] internalCertificateChain;
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(chainFile));
-        PEMParser pemParser = new PEMParser(bufferedReader);
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-
         // Decent initial capacity. Nobody needs more.
         List<Certificate> certChainList = new ArrayList<>(10);
 
-        Object holderObj;
-        X509CertificateHolder holder;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(chainFile));
+                PEMParser pemParser = new PEMParser(bufferedReader)) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
 
-        try {
-            while ((holderObj = pemParser.readObject()) != null) {
-                holder = (X509CertificateHolder) holderObj;
-                Certificate currCert = cf.generateCertificate(new ByteArrayInputStream(holder.getEncoded()));
-                certChainList.add(currCert);
+            Object holderObj;
+            X509CertificateHolder holder;
+
+            try {
+                while ((holderObj = pemParser.readObject()) != null) {
+                    holder = (X509CertificateHolder) holderObj;
+                    Certificate currCert = cf.generateCertificate(new ByteArrayInputStream(holder.getEncoded()));
+                    certChainList.add(currCert);
+                }
+            } catch (Exception e){
+                LOG.info("Certificate chain file not in X509+PEM format! : ", e);
+                return null;
             }
-        } catch (Exception e){
-            LOG.info("Certificate chain file not in X509+PEM format! : ", e);
-            pemParser.close();
-            return null;
-        } finally {
-            pemParser.close();
         }
 
         internalCertificateChain = certChainList.toArray(new Certificate[0]);
