@@ -208,7 +208,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildSslConfigurationForm() {
-        return new SslConfigurationLayout(this.server, this.deleteSslCertificateService, this.listSslCertificatesService, this.trustManager, this.ctx);
+        return new SslConfigurationLayout(this.deleteSslCertificateService, this.listSslCertificatesService, this.trustManager, this.ctx);
     }
 
     private FormLayout buildEmailForm() {

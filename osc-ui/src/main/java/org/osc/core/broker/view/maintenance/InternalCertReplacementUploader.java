@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
+import static org.osc.core.broker.view.common.VmidcMessages.getString;
+import static org.osc.core.broker.view.common.VmidcMessages_.*;
+
 import java.io.File;
 
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
@@ -29,27 +32,24 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
     private static final long serialVersionUID = 5863055568539605300L;
     private static final Logger log = LoggerFactory.getLogger(InternalCertReplacementUploader.class);
 
-    private static final String UPLOAD_DESCR = "Create a zip file containing <i>two files</i>: your private key (PKCS8+PEM, no passwd)<br/>"
-                                                + "and the certificate chain file (either X509+PEM or PKI Path format).</br>"
-                                                + "The key file name should be &quot;key.pem&quot;.<br/> "
-                                                + "The certificate chain file name should be &quot;certchain&quot; "
-                                                + "with .pem or .pkipath extension.<br/>"
-                                                + "<b>This operation will result in server restart ! ! !</b><br/>";
-    private static final String WARNING = "WARNING: Replacing the internal key pair results in server restart!";
-
     public InternalCertReplacementUploader(X509TrustManagerApi x509TrustManager) {
         super(x509TrustManager);
     }
 
     @Override
     protected void layout(Panel panel) {
-        Label warningLabel = new Label(WARNING);
+        Label warningLabel = new Label(getString(KEYPAIR_UPLOAD_WARN_RESTART));
 
         this.verLayout.addComponent(warningLabel);
 
         super.layout(panel);
-        this.upload.setButtonCaption("Upload ZIP");
-        this.upload.setDescription(UPLOAD_DESCR);
+    }
+
+    @Override
+    protected void createUpload() {
+        super.createUpload();
+        this.upload.setButtonCaption(getString(KEYPAIR_UPLOAD_BUTTON_TXT));
+        this.upload.setDescription(getString(KEYPAIR_UPLOAD_DESCR));
     }
 
     @Override

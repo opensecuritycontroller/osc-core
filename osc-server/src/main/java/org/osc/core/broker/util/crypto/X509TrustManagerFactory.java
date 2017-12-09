@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
+import static org.osc.core.broker.service.common.VmidcMessages.getString;
 import static org.osc.core.broker.service.common.VmidcMessages_.EXCEPTION_KEYPAIR_ZIP_MALFORMED;
 
 import java.io.BufferedReader;
@@ -291,13 +292,13 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         // Disabling reboot for testing.
 
         if (zipFile == null) {
-            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
         }
 
         Map<String, File> files = unzipFilePair(zipFile);
         File pKeyFile = files.get(KEY);
         File chainFile = files.get(CERT_CHAIN);
-
+        // File not needed any more.
         FileUtils.deleteQuietly(zipFile);
 
         replaceInternalCertificate(pKeyFile, chainFile, doReboot);
@@ -305,10 +306,10 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     private void replaceInternalCertificate(File pKeyFile, File chainFile, boolean doReboot) throws Exception {
         if (pKeyFile == null || chainFile == null) {
-            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
         }
 
-        LOG.info("Replacing internal private/public keys from files %s and %s.",
+        LOG.info("Replacing internal private/public keys from files {} and {}.",
                  pKeyFile.getName(), chainFile.getName());
 
         Certificate[] internalCertificateChain = tryParseCertificateChain(chainFile);
@@ -320,6 +321,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         } catch (KeyStoreException e) {
             throw new Exception("Failed to add persist the new internal certificate!", e);
         } finally {
+            // Files not needed any more.
             FileUtils.deleteQuietly(pKeyFile);
             FileUtils.deleteQuietly(chainFile);
         }
@@ -442,7 +444,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
      * @return cleaned filename
      */
     private String cleanFileName(String filename) {
-        return filename.replaceAll(this.ALNUM_FILTER_REGEX, "");
+        return filename.replaceAll(X509TrustManagerFactory.ALNUM_FILTER_REGEX, "");
     }
 
     @Override
@@ -528,7 +530,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
         File privateKeyFile = new File(unzipFolder, KEY_PEM_FILE);
         if (!privateKeyFile.exists()) {
-            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
         }
 
         File certChainFile = new File(unzipFolder, CERTCHAIN_PEM_FILE);
@@ -536,7 +538,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             certChainFile = new File(unzipFolder, CERTCHAIN_PKI_FILE);
         }
         if (!certChainFile.exists()) {
-            throw new Exception(EXCEPTION_KEYPAIR_ZIP_MALFORMED);
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
         }
 
         Map<String, File> retVal = new HashMap<>();
