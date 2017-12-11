@@ -90,14 +90,6 @@ public class X509TrustManagerFactoryTest {
         if (TEST_TRUSTSTORE_FILE.exists()) {
             TEST_TRUSTSTORE_FILE.delete();
         }
-
-        if (TEST_PKICHAIN_ZIP_FILE.exists()) {
-            TEST_PKICHAIN_ZIP_FILE.delete();
-        }
-
-        if (TEST_X509PEM_ZIP_FILE.exists()) {
-            TEST_X509PEM_ZIP_FILE .delete();
-        }
     }
 
     @Test

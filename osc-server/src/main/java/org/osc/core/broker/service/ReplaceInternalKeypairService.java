@@ -32,12 +32,14 @@ import org.osgi.service.component.annotations.Reference;
 public class ReplaceInternalKeypairService extends ServiceDispatcher<UploadRequest, EmptySuccessResponse>
 implements ReplaceInternalKeypairServiceApi {
 
+    private static final String FILENAME_EXTENSION = ".zip";
+    private static final String FILENAME_PREFIX = "repl_keystore";
     @Reference
     private X509TrustManagerApi x509TrustManagerApi;
 
     @Override
     protected EmptySuccessResponse exec(UploadRequest request, EntityManager em) throws Exception {
-        File zipFile = File.createTempFile("repl_keystore", ".zip");
+        File zipFile = File.createTempFile(FILENAME_PREFIX, FILENAME_EXTENSION);
         FileUtils.copyInputStreamToFile(request.getUploadedInputStream(), zipFile);
         this.x509TrustManagerApi.replaceInternalCertificate(zipFile, true);
         return new EmptySuccessResponse();
