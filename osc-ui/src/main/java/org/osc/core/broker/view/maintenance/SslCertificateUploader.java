@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
+import static org.osc.core.broker.view.common.VmidcMessages.getString;
+import static org.osc.core.broker.view.common.VmidcMessages_.*;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,12 +28,10 @@ import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.StyleConstants;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -49,31 +50,32 @@ import com.vaadin.ui.VerticalLayout;
 public class SslCertificateUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
     private static final Logger log = LoggerFactory.getLogger(SslCertificateUploader.class);
 
-    private static final String UPLOAD_DIR = "/tmp/";
     private static final long serialVersionUID = 1L;
-
-    private Upload upload;
     private File file;
-    private final VerticalLayout verLayout = new VerticalLayout();
-    private UploadNotifier uploadNotifier = null;
-    private X509TrustManagerApi x509TrustManager;
+    private UploadNotifier uploadNotifier;
+
+    protected Upload upload;
+    protected final VerticalLayout verLayout = new VerticalLayout();
+
+    protected X509TrustManagerApi x509TrustManager;
 
     public SslCertificateUploader(X509TrustManagerApi x509TrustManager) {
         this.x509TrustManager = x509TrustManager;
-        // Create vmidc upload folder
-        File uploadFolder = new File(SslCertificateUploader.UPLOAD_DIR);
-        if (!uploadFolder.exists() && !uploadFolder.mkdir()) {
-            log.error("Error creating upload folder");
-        }
+
+        Panel panel = new Panel();
+        layout(panel);
+        setCompositionRoot(panel);
+    }
+
+    protected void layout(Panel panel) {
         createUpload();
         this.verLayout.setSpacing(true);
-        Panel panel = new Panel();
+
         panel.setWidth("100%");
         panel.setContent(this.verLayout);
 
         this.verLayout.addComponent(this.upload);
         this.verLayout.addStyleName(StyleConstants.COMPONENT_SPACING);
-        setCompositionRoot(panel);
     }
 
     public void setUploadNotifier(UploadNotifier uploadNotifier) {
@@ -86,20 +88,20 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
             log.info("Start uploading certificate: " + filename);
 
             try {
-                this.file = new File(UPLOAD_DIR + filename);
+                this.file = File.createTempFile("tmp", filename);
                 return new FileOutputStream(this.file);
-            } catch (final java.io.FileNotFoundException e) {
+            } catch (final java.io.IOException e) {
                 log.error("Error opening certificate: " + filename, e);
-                ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
+                ViewUtil.iscNotification(getString(UPLOAD_COMMON_ERROR) + filename,
                         Notification.Type.ERROR_MESSAGE);
             }
         }
         return null;
     }
 
-    private void createUpload() {
+    protected void createUpload() {
         this.upload = new Upload();
-        this.upload.setButtonCaption(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD));
+        this.upload.setButtonCaption(getString(MAINTENANCE_SSLCONFIGURATION_UPLOAD));
         this.upload.setReceiver(this);
         this.upload.addFailedListener(this);
         this.upload.addSucceededListener(this);
@@ -126,11 +128,8 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     public void uploadSucceeded(SucceededEvent event) {
         boolean succeeded = true;
         try {
-            log.info("================ SSL certificate upload completed");
-            log.info("================ Adding new entry to truststore...");
-
-            addNewCertificate(this.file);
-            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
+            processCertificateFile(this.file);
+            ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
                     null, Notification.Type.TRAY_NOTIFICATION);
             log.info("=============== Upload certificate succeeded");
             repaintUpload();
@@ -146,7 +145,10 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         }
     }
 
-    private void addNewCertificate(File file) throws Exception {
+    protected void processCertificateFile(File file) throws Exception {
+        log.info("================ SSL certificate upload completed");
+        log.info("================ Adding new entry to truststore...");
+
         this.x509TrustManager.addEntry(file);
         removeUploadedFile();
     }
@@ -157,14 +159,14 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
 
         if (event.getFilename() == null || event.getFilename().isEmpty()) {
             log.warn("No upload certificate file specified");
-            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_NOFILE),
+            ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_NOFILE),
                     Notification.Type.ERROR_MESSAGE);
             repaintUpload();
         } else if (event.getReason() instanceof UploadInterruptedException) {
             log.warn("SSL certificate upload is cancelled by the user");
         } else {
             log.warn("SSL certificate upload failed");
-            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FAILED),
+            ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_FAILED),
                     Notification.Type.ERROR_MESSAGE);
             repaintUpload();
         }
@@ -172,7 +174,7 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         removeUploadedFile();
     }
 
-    private void removeUploadedFile() {
+    protected void removeUploadedFile() {
         if (this.file != null && this.file.exists()) {
             try {
                 FileUtils.forceDelete(this.file);

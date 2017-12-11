@@ -220,6 +220,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>1.58</version>
+            <scope>runtime</scope>
+        </dependency>
+
 		<!-- OSGi runtime for JPA -->
 		<dependency>
 			<groupId>org.apache.aries.jpa</groupId>

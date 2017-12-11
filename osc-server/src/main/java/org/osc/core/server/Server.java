@@ -54,6 +54,7 @@ import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.PasswordUtil;
@@ -109,6 +110,7 @@ public class Server implements ServerApi {
     private static final int SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
     private static final int TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
     private static final int SERVER_SYNC_DELAY = 60 * 3; // 3 mins
+    private static final String REPLACEMENT_SSL_KEYPAIR_ZIP = "internal.keypair.startup.location";
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
@@ -170,6 +172,7 @@ public class Server implements ServerApi {
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private volatile List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
+
     @Reference
     private EncryptionApi encryption;
 
@@ -185,6 +188,9 @@ public class Server implements ServerApi {
     @Reference
     private AlertGenerator alertGenerator;
 
+    @Reference
+    private X509TrustManagerApi x509TrustManager;
+
     private Thread thread;
     private BundleContext context;
     private ServiceRegistration<RabbitMQRunner> rabbitMQRegistration;
@@ -192,6 +198,11 @@ public class Server implements ServerApi {
     @Activate
     void activate(BundleContext context) {
         this.context = context;
+
+        if (doReplaceSslKeysAndReboot()) {
+            return;
+        }
+
         Runnable server = () -> {
             try {
                 startServer();
@@ -452,6 +463,31 @@ public class Server implements ServerApi {
         } catch (Exception e) {
             log.error("Failed to write to the properties file", e);
         }
+    }
+
+    private boolean doReplaceSslKeysAndReboot() {
+        if (!ReleaseUpgradeMgr.isLastUpgradeSucceeded()) {
+            return false;
+        }
+
+        // This method is just before the startup. It cannot be allowed to throw.
+        try {
+            Properties prop = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+            String replacementKeypairLocation = prop.getProperty(REPLACEMENT_SSL_KEYPAIR_ZIP);
+            if (replacementKeypairLocation != null) {
+                File zipFile = new File(replacementKeypairLocation);
+                if (zipFile.exists()) {
+                    log.info("New ssl key pair file located at " + replacementKeypairLocation
+                            + ". Replacing and rebooting !!");
+                    this.x509TrustManager.replaceInternalCertificate(zipFile, true);
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            log.error("Exception replacing internal ssl key pair: ", e);
+        }
+
+        return false;
     }
 
     private void addShutdownHook() {

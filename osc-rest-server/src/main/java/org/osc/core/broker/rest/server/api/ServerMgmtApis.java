@@ -18,6 +18,7 @@ package org.osc.core.broker.rest.server.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Date;
@@ -41,7 +42,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.osc.core.broker.rest.server.ApiUtil;
-import org.slf4j.LoggerFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
@@ -51,6 +51,7 @@ import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
+import org.osc.core.broker.service.api.ReplaceInternalKeypairServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.SslCertificateDto;
@@ -59,12 +60,15 @@ import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
+import org.osc.core.broker.service.request.UploadRequest;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -101,6 +105,9 @@ public class ServerMgmtApis {
 
     @Reference
     private UserContextApi userContext;
+
+    @Reference
+    private ReplaceInternalKeypairServiceApi replaceInternalKeypairServiceApi;
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
@@ -242,5 +249,26 @@ public class ServerMgmtApis {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponse(this.deleteSslCertificateService, new DeleteSslEntryRequest(alias));
+    }
+
+    @ApiOperation(value = "Upload a private/public certificate zip file. ",
+            notes = "Overwrites the entry marked &quot;internal&quot; in the truststore. "
+            + "That is a private/public keypair used for secure connections by OSC. "
+            + "The zip file should contain a  &quot;key.pem&quot; in PKCS8+PEM format (private key) and "
+            + "certchain.pem or certchain.pkipath (the certificate chain). This results in the server restart ! ! !",
+            response = BaseResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/internalkeypair")
+    @POST
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    public Response uploadKeypair(@Context HttpHeaders headers,
+            @ApiParam(value = "The imported keypair zip file name",
+            required = true) @PathParam("fileName") String fileName,
+            @ApiParam(required = true) InputStream uploadedInputStream) {
+        logger.info("Started uploading file " + fileName);
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.replaceInternalKeypairServiceApi,
+                new UploadRequest(fileName, uploadedInputStream));
     }
 }

@@ -69,6 +69,14 @@
             <version>2.25</version>
         </dependency>
         
+        <!-- Used when importing PEM private keys -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>1.58</version>
+            <scope>provided</scope>
+        </dependency>
+                
         <!--TODO: below exclusions are necessery to pick a correct version of library by bnd/osgi . -->
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>

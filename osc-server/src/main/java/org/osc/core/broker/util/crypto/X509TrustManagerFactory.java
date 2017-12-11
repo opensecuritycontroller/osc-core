@@ -16,17 +16,27 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
+import static org.osc.core.broker.service.common.VmidcMessages.getString;
+import static org.osc.core.broker.service.common.VmidcMessages_.EXCEPTION_KEYPAIR_ZIP_MALFORMED;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.security.Key;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertPath;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -34,8 +44,10 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.net.ssl.TrustManager;
@@ -43,11 +55,19 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.openssl.PEMException;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
+import org.osc.core.broker.util.ServerUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,8 +79,15 @@ import org.slf4j.LoggerFactory;
 @Component(service = X509TrustManagerApi.class, immediate=true)
 public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
 
+    private static final String CERTCHAIN_PKI_FILE = "certchain.pkipath";
+    private static final String CERTCHAIN_PEM_FILE = "certchain.pem";
+    private static final String KEY_PEM_FILE = "key.pem";
+    private static final String CERT_CHAIN = "CERTCHAIN";
+    private static final String KEY = "KEY";
+
     private static final Logger LOG = LoggerFactory.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
+
     // osctrustore stores public certificates needed to establish SSL connection
     // osctrustore also stores private certificate used by application to enable
     // HTTPS - it's also used to establish connection internally
@@ -69,16 +96,19 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     // osctrustore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
-    private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
-
+    private static final String INTERNAL_ALIAS = "internal";
     private static volatile X509TrustManagerFactory instance = null;
-    private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
+    private static final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
+
     private X509TrustManager trustManager = null;
     private KeyStore keyStore;
     private CertificateInterceptor listener = null;
 
     /** Listeners for trust store changes (adding/removing/modifying trust store) */
     private LinkedHashSet<TruststoreChangedListener> truststoreChangedListeners = new LinkedHashSet<>();
+
+    @Reference
+    private ArchiveApi archiveApi;
 
     public static X509TrustManagerFactory getInstance() {
         if (instance == null) {
@@ -90,7 +120,8 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
                 try {
                     m = loader.getClass().getMethod("getBundle");
                 } catch (Exception e) {
-                    // ClassLoader is not an OSGi classloader
+                    // ClassLoader is not an OSGi class loader
+                    LOG.info("ClassLoader is not an OSGi classloader.", e);
                 }
                 if(m != null && "org.osgi.framework.Bundle".equals(m.getReturnType().getName())) {
                     throw new IllegalStateException("X509TrustManager component is not yet started");
@@ -189,7 +220,6 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         }
 
         throw new NoSuchAlgorithmException("No X509TrustManager in TrustManagerFactory");
-
     }
 
     @Override
@@ -220,13 +250,36 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
     @Override
     public void addEntry(File file) throws Exception {
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
         String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate certificate;
         try (FileInputStream inputStream = new FileInputStream(file)) {
             certificate = (X509Certificate) cf.generateCertificate(inputStream);
         }
+        setOrUpdateCertificate(certificate, newAlias);
+    }
+
+    @Override
+    public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
+        if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
+            setOrUpdateCertificate(certificate, newAlias);
+        } else {
+            throw new Exception("Given certificate fingerprint already exists in trust store");
+        }
+    }
+
+    private void setOrUpdateCertificate(X509Certificate certificate, String newAlias) throws Exception {
+
+        if (INTERNAL_ALIAS.equals(newAlias)) {
+            throw new Exception("Certificate alias " + INTERNAL_ALIAS + " is reserved! Change alias supplied or file name.");
+        }
+
         this.keyStore.setCertificateEntry(newAlias, certificate);
+        saveTruststore();
+    }
+
+    private void saveTruststore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
+            Exception, FileNotFoundException {
         try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             this.keyStore.store(outputStream, getTruststorePassword());
         }
@@ -235,17 +288,124 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     }
 
     @Override
-    public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
-        if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
-            this.keyStore.setCertificateEntry(newAlias, certificate);
-            try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
-                this.keyStore.store(outputStream, getTruststorePassword());
-            }
-            reloadTrustManager();
-            notifyTruststoreChanged();
-        } else {
-            throw new Exception("Given certificate fingerprint already exists in trust store");
+    public void replaceInternalCertificate(File zipFile, boolean doReboot) throws Exception {
+        // Disabling reboot for testing.
+
+        if (zipFile == null) {
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
         }
+
+        Map<String, File> files = unzipFilePair(zipFile);
+        File pKeyFile = files.get(KEY);
+        File chainFile = files.get(CERT_CHAIN);
+        // File not needed any more.
+        FileUtils.deleteQuietly(zipFile);
+
+        replaceInternalCertificate(pKeyFile, chainFile, doReboot);
+    }
+
+    private void replaceInternalCertificate(File pKeyFile, File chainFile, boolean doReboot) throws Exception {
+        if (pKeyFile == null || chainFile == null) {
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
+        }
+
+        LOG.info("Replacing internal private/public keys from files {} and {}.",
+                 pKeyFile.getName(), chainFile.getName());
+
+        Certificate[] internalCertificateChain = tryParseCertificateChain(chainFile);
+        Key internalKey = tryParsePKCS8PemPrivateKey(pKeyFile);
+
+        try {
+            this.keyStore.setKeyEntry(INTERNAL_ALIAS, internalKey, getTruststorePassword(), internalCertificateChain);
+            saveTruststore();
+        } catch (KeyStoreException e) {
+            throw new Exception("Failed to add persist the new internal certificate!", e);
+        } finally {
+            // Files not needed any more.
+            FileUtils.deleteQuietly(pKeyFile);
+            FileUtils.deleteQuietly(chainFile);
+        }
+
+        if (doReboot) {
+            LOG.info("Replaced internal private/public key! Rebooting system ! ! !");
+            ServerUtil.execWithLog("/sbin/reboot");
+        }
+    }
+
+    private Key tryParsePKCS8PemPrivateKey(File pKeyFile) throws FileNotFoundException, IOException, PEMException {
+        LOG.info("Trying to parse as PKCS8 private key file:" + pKeyFile.getName());
+
+        Key internalKey;
+        try (BufferedReader br = new BufferedReader(new FileReader(pKeyFile));
+                PEMParser pp = new PEMParser(br);) {
+            PrivateKeyInfo pkInfo = (PrivateKeyInfo) pp.readObject();
+            internalKey = new JcaPEMKeyConverter().getPrivateKey(pkInfo);
+        }
+
+        return internalKey;
+    }
+
+    private Certificate[] tryParseCertificateChain(File chainFile) throws Exception {
+        Certificate[] internalCertificateChain;
+
+        LOG.info("Trying to parse as X509PEM Path chain file:" + chainFile.getName());
+        internalCertificateChain = tryParseX509PEMChain(chainFile);
+
+        if (internalCertificateChain == null || internalCertificateChain.length == 0) {
+            LOG.info("Trying to parse as PKI Path chain file:" + chainFile.getName());
+            internalCertificateChain = tryParsePKIPathChain(chainFile);
+        }
+
+        if (internalCertificateChain == null || internalCertificateChain.length == 0) {
+            throw new Exception("Certificate chain file is neither in PKI Path nor X509 PEM formats.");
+        }
+
+        return internalCertificateChain;
+    }
+
+    private Certificate[] tryParseX509PEMChain(File chainFile) throws Exception {
+        Certificate[] internalCertificateChain;
+        // Decent initial capacity. Nobody needs more.
+        List<Certificate> certChainList = new ArrayList<>(10);
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(chainFile));
+                PEMParser pemParser = new PEMParser(bufferedReader)) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+            Object holderObj;
+            X509CertificateHolder holder;
+
+            try {
+                while ((holderObj = pemParser.readObject()) != null) {
+                    holder = (X509CertificateHolder) holderObj;
+                    Certificate currCert = cf.generateCertificate(new ByteArrayInputStream(holder.getEncoded()));
+                    certChainList.add(currCert);
+                }
+            } catch (Exception e){
+                LOG.info("Certificate chain file not in X509+PEM format! : ", e);
+                return null;
+            }
+        }
+
+        internalCertificateChain = certChainList.toArray(new Certificate[0]);
+        return internalCertificateChain;
+    }
+
+    private Certificate[] tryParsePKIPathChain(File chainFile)
+            throws IOException, FileNotFoundException, CertificateException {
+
+        Certificate[] internalCertificateChain = null;
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+        try (FileInputStream inputStream = new FileInputStream(chainFile)) {
+            CertPath certPath = cf.generateCertPath(inputStream);
+            List<? extends Certificate> certList = certPath.getCertificates();
+            internalCertificateChain = certList.toArray(new Certificate[]{});
+        } catch (CertificateException e){
+            LOG.info("Tried and failed to parse file as a PKI :" + chainFile.getName(), e);
+        }
+
+        return internalCertificateChain;
     }
 
     public boolean exists(String alias) throws Exception {
@@ -274,11 +434,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     public void removeEntry(String alias) throws Exception {
         reloadTrustManager();
         this.keyStore.deleteEntry(alias);
-        try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
-            this.keyStore.store(outputStream, getTruststorePassword());
-        }
-        notifyTruststoreChanged();
-
+        saveTruststore();
     }
 
     /**
@@ -288,7 +444,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
      * @return cleaned filename
      */
     private String cleanFileName(String filename) {
-        return filename.replaceAll(this.ALNUM_FILTER_REGEX, "");
+        return filename.replaceAll(X509TrustManagerFactory.ALNUM_FILTER_REGEX, "");
     }
 
     @Override
@@ -364,5 +520,30 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
             LOG.error("Cannot encode certificate", e);
         }
         return sw.toString();
+    }
+
+    private Map<String, File> unzipFilePair(File zipFile) throws Exception {
+
+        String unzipFolder = zipFile.getParent() != null ? zipFile.getParent() : ".";
+
+        this.archiveApi.unzip(zipFile.getAbsolutePath(), unzipFolder);
+
+        File privateKeyFile = new File(unzipFolder, KEY_PEM_FILE);
+        if (!privateKeyFile.exists()) {
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
+        }
+
+        File certChainFile = new File(unzipFolder, CERTCHAIN_PEM_FILE);
+        if (!certChainFile.exists()) {
+            certChainFile = new File(unzipFolder, CERTCHAIN_PKI_FILE);
+        }
+        if (!certChainFile.exists()) {
+            throw new Exception(getString(EXCEPTION_KEYPAIR_ZIP_MALFORMED));
+        }
+
+        Map<String, File> retVal = new HashMap<>();
+        retVal.put(KEY, privateKeyFile);
+        retVal.put(CERT_CHAIN, certChainFile);
+        return retVal;
     }
 }
