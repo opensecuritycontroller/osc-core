@@ -77,6 +77,7 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
                 } finally {
                     alertWindow.close();
+                    removeUploadedFile();
                 }
             }});
         alertWindow.getComponentModel().setCancelClickedListener(new Button.ClickListener(){
