@@ -84,6 +84,7 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
             public void buttonClick(ClickEvent event) {
                 removeUploadedFile();
                 alertWindow.close();
+                ViewUtil.iscNotification(getString(KEYPAIR_NOT_REPLACED), Notification.Type.WARNING_MESSAGE);
             }});
 
         ViewUtil.addWindow(alertWindow);

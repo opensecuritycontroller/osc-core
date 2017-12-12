@@ -129,8 +129,6 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         boolean succeeded = true;
         try {
             processCertificateFile(this.file);
-            ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
-                    null, Notification.Type.TRAY_NOTIFICATION);
             log.info("=============== Upload certificate succeeded");
             repaintUpload();
         } catch (Exception ex) {
@@ -148,6 +146,8 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     protected void processCertificateFile(File file) throws Exception {
         log.info("================ SSL certificate upload completed");
         log.info("================ Adding new entry to truststore...");
+        ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
+                null, Notification.Type.TRAY_NOTIFICATION);
 
         this.x509TrustManager.addEntry(file);
         removeUploadedFile();
