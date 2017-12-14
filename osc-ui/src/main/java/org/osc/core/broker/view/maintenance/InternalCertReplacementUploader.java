@@ -19,8 +19,6 @@ package org.osc.core.broker.view.maintenance;
 import static org.osc.core.broker.view.common.VmidcMessages.getString;
 import static org.osc.core.broker.view.common.VmidcMessages_.*;
 
-import java.io.File;
-
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
@@ -59,20 +57,27 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
         this.upload.setDescription(getString(KEYPAIR_UPLOAD_DESCR));
     }
 
-    @SuppressWarnings("serial")
     @Override
-    protected void processCertificateFile(File file) throws Exception {
+    protected void processCertificateFile() throws Exception {
         log.info("================ SSL certificate upload completed");
         log.info("================ Replacing internal certificate in truststore...");
 
         final VmidcWindow<OkCancelButtonModel> alertWindow =
                 WindowUtil.createAlertWindow("Warning", getString(KEYPAIR_UPLOAD_WARN_CONFIRM));
 
+        setupOkClickedListener(alertWindow);
+        setupCancelClickedListener(alertWindow);
+        ViewUtil.addWindow(alertWindow);
+    }
+
+    @SuppressWarnings("serial")
+    private void setupOkClickedListener(final VmidcWindow<OkCancelButtonModel> alertWindow) {
         alertWindow.getComponentModel().setOkClickedListener(new Button.ClickListener(){
             @Override
             public void buttonClick(ClickEvent event) {
                 try {
-                    InternalCertReplacementUploader.this.x509TrustManager.replaceInternalCertificate(file, true);
+                    InternalCertReplacementUploader.this.x509TrustManager
+                        .replaceInternalCertificate(InternalCertReplacementUploader.this.file, true);
                 } catch (Exception e) {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
                 } finally {
@@ -80,6 +85,10 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
                     removeUploadedFile();
                 }
             }});
+    }
+
+    @SuppressWarnings("serial")
+    private void setupCancelClickedListener(final VmidcWindow<OkCancelButtonModel> alertWindow) {
         alertWindow.getComponentModel().setCancelClickedListener(new Button.ClickListener(){
             @Override
             public void buttonClick(ClickEvent event) {
@@ -87,7 +96,5 @@ public class InternalCertReplacementUploader extends SslCertificateUploader {
                 alertWindow.close();
                 ViewUtil.iscNotification(getString(KEYPAIR_NOT_REPLACED), Notification.Type.WARNING_MESSAGE);
             }});
-
-        ViewUtil.addWindow(alertWindow);
     }
 }
