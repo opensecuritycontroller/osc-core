@@ -34,6 +34,7 @@ implements ReplaceInternalKeypairServiceApi {
 
     private static final String FILENAME_EXTENSION = ".zip";
     private static final String FILENAME_PREFIX = "repl_keystore";
+
     @Reference
     private X509TrustManagerApi x509TrustManagerApi;
 

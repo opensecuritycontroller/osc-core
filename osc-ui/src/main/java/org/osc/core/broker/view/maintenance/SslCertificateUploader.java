@@ -51,9 +51,10 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     private static final Logger log = LoggerFactory.getLogger(SslCertificateUploader.class);
 
     private static final long serialVersionUID = 1L;
-    private File file;
+
     private UploadNotifier uploadNotifier;
 
+    protected File file;
     protected Upload upload;
     protected final VerticalLayout verLayout = new VerticalLayout();
 
@@ -128,9 +129,7 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     public void uploadSucceeded(SucceededEvent event) {
         boolean succeeded = true;
         try {
-            processCertificateFile(this.file);
-            ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
-                    null, Notification.Type.TRAY_NOTIFICATION);
+            processCertificateFile();
             log.info("=============== Upload certificate succeeded");
             repaintUpload();
         } catch (Exception ex) {
@@ -145,11 +144,13 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         }
     }
 
-    protected void processCertificateFile(File file) throws Exception {
+    protected void processCertificateFile() throws Exception {
         log.info("================ SSL certificate upload completed");
         log.info("================ Adding new entry to truststore...");
+        ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_SUCCESSFUL, new Date()),
+                null, Notification.Type.TRAY_NOTIFICATION);
 
-        this.x509TrustManager.addEntry(file);
+        this.x509TrustManager.addEntry(this.file);
         removeUploadedFile();
     }
 
