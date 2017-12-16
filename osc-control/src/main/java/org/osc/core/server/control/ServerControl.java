@@ -57,7 +57,7 @@ public class ServerControl {
     private static Logger log = LoggerFactory.getLogger(ServerControl.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
-    private static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
+    private static final String CONFIG_PROPERTIES_FILE = "data/vmidcServer.conf";
     private static final String SERVER_PID_FILE = "server.pid";
 
     private static final String PRODUCT_NAME = "Open Security Controller";
@@ -321,7 +321,7 @@ public class ServerControl {
                     int retries = 10; // 10 x 500ms = 5 seconds.
                     boolean pidFound = false;
                     while (retries > 0) {
-                        List<String> lines = new ArrayList<String>();
+                        List<String> lines = new ArrayList<>();
                         ServerUtil.execWithLines("ps " + oldPid, lines);
                         pidFound = false;
                         for (String line : lines) {

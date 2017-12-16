@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export LD_LIBRARY_PATH=/opt/vmidc/bin
-
 default_java_opts="
     -Djava.security.egd=file:/dev/./urandom
     -server
@@ -36,6 +34,13 @@ JAVA_OPTS="$JAVA_OPTS -Djdk.tls.ephemeralDHKeySize=2048"
 #JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=55555 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=`hostname -I`"
 
 PATH=${JAVA_HOME:-../jre}/bin:$PATH
+
+mkdir -p data/plugins/
+mkdir -p data/ovf/
+cp -n default-data/plugins/* data/plugins/
+cp -n default-data/mainKeyStore.p12 data/
+cp -n default-data/osctrustore.jks data/
+cp -n default-data/vmidcServer.conf data/
 
 case "$1" in
 --console)

@@ -49,7 +49,7 @@ public class X509TrustManagerFactoryTest {
 
     private static final String RESOURCE_FOLDER = Paths.get(".", "src", "test", "resources").toString() + File.separator;
 
-    private static final String TEST_TRUSTSTORE_FILE_NAME = "osctrustore.jks";
+    private static final String TEST_TRUSTSTORE_FILE_NAME = "data/osctrustore.jks";
     private static final String TEST_X509PEM_ZIP_FILE_NAME = "oscx509test_x509pem.zip";
     private static final String TEST_PKICHAIN_ZIP_FILE_NAME = "oscx509test.zip";
 

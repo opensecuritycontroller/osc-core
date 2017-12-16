@@ -115,7 +115,7 @@ public class Server implements ServerApi {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
-    public static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
+    public static final String CONFIG_PROPERTIES_FILE = "data/vmidcServer.conf";
     private static final String SERVER_PID_FILE = "server.pid";
 
     public static final String PRODUCT_NAME = "Open Security Controller";

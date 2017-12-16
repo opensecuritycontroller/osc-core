@@ -28,8 +28,8 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -45,6 +45,7 @@ import com.vaadin.ui.VerticalLayout;
 
 @SuppressWarnings("serial")
 public class ApplianceUploader extends CustomComponent implements Receiver, FailedListener {
+	static final String OVF_UPLOAD_PATH = "data" + File.separator + "ovf" + File.separator;
     private static final Logger log = LoggerFactory.getLogger(ApplianceUploader.class);
     private static int TEMP_FOLDER_COUNTER = 0;
     private final Upload upload;
@@ -129,7 +130,7 @@ public class ApplianceUploader extends CustomComponent implements Receiver, Fail
      */
     public static String getUploadPath(boolean isTmpFolder) {
         String uploadPath = "";
-        uploadPath += "webapp" + File.separator + "ovf" + File.separator;
+        uploadPath += OVF_UPLOAD_PATH;
         if (isTmpFolder) {
             uploadPath += "tmp" + TEMP_FOLDER_COUNTER++ + File.separator;
         }
