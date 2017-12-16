@@ -23,7 +23,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
@@ -42,6 +41,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.slf4j.LoggerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -50,6 +50,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -61,7 +62,7 @@ import com.google.common.collect.Multimap;
  */
 
 @Component(scope=ServiceScope.PROTOTYPE,
- service=OsSecurityGroupNotificationRunner.class)
+service=OsSecurityGroupNotificationRunner.class)
 public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     @Reference
@@ -76,7 +77,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
     private final Multimap<Long, OsNotificationListener> sgToListenerMap = ArrayListMultimap.create();
     private final HashMap<Long, VirtualizationConnector> sgToVCMap = new HashMap<Long, VirtualizationConnector>();
 
-    private static final Logger log = Logger.getLogger(OsSecurityGroupNotificationRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(OsSecurityGroupNotificationRunner.class);
     private ServiceRegistration<BroadcastListener> registration;
 
     @Activate
@@ -90,7 +91,9 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
             this.dbConnectionManager.getTransactionControl().required(() -> {
                 OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
                 for (SecurityGroup sg : sgEmgr.listAll()) {
-                    addListener(sg);
+                    if (sg.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                        addListener(sg);
+                    }
                 }
                 return null;
             });
@@ -129,11 +132,14 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                     if (sg == null) {
                         log.error("Processing " + msg.getEventType() + " notification for Security Group ("
                                 + msg.getEntityId() + ") but couldn't find it in the DB");
+                    } else if (sg.getVirtualizationConnector().getVirtualizationType().isKubernetes()) {
+                        return null;
                     } else if (msg.getEventType() == EventType.ADDED) {
                         addListener(sg);
                     } else if (msg.getEventType() == EventType.UPDATED) {
                         updateListeners(sg);
                     }
+
                     return null;
                 });
 

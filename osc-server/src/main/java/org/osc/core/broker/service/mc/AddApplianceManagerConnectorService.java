@@ -24,13 +24,12 @@ import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -52,6 +51,8 @@ import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component exposes both the API and the implementation so that the
@@ -64,13 +65,13 @@ public class AddApplianceManagerConnectorService
 extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>
 implements AddApplianceManagerConnectorServiceApi {
 
-    private static final Logger LOG = Logger.getLogger(AddApplianceManagerConnectorService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AddApplianceManagerConnectorService.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
 
     @Reference
-    private ConformService conformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private EncryptionApi encryption;
@@ -92,7 +93,7 @@ implements AddApplianceManagerConnectorServiceApi {
         }
 
         String serviceName = this.apiFactoryService.getServiceName(request.getDto().getManagerType());
-        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName);
+        ApplianceManagerConnector mc = ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName);
         appMgrEntityMgr.create(mc);
 
         SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
@@ -103,7 +104,7 @@ implements AddApplianceManagerConnectorServiceApi {
         // Commit the changes early so that the entity is available for the job engine
         chain(() -> {
             UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
-            Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
+            Job job = this.mcConformJobFactory.startMCConformJob(mc, mcUnlock, em);
             return new BaseJobResponse(mc.getId(), job.getId());
         });
 

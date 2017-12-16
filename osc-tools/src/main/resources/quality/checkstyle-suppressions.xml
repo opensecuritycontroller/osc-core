@@ -25,5 +25,8 @@
       <!-- suppress checks on generated files -->
     <suppress files="src[\\/]main[\\/]generated" checks="."/>
     <!-- suppress Parameter number check on unit test files since we use parameterized tests -->
-	<suppress files="src[\\/]test[\\/]java" checks="ParameterNumberCheck"/>
+    <suppress files="src[\\/]test[\\/]java" checks="ParameterNumberCheck"/>
+    <suppress 
+        files="src[\\/]main[\\/]java[\\/]org[\\/]osc[\\/]core[\\/]broker[\\/]util[\\/]db[\\/]upgrade[\\/]ReleaseUpgradeMgr.java" 
+        checks="FileLength" />
 </suppressions>

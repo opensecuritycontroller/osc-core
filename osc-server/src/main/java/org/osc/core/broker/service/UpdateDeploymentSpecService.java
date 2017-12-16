@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -44,16 +43,18 @@ import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateDeploymentSpecService
-        extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
-        implements UpdateDeploymentSpecServiceApi {
+extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
+implements UpdateDeploymentSpecServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateDeploymentSpecService.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateDeploymentSpecService.class);
 
     @Reference
-    private ConformService conformService;
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
 
     private DeploymentSpec ds;
 
@@ -70,25 +71,26 @@ public class UpdateDeploymentSpecService
 
             // as we do not allow to modify VS and IPPool for a DS we can assume they are the same.
             DeploymentSpecEntityMgr.toEntity(this.ds, request.getDto());
+            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                if (!this.ds.getHosts().isEmpty() || !this.ds.getAvailabilityZones().isEmpty()
+                        || !this.ds.getHostAggregates().isEmpty()) {
+                    if (!this.ds.getAvailabilityZones().isEmpty()) {
+                        this.ds.setAvailabilityZones(updateAvailabilityZones(em, request.getDto()
+                                .getAvailabilityZones(), this.ds));
+                    } else if (!this.ds.getHostAggregates().isEmpty()) {
+                        this.ds.setHostAggregates(updateHostAggregates(em, request.getDto().getHostAggregates(),
+                                this.ds));
+                    } else if (!this.ds.getHosts().isEmpty()) {
+                        this.ds.setHosts(updateHosts(em, request.getDto().getHosts(), this.ds));
 
-            if (!this.ds.getHosts().isEmpty() || !this.ds.getAvailabilityZones().isEmpty()
-                    || !this.ds.getHostAggregates().isEmpty()) {
-                if (!this.ds.getAvailabilityZones().isEmpty()) {
-                    this.ds.setAvailabilityZones(updateAvailabilityZones(em, request.getDto()
-                            .getAvailabilityZones(), this.ds));
-                } else if (!this.ds.getHostAggregates().isEmpty()) {
-                    this.ds.setHostAggregates(updateHostAggregates(em, request.getDto().getHostAggregates(),
-                            this.ds));
-                } else if (!this.ds.getHosts().isEmpty()) {
-                    this.ds.setHosts(updateHosts(em, request.getDto().getHosts(), this.ds));
-
+                    }
                 }
             }
             OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
             UnlockObjectMetaTask forLambda = dsUnlock;
             chain(() -> {
                 try {
-                    Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
+                    Job job = this.dsConformJobFactory.startDsConformanceJob(em, this.ds, forLambda);
                     return new BaseJobResponse(this.ds.getId(), job.getId());
                 } catch (Exception e) {
                     LockUtil.releaseLocks(forLambda);
@@ -110,7 +112,7 @@ public class UpdateDeploymentSpecService
         this.ds = em.find(DeploymentSpec.class, dto.getId());
         if (this.ds == null) {
             throw new VmidcBrokerValidationException("Deployment Specification with Id: " + dto.getId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         ValidateUtil.checkMarkedForDeletion(this.ds, this.ds.getName());
@@ -119,18 +121,21 @@ public class UpdateDeploymentSpecService
 
         if (!dto.getParentId().equals(this.ds.getVirtualSystem().getId())) {
             throwInvalidUpdateActionException("Virtual System", this.ds.getName());
-        } else if (!dto.getProjectId().equals(this.ds.getProjectId())) {
-            throwInvalidUpdateActionException("Project", this.ds.getName());
-        } else if (dto.isShared() != this.ds.isShared()) {
-            throwInvalidUpdateActionException("Shared", this.ds.getName());
-        } else if (!dto.getRegion().equals(this.ds.getRegion())) {
-            throwInvalidUpdateActionException("Region", this.ds.getName());
-        } else if (!dto.getManagementNetworkId().equals(this.ds.getManagementNetworkId())) {
-            throwInvalidUpdateActionException("Management Network Id", this.ds.getName());
-        } else if (!dto.getInspectionNetworkId().equals(this.ds.getInspectionNetworkId())) {
-            throwInvalidUpdateActionException("Inspection Network Id", this.ds.getName());
-        } else if (isFloatingIpUpdated(dto)) {
-            throwInvalidUpdateActionException("Floating Ip Pool", this.ds.getName());
+        }
+        if (this.ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            if (!dto.getProjectId().equals(this.ds.getProjectId())) {
+                throwInvalidUpdateActionException("Project", this.ds.getName());
+            } else if (dto.isShared() != this.ds.isShared()) {
+                throwInvalidUpdateActionException("Shared", this.ds.getName());
+            } else if (!dto.getRegion().equals(this.ds.getRegion())) {
+                throwInvalidUpdateActionException("Region", this.ds.getName());
+            } else if (!dto.getManagementNetworkId().equals(this.ds.getManagementNetworkId())) {
+                throwInvalidUpdateActionException("Management Network Id", this.ds.getName());
+            } else if (!dto.getInspectionNetworkId().equals(this.ds.getInspectionNetworkId())) {
+                throwInvalidUpdateActionException("Inspection Network Id", this.ds.getName());
+            } else if (isFloatingIpUpdated(dto)) {
+                throwInvalidUpdateActionException("Floating Ip Pool", this.ds.getName());
+            }
         }
     }
 
@@ -150,7 +155,6 @@ public class UpdateDeploymentSpecService
 
     private Set<HostAggregate> updateHostAggregates(EntityManager em, Set<HostAggregateDto> selectedHaDtoSet,
             DeploymentSpec ds) {
-
         // assuming nothing changed
         Set<HostAggregate> updatedHaSet = new HashSet<>();
         updatedHaSet.addAll(ds.getHostAggregates());
@@ -175,7 +179,6 @@ public class UpdateDeploymentSpecService
         }
 
         return updatedHaSet;
-
     }
 
     private boolean isEqual(HostAggregate hostAggrEntity, HostAggregateDto hostAggrDto) {
@@ -202,7 +205,6 @@ public class UpdateDeploymentSpecService
 
     private Set<AvailabilityZone> updateAvailabilityZones(EntityManager em, Set<AvailabilityZoneDto> selectedAZDtoSet,
             DeploymentSpec ds) {
-
         // assuming nothing changed
         Set<AvailabilityZone> updatedAzSet = new HashSet<>();
         updatedAzSet.addAll(ds.getAvailabilityZones());
@@ -252,7 +254,6 @@ public class UpdateDeploymentSpecService
     }
 
     private Set<Host> updateHosts(EntityManager em, Set<HostDto> selectedHostDtoSet, DeploymentSpec ds) {
-
         // assuming nothing changed
         Set<Host> updatedHostSet = new HashSet<>();
         updatedHostSet.addAll(ds.getHosts());

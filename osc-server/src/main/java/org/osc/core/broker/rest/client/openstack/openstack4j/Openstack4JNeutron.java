@@ -24,8 +24,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
-import org.openstack4j.api.exceptions.ServerResponseException;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.openstack4j.api.exceptions.ClientResponseException;
+import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.network.IP;
 import org.openstack4j.model.network.NetFloatingIP;
@@ -33,28 +36,27 @@ import org.openstack4j.model.network.Network;
 import org.openstack4j.model.network.Port;
 import org.openstack4j.model.network.SecurityGroup;
 import org.openstack4j.model.network.SecurityGroupRule;
-import org.openstack4j.model.network.State;
 import org.openstack4j.model.network.Subnet;
 import org.openstack4j.model.network.builder.NetFloatingIPBuilder;
 import org.openstack4j.model.network.builder.NetSecurityGroupBuilder;
 import org.openstack4j.model.network.options.PortListOptions;
 import org.openstack4j.openstack.networking.domain.NeutronFloatingIP;
 import org.openstack4j.openstack.networking.domain.NeutronSecurityGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
-    private static final Logger log = Logger.getLogger(Openstack4JNeutron.class);
+    private static final Logger log = LoggerFactory.getLogger(Openstack4JNeutron.class);
 
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";
     private static final String QUERY_PARAM_ROUTER_DEVICE_OWNER = "network:router_interface";
-    private static final String QUERY_PARAM_TENANT_ID = "tenant_id";
     private static final String QUERY_PARAM_EXTERNAL_ROUTER = "router:external";
 
     private static final int OPENSTACK_CONFLICT_STATUS = 409;
-    private static final int OPENSTACK_NOT_FOUND_STATUS = 404;
 
     public Openstack4JNeutron(Endpoint endPoint) {
         super(endPoint);
@@ -65,15 +67,27 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
      */
     public List<Network> listNetworkByProject(String region, String projectId) {
         getOs().useRegion(region);
-        List<? extends Network> list = getOs().networking().network().list().stream()
-                .filter(subnet -> (projectId.equals(subnet.getTenantId()) && !subnet.isShared())
+        List<? extends Network> originalList = getOs().networking().network().list();
+
+        if (CollectionUtils.isEmpty(originalList)) {
+            log.info(String.format("No networks found in region: %s for project: %s", region, projectId));
+        }
+
+        List<? extends Network> list = originalList.stream()
+                .filter(subnet -> projectId.equals(subnet.getTenantId()) && !subnet.isShared()
                         || subnet.isShared()).collect(Collectors.toList());
         return ImmutableList.<Network>builder().addAll(list).build();
     }
 
     public List<Subnet> listSubnetByProject(String region, String projectId) {
         getOs().useRegion(region);
-        List<? extends Subnet> list = getOs().networking().subnet().list()
+        List<? extends Subnet> originalList = getOs().networking().subnet().list();
+
+        if (CollectionUtils.isEmpty(originalList)) {
+            log.info(String.format("No subnets found in region: %s for project: %s", region, projectId));
+        }
+
+        List<? extends Subnet> list = originalList
                 .stream().filter(subnet -> projectId.equals(subnet.getTenantId())).collect(Collectors.toList());
         return ImmutableList.<Subnet>builder().addAll(list).build();
     }
@@ -101,9 +115,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
         for (Port port : portList) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null
-                    && deviceOwner.startsWith(QUERY_PARAM_COMPUTE_DEVICE_OWNER)
-                    && port.getState() == State.ACTIVE) {
+			if (deviceOwner != null && deviceOwner.startsWith(QUERY_PARAM_COMPUTE_DEVICE_OWNER)) {
                 computePorts.add(port);
             }
         }
@@ -118,9 +130,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         List<? extends Port> osPorts = listPorts(region, projectId, networkId);
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null
-                    && deviceOwner.startsWith(QUERY_PARAM_ROUTER_DEVICE_OWNER)
-                    && port.getState() == State.ACTIVE) {
+			if (deviceOwner != null && deviceOwner.startsWith(QUERY_PARAM_ROUTER_DEVICE_OWNER)) {
                 routerPortDeviceId = port.getDeviceId();
             }
         }
@@ -136,7 +146,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null && deviceOwner.startsWith(classifier) && port.getState() == State.ACTIVE) {
+            if (deviceOwner != null && deviceOwner.startsWith(classifier)) {
                 for (IP ip : port.getFixedIps()) {
                     if (ip.getSubnetId().equals(subnetId)) {
                         subnetPorts.add(port);
@@ -150,13 +160,21 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
     private List<? extends Port> listPorts(String region, String projectId, String networkId) {
         getOs().useRegion(region);
-        return getOs().networking().port().list(PortListOptions.create().networkId(networkId).tenantId(projectId));
+        List<? extends Port> portList = getOs().networking().port().list(PortListOptions.create().networkId(networkId).tenantId(projectId));
+        if (CollectionUtils.isEmpty(portList)) {
+            log.info(String.format("No ports found in network: %s for project: %s in region: %s", networkId, projectId,
+                    region));
+        }
+        return portList;
     }
 
     private Port getPortByMacAddress(String region, String macAddress) {
         getOs().useRegion(region);
         List<? extends Port> portList = getOs().networking().port().list(PortListOptions.create().macAddress(macAddress));
-        return (portList == null || portList.isEmpty()) ? null : portList.get(0);
+        if (CollectionUtils.isEmpty(portList)) {
+            log.info(String.format("No ports found with mac: %s in region: %s", macAddress, region));
+        }
+        return portList.isEmpty() ? null : portList.get(0);
     }
 
     public Port getPortById(String region, String portId) {
@@ -180,6 +198,8 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         if (port != null) {
             ActionResponse delete = getOs().networking().port().delete(portId);
             success = delete.isSuccess();
+        } else {
+            log.warn(String.format("No port: %s found in region: %s", portId, region));
         }
         return success;
     }
@@ -222,6 +242,11 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
             securityGroup = getOs().networking().securitygroup().create(securityGroupBuilder.build());
         }
 
+        if (securityGroup == null) {
+            String message = String.format("Cannot create Security group with name: %s in region: %s.", sgName, region);
+            log.warn(message);
+            throw new ResponseException(message, 500);
+        }
         return securityGroup;
     }
 
@@ -230,11 +255,15 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         for (SecurityGroupRule rule : rules) {
             try {
                 getOs().networking().securityrule().create(rule.toBuilder().securityGroupId(sg.getId()).build());
-            } catch (ServerResponseException e) {
-                if (e.getStatusCode().getCode() == OPENSTACK_CONFLICT_STATUS) {
-                    log.info("Rule already exists for Openstack Security Group name " + sg.getName());
+            } catch (ResponseException re) {
+                if (re instanceof ClientResponseException
+                        && ((ClientResponseException) re).getStatusCode().getCode() == OPENSTACK_CONFLICT_STATUS) {
+                    log.info(String.format("Rule: %s already exists for Security Group: %s  ", rule, sg.getName()));
                 } else {
-                    log.error(e);
+                    String message = String.format("Unable to create rule: %s for Security Group: %s  ", rule,
+                            sg.getName());
+                    log.error(message, re);
+                    throw new ResponseException(message, 500);
                 }
             }
         }
@@ -243,8 +272,11 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     public boolean deleteSecurityGroupById(String region, String sgRefId) throws IllegalStateException {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().networking().securitygroup().delete(sgRefId);
-        if (actionResponse.getCode() == OPENSTACK_CONFLICT_STATUS) {
-            throw new IllegalStateException(actionResponse.getFault());
+        if (!actionResponse.isSuccess()) {
+            String message = String.format("Deleting Security group: %s in region: %s failed. Error: %s", sgRefId,
+                    region, actionResponse.getFault());
+            log.warn(message);
+            throw new IllegalStateException(message);
         }
         return actionResponse.isSuccess();
     }
@@ -258,14 +290,17 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     }
 
     // Floating IP API
-    public List<String> getFloatingIpPools(String region, String projectId) throws Exception {
+    public List<String> getFloatingIpPools(String region) throws Exception {
         getOs().useRegion(region);
 
         Map<String, String> filter = Maps.newHashMap();
-        filter.put(QUERY_PARAM_TENANT_ID, projectId);
         filter.put(QUERY_PARAM_EXTERNAL_ROUTER, Boolean.TRUE.toString());
 
-        return getOs().networking().network().list(filter)
+        List<? extends Network> floatingIpPoolList = getOs().networking().network().list(filter);
+        if (CollectionUtils.isEmpty(floatingIpPoolList)) {
+            log.info("No floating ip found in region: " + region);
+        }
+        return floatingIpPoolList
                 .stream()
                 .map(Network::getName)
                 .collect(Collectors.toList());
@@ -282,14 +317,21 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
     public synchronized void associateMgmtPortWithFloatingIp(String region, String netFloatingIpId, String portId) {
         getOs().useRegion(region);
-        getOs().networking().floatingip().associateToPort(netFloatingIpId, portId);
+        NetFloatingIP associateToPort = getOs().networking().floatingip().associateToPort(netFloatingIpId, portId);
+        if(associateToPort == null) {
+            String message = String.format("Associating floating ip: %s to port: %s in region: %s failed.", netFloatingIpId,
+                    portId, region);
+            log.warn(message);
+            throw new ResponseException(message, 500);
+        }
     }
 
     /**
      * A synchronous way to allocate floating ip(within ourselfs). Since this is a static method, we would lock on
      * the class objects which prevents multiple threads from making the floating ip call at the same time.
      */
-    public synchronized NetFloatingIP createFloatingIp(String region, String networkId, String serverId, String portId) {
+    public synchronized NetFloatingIP createFloatingIp(String region, String networkId, String serverId,
+            String portId) {
         getOs().useRegion(region);
 
         NetFloatingIPBuilder builder = new NeutronFloatingIP.FloatingIPConcreteBuilder();
@@ -297,15 +339,15 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         builder.portId(portId);
 
         NetFloatingIP netFloatingIP = null;
-        try {
-            netFloatingIP = getOs().networking().floatingip().create(builder.build());
+        netFloatingIP = getOs().networking().floatingip().create(builder.build());
+        if (netFloatingIP != null) {
             log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
-        } catch (ServerResponseException e) {
-            if (e.getStatusCode().getCode() == OPENSTACK_NOT_FOUND_STATUS) {
-                log.warn("Cannot create floating ip: " + e.getMessage());
-            } else {
-                throw e;
-            }
+        } else {
+            String message = String.format(
+                    "Cannot create floating ip for server: %s with port: %s under network: %s in region: %s", serverId,
+                    portId, networkId, region);
+            log.warn(message);
+            throw new ResponseException(message, 500);
         }
         return netFloatingIP;
     }
@@ -315,7 +357,12 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         log.info("Deleting Floating ip with id: " + floatingIpId);
         ActionResponse actionResponse = getOs().networking().floatingip().delete(floatingIpId);
         if (!actionResponse.isSuccess()) {
-            log.warn("Deleting floating ip with id: " + floatingIpId + " failed with message: " + actionResponse.getFault());
+            String message = String.format("Deleting floating ip with id: %s in region: %s failed with message: %s",
+                    floatingIpId, region, actionResponse.getFault());
+            log.warn(message);
+            if (actionResponse.getCode() != Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new ResponseException(message, actionResponse.getCode());
+            }
         }
     }
 

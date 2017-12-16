@@ -22,7 +22,6 @@ import java.util.concurrent.Callable;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.osc.core.broker.service.api.ServiceDispatcherApi;
@@ -36,16 +35,18 @@ import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.slf4j.LoggerFactory;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
+import org.slf4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public abstract class ServiceDispatcher<I extends Request, O extends Response> implements ServiceDispatcherApi<I, O> {
 
-    private static final Logger log = Logger.getLogger(ServiceDispatcher.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceDispatcher.class);
     private EntityManager em = null;
 
     /**
@@ -91,7 +92,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
             // calling service in a transaction
             response = txControl.required(() -> exec(request, this.em));
         } catch (ScopedWorkException e) {
-            handleException((Exception) e.getCause());
+            handleException(e.getCause());
         }
 
 		ChainedDispatch<O> nextDispatch;
@@ -101,7 +102,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
 				final ChainedDispatch<O> tempNext = nextDispatch;
 				response = txControl.required(() -> tempNext.dispatch(previousResponse, this.em));
 			} catch (ScopedWorkException e) {
-				handleException((Exception) e.getCause());
+				handleException(e.getCause());
 			}
 		}
 
@@ -212,11 +213,11 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
 
     protected abstract O exec(I request, EntityManager em) throws Exception;
 
-    private void handleException(Exception e) throws VmidcDbConstraintViolationException,
-    VmidcDbConcurrencyException, Exception {
-        if(e instanceof SslCertificatesExtendedException){
-            throw e;
-        }else if (e instanceof VmidcException) {
+    private void handleException(Throwable e)
+            throws VmidcDbConstraintViolationException, VmidcDbConcurrencyException, Exception {
+        if (e instanceof SslCertificatesExtendedException) {
+            throw (SslCertificatesExtendedException) e;
+        } else if (e instanceof VmidcException) {
             log.warn("Service request failed (logically): " + e.getMessage());
         } else {
             log.error("Service request failed (unexpectedly): " + e.getMessage(), e);
@@ -231,9 +232,11 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
             log.error("Got database concurrency exception", e);
 
             throw new VmidcDbConcurrencyException("Database Concurrency Exception.");
+        } else if (e instanceof Exception) {
+            throw (Exception) e;
         }
 
-        throw e;
-    }
 
+        throw new Exception("Exception or error executing service call: " + e.getMessage(), e);
+    }
 }

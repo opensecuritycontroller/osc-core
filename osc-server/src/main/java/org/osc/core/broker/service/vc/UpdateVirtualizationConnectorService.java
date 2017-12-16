@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toSet;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.NO_CONTROLLER_TYPE;
 
 import java.util.List;
 import java.util.Set;
@@ -24,14 +26,12 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
@@ -53,7 +53,7 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -64,19 +64,18 @@ import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateVirtualizationConnectorService
-        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
-        implements UpdateVirtualizationConnectorServiceApi {
+extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseResponse>
+implements UpdateVirtualizationConnectorServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateVirtualizationConnectorService.class);
 
     @Reference
     private VirtualizationConnectorUtil util;
-
-    @Reference
-    private ConformService conformService;
 
     @Reference
     private EncryptionApi encryption;
@@ -85,7 +84,7 @@ public class UpdateVirtualizationConnectorService
     private ApiFactoryService apiFactoryService;
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
+    public BaseResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
@@ -116,8 +115,8 @@ public class UpdateVirtualizationConnectorService
             updateVirtualizationConnector(request, vc);
             SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
-                            .map(SslCertificateAttrEntityMgr::createEntity)
-                            .collect(toSet()),
+                    .map(SslCertificateAttrEntityMgr::createEntity)
+                    .collect(toSet()),
                     request.getDto().getId(), persistentSslCertificatesSet));
             vcEntityMgr.update(vc);
 
@@ -144,13 +143,12 @@ public class UpdateVirtualizationConnectorService
             LockUtil.releaseLocks(vcUnlock);
         }
 
-        Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
-        return new BaseJobResponse(vc.getId(), jobId);
+        return new BaseResponse(vc.getId());
     }
 
     private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(
             DryRunRequest<VirtualizationConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException)
-            throws Exception {
+                    throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
         int i = 1;
@@ -164,7 +162,7 @@ public class UpdateVirtualizationConnectorService
     }
 
     void validate(EntityManager em, DryRunRequest<VirtualizationConnectorRequest> request,
-                  VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
+            VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
@@ -221,7 +219,7 @@ public class UpdateVirtualizationConnectorService
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
         if (!existingVc.getControllerType().equals(dto.getControllerType())
-                && !existingVc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)
+                && !existingVc.getControllerType().equals(NO_CONTROLLER_TYPE)
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(
                     "SDN Controller type cannot be changed if this Virtualization Connector is "
@@ -231,9 +229,7 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-        if (dto.getType().isOpenstack()) {
-            this.util.checkOpenstackConnection(request, existingVc);
-        }
+        this.util.checkConnection(request, existingVc);
     }
 
     /**
@@ -241,10 +237,12 @@ public class UpdateVirtualizationConnectorService
      * no password specified, it uses the password from the DB.
      */
     private void updateVirtualizationConnector(DryRunRequest<VirtualizationConnectorRequest> request,
-                                               VirtualizationConnector existingVc) throws EncryptionException {
+            VirtualizationConnector existingVc) throws EncryptionException {
         // cache existing DB passwords
         String providerDbPassword = existingVc.getProviderPassword();
         String controllerDbPassword = existingVc.getControllerPassword();
+        String rabbitDbPassword = existingVc.getProviderAttributes()
+                .get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
 
         VirtualizationConnectorDto dto = request.getDto();
         // Vanilla Transform the request to entity
@@ -257,6 +255,11 @@ public class UpdateVirtualizationConnectorService
             }
             if (StringUtils.isEmpty(dto.getControllerPassword())) {
                 existingVc.setControllerPassword(controllerDbPassword);
+            }
+            if (StringUtils.isEmpty(
+                    dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD))) {
+                existingVc.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                        rabbitDbPassword);
             }
         }
     }

@@ -38,17 +38,14 @@ import org.osc.core.common.virtualization.VirtualizationType;
 public class ApplianceSoftwareVersionEntityMgr {
 
     public static ApplianceSoftwareVersion createEntity(EntityManager em, ApplianceSoftwareVersionDto dto, Appliance a) {
-
         ApplianceSoftwareVersion av = new ApplianceSoftwareVersion(a);
 
         toEntity(av, dto);
 
         return av;
-
     }
 
     public static void toEntity(ApplianceSoftwareVersion av, ApplianceSoftwareVersionDto dto) {
-
         // transfrom from dto to entity
         av.setId(dto.getId());
         av.setApplianceSoftwareVersion(dto.getSwVersion());
@@ -65,7 +62,7 @@ public class ApplianceSoftwareVersionEntityMgr {
         av.setAdditionalNicForInspection(dto.isAdditionalNicForInspection());
         av.getImageProperties().putAll(dto.getImageProperties());
         av.getConfigProperties().putAll(dto.getConfigProperties());
-
+        av.setImagePullSecretName(dto.getImagePullSecretName());
     }
 
     public static void fromEntity(ApplianceSoftwareVersion av, ApplianceSoftwareVersionDto dto) {
@@ -82,6 +79,10 @@ public class ApplianceSoftwareVersionEntityMgr {
                 .map(t -> org.osc.sdk.controller.TagEncapsulationType.valueOf(t.name()))
                 .collect(Collectors.toList()));
         dto.setAdditionalNicForInspection(av.hasAdditionalNicForInspection());
+        dto.setImagePullSecretName(av.getImagePullSecretName());
+        dto.setDiskSizeInGb(av.getDiskSizeInGb());
+        dto.setMemoryInMb(av.getMemoryInMb());
+        dto.setMinCpus(av.getMinCpus());
     }
 
     public static ApplianceSoftwareVersion findByApplianceVersionVirtTypeAndVersion(EntityManager em, Long applianceId, String av,

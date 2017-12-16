@@ -21,7 +21,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.api.client.IOSClientBuilder;
 import org.openstack4j.api.types.Facing;
@@ -29,10 +28,12 @@ import org.openstack4j.core.transport.Config;
 import org.openstack4j.model.common.Identifier;
 import org.openstack4j.model.identity.v3.Token;
 import org.openstack4j.openstack.OSFactory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public final class KeystoneProvider {
 
-    private static final Logger log = Logger.getLogger(KeystoneProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(KeystoneProvider.class);
 
     private static final String KEYSTONE_VERSION = "v3";
 
@@ -54,7 +55,7 @@ public final class KeystoneProvider {
         OSClient.OSClientV3 localOs;
         Config config = Config.newConfig().withSSLContext(endpoint.getSslContext()).withHostnameVerifier((hostname, session) -> true);
         if (connectionsMap.containsKey(endpoint)) {
-            localOs = OSFactory.clientFromToken(connectionsMap.get(endpoint), Facing.ADMIN, config);
+            localOs = OSFactory.clientFromToken(connectionsMap.get(endpoint), Facing.PUBLIC, config);
         } else {
             String endpointURL;
             try {
@@ -68,7 +69,7 @@ public final class KeystoneProvider {
 
             Identifier domainIdentifier = Identifier.byId(endpoint.getDomainId());
 
-            IOSClientBuilder.V3 keystoneV3Builder = OSFactory.builderV3().perspective(Facing.ADMIN)
+            IOSClientBuilder.V3 keystoneV3Builder = OSFactory.builderV3().perspective(Facing.PUBLIC)
                     .endpoint(endpointURL)
                     .credentials(endpoint.getUser(), endpoint.getPassword(), domainIdentifier)
                     .scopeToProject(Identifier.byName(endpoint.getProject()), domainIdentifier)

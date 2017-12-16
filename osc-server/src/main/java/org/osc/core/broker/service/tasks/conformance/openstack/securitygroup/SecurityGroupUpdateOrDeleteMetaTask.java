@@ -18,14 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
@@ -38,7 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
@@ -52,6 +50,7 @@ import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.osc.core.broker.service.tasks.conformance.openstack.sfc.CheckServiceFunctionChainMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
 import org.osc.core.common.job.TaskGuard;
@@ -65,6 +64,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Validates the Security Group members and syncs them if needed
@@ -74,6 +75,9 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Reference
     PortGroupCheckMetaTask portGroupCheckMetaTask;
+
+    @Reference
+    CheckServiceFunctionChainMetaTask checkServiceFunctionChainMetaTask;
 
     @Reference
     CheckPortGroupHookMetaTask checkPortGroupHookMetaTask;
@@ -110,7 +114,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private volatile ServiceReference<AddSecurityGroupService> addSecurityGroupServiceSR;
     AddSecurityGroupService addSecurityGroupService;
 
-    private final Logger log = Logger.getLogger(SecurityGroupUpdateOrDeleteMetaTask.class);
+    private final Logger log = LoggerFactory.getLogger(SecurityGroupUpdateOrDeleteMetaTask.class);
 
     private SecurityGroup sg;
     private TaskGraph tg;
@@ -138,6 +142,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
         this.addSecurityGroupService = this.factory.addSecurityGroupService;
         this.portGroupCheckMetaTask = this.factory.portGroupCheckMetaTask;
+        this.checkServiceFunctionChainMetaTask = this.factory.checkServiceFunctionChainMetaTask;
         this.checkPortGroupHookMetaTask = this.factory.checkPortGroupHookMetaTask;
         this.deleteMgrSecurityGroupTask = this.factory.deleteMgrSecurityGroupTask;
         this.deleteSecurityGroupInterfaceTask = this.factory.deleteSecurityGroupInterfaceTask;
@@ -236,14 +241,27 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(),
                 this.sg.getVirtualizationConnector().getProviderAdminProjectName());
 
+		if (this.apiFactoryService.supportsNeutronSFC(this.sg.getVirtualizationConnector().getControllerType())) {
+
+			// if SFC binded and network element null -> create PC
+			// if SFC binded and network element not null -> update PC
+			// if SFC not binded and network element not null -> delete PC
+
+			if (this.sg.getServiceFunctionChain() != null
+					|| (this.sg.getServiceFunctionChain() == null && this.sg.getNetworkElementId() != null)) {
+				this.tg.appendTask(this.checkServiceFunctionChainMetaTask.create(this.sg),
+						TaskGuard.ALL_PREDECESSORS_SUCCEEDED);
+			}
+
+		}
+
         // SGM Member sync with no task deferred
         addSGMemberSyncJob(em, isDeleteTg, vdc);
 
-        if (this.sg.getVirtualizationConnector().isControllerDefined()) {
-            if (this.apiFactoryService.supportsPortGroup(this.sg)) {
-                this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg, isDeleteTg, domainId),
-                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
-            }
+        if (this.sg.getVirtualizationConnector().isControllerDefined()
+                && this.apiFactoryService.supportsPortGroup(this.sg)) {
+            this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg, isDeleteTg, domainId),
+                    TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
@@ -257,17 +275,23 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             if (sgi.getMarkedForDeletion() || isDeleteTg) {
                 VirtualSystem vs = sgi.getVirtualSystem();
                 if (this.apiFactoryService.syncsSecurityGroup(vs)) {
-                    ManagerSecurityGroupApi mgrSgApi = this.apiFactoryService.createManagerSecurityGroupApi(vs);
-                    ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
-                    if (mepg != null) {
-                        DeleteMgrSecurityGroupTask mgrSecurityGroupDelTask = this.deleteMgrSecurityGroupTask.create(vs,
-                                mepg);
-                        this.tg.appendTask(mgrSecurityGroupDelTask);
-                        tasksToSucceedToDeleteSGI.add(mgrSecurityGroupDelTask);
+                    try (ManagerSecurityGroupApi mgrSgApi = this.apiFactoryService.createManagerSecurityGroupApi(vs)) {
+                        ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(sgi.getMgrSecurityGroupId());
+                        if (mepg != null) {
+                            DeleteMgrSecurityGroupTask mgrSecurityGroupDelTask = this.deleteMgrSecurityGroupTask
+                                    .create(vs, mepg);
+                            this.tg.appendTask(mgrSecurityGroupDelTask);
+                            tasksToSucceedToDeleteSGI.add(mgrSecurityGroupDelTask);
+                        }
                     }
                 }
 
-                if (!this.apiFactoryService.supportsPortGroup(this.sg)) {
+                // Mostly applies only when SGI marked for deletion(not delete tg case) In delete tg case, the members
+                // are already deleted and this essentially a no op. The tasks SecurityGroupMemberVmCheckTask etc
+                // need to make sure hooks are removed in case of delete tg.
+                boolean shouldRemoveHooks = !this.apiFactoryService.supportsPortGroup(this.sg)
+                        || !this.apiFactoryService.supportsNeutronSFC(this.sg);
+                if (shouldRemoveHooks) {
                     tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(em, sgi));
                 }
 
@@ -313,17 +337,10 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member
             // from DB
             if (!sgm.getMarkedForDeletion()) {
-                Set<VMPort> ports = new HashSet<>();
-                if (sgm.getType() == SecurityGroupMemberType.VM) {
-                    ports = sgm.getVm().getPorts();
-                } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
-                    ports = sgm.getNetwork().getPorts();
-                } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
-                    ports = sgm.getSubnet().getPorts();
-                }
+                Set<VMPort> ports = sgm.getVmPorts();
                 for (VMPort port : ports) {
                     DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
-                            .findByVirtualSystemAndPort(em, vs, port);
+                            .findByVirtualSystemAndPort(em, vs, port.getId(), VMPort.class);
                     VmPortHookRemoveTask hookRemoveTask = this.vmPortHookRemoveTask.create(sgm, port,
                             assignedRedirectedDai, vs.getDistributedAppliance().getName());
                     this.tg.appendTask(hookRemoveTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);

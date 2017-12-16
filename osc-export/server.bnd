@@ -8,17 +8,17 @@
 -runfw: org.apache.felix.framework;version='[5.4.0,5.4.0]'
 
 -runrequires: \
+	osgi.identity;filter:='(osgi.identity=osc-rest-server)',\
 	osgi.identity;filter:='(osgi.identity=osc-server)',\
 	osgi.identity;filter:='(osgi.identity=osc-common)',\
 	osgi.identity;filter:='(osgi.identity=osc-installer)',\
 	osgi.identity;filter:='(osgi.identity=osc-installer-simple)',\
 	osgi.identity;filter:='(osgi.identity=osc-resolver)',\
-	osgi.identity;filter:='(osgi.identity=osc-rest-server)',\
 	osgi.identity;filter:='(osgi.identity=osc-ui)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.configadmin)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.scr)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.fileinstall)',\
-	osgi.identity;filter:='(osgi.identity=slf4j.simple)',\
+	osgi.identity;filter:='(osgi.identity=slf4j.api)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.metatype)',\
 	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.resolver)(version>=1.10.1))',\
 	osgi.identity;filter:='(osgi.identity=org.hibernate.osgi)',\
@@ -48,7 +48,8 @@ hk2:\
 -runproperties: \
     org.osgi.framework.bootdelegation=sun.*,\
     org.apache.felix.http.enable=false,\
-    felix.fileinstall.dir='./config,./plugins'
+    felix.fileinstall.dir='./config,./data/plugins', \
+    logback.configurationFile=./logback.xml
 
 -runsystempackages:\
     sun.misc,\

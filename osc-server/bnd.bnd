@@ -19,3 +19,4 @@ import-guava:\
 import-jta:\
     javax.transaction;version="[1.1,2)",\
     javax.transaction.xa;version="[1.1,2)"
+

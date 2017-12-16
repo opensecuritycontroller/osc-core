@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -82,12 +81,14 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(immediate = true)
 public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     private static final String OSC_PLUGIN_NAME = PluginTracker.PROP_PLUGIN_NAME;
-    private final Logger log = Logger.getLogger(ApiFactoryServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(ApiFactoryServiceImpl.class);
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
@@ -240,7 +241,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     }
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
-        removeApi(serviceObjs, this.sdnControllerRefs, null);
+        removeApi(serviceObjs, this.sdnControllerRefs, this.sdnControllerApis);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -321,6 +322,16 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         }
         return this.managerRefs.get(name).getServiceReference().getProperty(propertyName);
     }
+
+	@Override
+	public Boolean supportsMultiplePolicies(String managerType) throws Exception {
+		return (Boolean) getManagerPluginProperty(managerType, SUPPORT_MULTIPLE_POLICIES);
+	}
+
+	@Override
+	public Boolean supportsMultiplePolicies(VirtualSystem vs) throws Exception {
+		return supportsMultiplePolicies(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType());
+	}
 
     @Override
     public Boolean syncsPolicyMapping(String managerType) throws Exception {
@@ -450,12 +461,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     @Override
     public Set<String> getManagerTypes() {
-        return new TreeSet<String>(this.managerRefs.keySet());
+        return new TreeSet<>(this.managerRefs.keySet());
     }
 
     @Override
     public Set<String> getControllerTypes() {
-        return new TreeSet<String>(this.sdnControllerRefs.keySet());
+        return new TreeSet<>(this.sdnControllerRefs.keySet());
     }
 
     @Override
@@ -656,13 +667,28 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         return supportsPortGroup(vs.getVirtualizationConnector().getControllerType());
     }
 
+    @Override
+    public Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
+        return supportsPortGroup(sg.getVirtualizationConnector().getControllerType());
+    }
+
     private Boolean supportsPortGroup(String controllerType) throws Exception {
         return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_PORT_GROUP);
     }
 
     @Override
-    public Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
-        return supportsPortGroup(sg.getVirtualizationConnector().getControllerType());
+    public Boolean supportsNeutronSFC(VirtualSystem vs) throws Exception {
+        return supportsNeutronSFC(vs.getVirtualizationConnector().getControllerType());
+    }
+
+    @Override
+    public Boolean supportsNeutronSFC(SecurityGroup sg) throws Exception {
+        return supportsNeutronSFC(sg.getVirtualizationConnector().getControllerType());
+    }
+
+    @Override
+    public Boolean supportsNeutronSFC(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_NEUTRON_SFC);
     }
 
 }

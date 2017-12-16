@@ -19,6 +19,7 @@ package org.osc.core.broker.service.validator;
 import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.*;
 
 import java.text.MessageFormat;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,6 +28,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
+import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -36,8 +41,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDtoValidatorBaseTest{
-//    private DistributedAppliance existingDa;
-
     @Override
     @Before
     public void testInitialize() throws Exception{
@@ -146,5 +149,56 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         // Assert.
         Assert.assertNotNull("The returned da should not be null.",  da);
         Assert.assertEquals("The id of the returned da was different than expected.", this.da.getId(), da.getId());
+    }
+
+    @Test
+    public void testValidateForUpdate_WhenDAUpdateRemovesAssignedVS_ThrowsInvalidEntryException() throws Exception {
+        // Arrange.
+        DistributedAppliance assignedDA = new DistributedAppliance(this.amc);
+        assignedDA.setName("DA_WITH_ASSIGNED_VS");
+        assignedDA.setApplianceVersion(this.asv.getApplianceSoftwareVersion());
+        assignedDA.setAppliance(this.app);
+
+        VirtualSystem assignedVS = new VirtualSystem(assignedDA);
+        assignedVS.setName("VS_WITH_ASSIGNED_DS");
+        assignedVS.setApplianceSoftwareVersion(this.asv);
+        assignedVS.setVirtualizationConnector(this.vc);
+        assignedDA.getVirtualSystems().add(assignedVS);
+
+        DeploymentSpec assignedDS = new DeploymentSpec(assignedVS, null, null, null, null, null);
+        assignedDS.setName("DS_WITH_ASSIGNED_DAI");
+        assignedDS.setInstanceCount(1);
+        assignedVS.getDeploymentSpecs().add(assignedDS);
+
+        DistributedApplianceInstance assignedDAI = new DistributedApplianceInstance(assignedVS);
+        assignedDAI.setName("ASSIGNED_DAI");
+        assignedDS.getDistributedApplianceInstances().add(assignedDAI);
+
+        PodPort podPort = new PodPort(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
+
+        this.em.getTransaction().begin();
+
+        this.em.persist(assignedDA);
+        this.em.persist(assignedVS);
+        this.em.persist(assignedDS);
+        this.em.persist(assignedDAI);
+        this.em.persist(podPort);
+        assignedDAI.addProtectedPort(podPort);
+        podPort.addDai(assignedDAI);
+
+        this.em.getTransaction().commit();
+
+        DistributedApplianceDto daDto = createDistributedApplianceDto();
+        daDto.setId(assignedDA.getId());
+        daDto.setMcId(this.amc.getId());
+        daDto.setApplianceId(this.app.getId());
+        daDto.getVirtualizationSystems().iterator().next().setVcId(this.vc.getId());
+        daDto.getVirtualizationSystems().iterator().next().setDomainId(this.domain.getId());
+
+        this.exception.expect(VmidcBrokerInvalidEntryException.class);
+        this.exception.expectMessage(String.format("The virtual system '%s' cannot be deleted. It is currently assigned to protect a workload.", assignedVS.getName()));
+
+        // Act.
+        this.validator.validateForUpdate(daDto);
     }
 }

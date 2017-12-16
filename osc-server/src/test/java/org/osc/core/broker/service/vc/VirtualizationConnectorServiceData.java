@@ -16,58 +16,25 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VirtualizationConnectorServiceData {
+    static String OPENSTACK_NAME_ALREADY_EXISTS = "Openstack Name";
 
-    public static String OPENSTACK_NAME_ALREADY_EXISTS = "Openstack Name";
-    public static String CONTROLLER_IP_ALREADY_EXISTS = "127.0.0.1";
-    public static String PROVIDER_IP_ALREADY_EXISTS = "127.0.0.2";
-    public static String CONTROLLER_IP_ALREADY_EXISTS_2 = "127.0.0.3";
-    public static String PROVIDER_IP_ALREADY_EXISTS_2 = "127.0.0.4";
-
-    public static VirtualizationConnector createVirtualisationConnector(String name,
-            String controller, String provider) {
-        VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setName(name);
-        vc.setControllerIpAddress(controller);
-        vc.setProviderIpAddress(provider);
-        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
-        vc.setProviderUsername("Natasha");
-        vc.setProviderPassword("********");
-        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
-        return vc;
-    }
-
-    public static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NAME_ALREADY_EXISTS_NOCONTROLLER_REQUEST = createOpenStackRequest(
-            VirtualizationType.OPENSTACK, OPENSTACK_NAME_ALREADY_EXISTS, null, null, null, "2.2.2.2", "provider user",
-            "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", null);
-
-    public static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST = createOpenStackRequest(
+    static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST = createOpenStackRequest(
             VirtualizationType.OPENSTACK, OPENSTACK_NAME_ALREADY_EXISTS, null, null, null, "2.2.2.2", "provider user",
             "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", "NSC");
 
-    public static DryRunRequest<VirtualizationConnectorRequest> PROVIDER_IP_ALREADY_EXISTS_OPENSTACK_REQUEST = createOpenStackRequest(
-            VirtualizationType.OPENSTACK, "Random Openstack name", "1.1.1.1", "SDNUserName", "SDNPwd", PROVIDER_IP_ALREADY_EXISTS,
-            "provider user", "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111",
-            "NSC");
 
-    public static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NSC_REQUEST = createOpenStackRequest(
-            VirtualizationType.OPENSTACK, "Random Openstack name", null, null, null, "2.2.2.2", "provider user",
-            "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", "NSC");
-
-    public static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_CONTROLLER_IP_ALREADY_EXISTS_REQUEST = createOpenStackRequest(
-            VirtualizationType.OPENSTACK, "Random Openstack name", CONTROLLER_IP_ALREADY_EXISTS, "SDNUserName", "SDNPwd", "2.2.2.2", "provider user",
-            "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", "NSC");
-
-    public static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NOCONTROLLER_REQUEST = createOpenStackRequest(
+    static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NOCONTROLLER_REQUEST = createOpenStackRequest(
             VirtualizationType.OPENSTACK, "Random Openstack name", null, null, null, "2.2.2.2", "provider user",
             "provider Password", "4.3", "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", null);
 
@@ -114,24 +81,6 @@ public class VirtualizationConnectorServiceData {
         return dto;
     }
 
-    public static VirtualizationConnectorDto getVCDtoforOpenStack(){
-
-        VirtualizationConnectorDto vcDto = getVCDto(VirtualizationType.OPENSTACK, "Random Openstack name", null, null, null, "2.2.2.2", "provider user",
-                "provider Password", "4.3");
-        setOpenStackParams(vcDto, "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", null);
-
-        return vcDto;
-    }
-
-    public static VirtualizationConnectorDto getVCDtoforOpenStackwithSDN(){
-
-        VirtualizationConnectorDto vcDto = getVCDto(VirtualizationType.OPENSTACK, "Random Openstack name", "1.1.1.1", "controller user", "controller password", "2.2.2.2", "provider user",
-                "provider Password", "4.3");
-        setOpenStackParams(vcDto, "Project Demo", "default", "RabbitMq User", "RabbitMq Password", "1111", "NSC");
-
-        return vcDto;
-    }
-
     private static void setOpenStackParams(VirtualizationConnectorDto vcDto,
             String projectName,
             String domainId,
@@ -144,9 +93,9 @@ public class VirtualizationConnectorServiceData {
         vcDto.setAdminProjectName(projectName);
 
         Map<String, String> providerAttributes = new HashMap<>();
-        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
-        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
-        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
+        providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
+        providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
+        providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
         vcDto.setProviderAttributes(providerAttributes);
 
         if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
@@ -178,13 +127,4 @@ public class VirtualizationConnectorServiceData {
 
         return request;
     }
-
-    public static DryRunRequest<VirtualizationConnectorDto> getOpenStackRequestwithSDN() {
-
-        DryRunRequest<VirtualizationConnectorDto> request = new DryRunRequest<>();
-        request.setDto(getVCDtoforOpenStackwithSDN());
-
-        return request;
-    }
-
 }

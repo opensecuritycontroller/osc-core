@@ -26,24 +26,10 @@ public class DeploymentSpecDtoValidator {
 
 
     public static void checkForNullFields(DeploymentSpecDto dto) throws Exception {
-
         // build a map of (field,value) pairs to be checked for null/empty
         // values
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("Name", dto.getName());
-
-        map.put("Project Name", dto.getProjectName());
-        map.put("Project", dto.getProjectId());
-
-        map.put("Region", dto.getRegion());
-
-        map.put("Virtual System Id", dto.getParentId());
-
-        map.put("Management Network Name", dto.getManagementNetworkName());
-        map.put("Management Network Id", dto.getManagementNetworkId());
-
-        map.put("Inspection Network Name", dto.getInspectionNetworkName());
-        map.put("Inspection Network Id", dto.getInspectionNetworkId());
 
         map.put("Instance Count", dto.getCount());
 

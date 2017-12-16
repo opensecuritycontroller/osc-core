@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
@@ -39,16 +38,18 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.request.UploadRequest;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 @Component(configurationPid="org.osc.core.broker.upload",
     configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadRequest, BaseResponse>
         implements UploadApplianceVersionFileServiceApi {
 
-    private static final Logger log = Logger.getLogger(UploadApplianceVersionFileService.class);
+    private static final Logger log = LoggerFactory.getLogger(UploadApplianceVersionFileService.class);
 
     @Reference
     private ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;

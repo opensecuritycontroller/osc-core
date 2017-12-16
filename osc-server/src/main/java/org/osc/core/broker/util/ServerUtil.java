@@ -43,12 +43,13 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.client.RestBaseClient;
 import org.osc.core.broker.util.VersionUtil.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServerUtil {
-    private static final Logger log = Logger.getLogger(ServerUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(ServerUtil.class);
 
     private static final Long ISC_DISC_SPACE_THRESHOLD = 5L;
     private static String serverIP = "";

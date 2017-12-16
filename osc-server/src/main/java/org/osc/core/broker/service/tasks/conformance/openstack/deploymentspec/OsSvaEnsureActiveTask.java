@@ -51,7 +51,7 @@ public class OsSvaEnsureActiveTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
-        String osServerId = this.dai.getOsServerId();
+        String osServerId = this.dai.getExternalId();
         DeploymentSpec ds = this.dai.getDeploymentSpec();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
 

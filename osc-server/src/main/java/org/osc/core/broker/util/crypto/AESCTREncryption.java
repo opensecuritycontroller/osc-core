@@ -30,11 +30,12 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.server.EncryptionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AESCTREncryption {
-    private static final Logger LOG = Logger.getLogger(AESCTREncryption.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AESCTREncryption.class);
     private static final int IV_BYTES = 16;
     private static final String AESCTR_ALGORITHM = "AES/CTR/PKCS5Padding";
     private static final int IV_INDEX = 0;
@@ -78,7 +79,7 @@ public class AESCTREncryption {
 
             return new String(result, "UTF-8");
         } catch (Exception ex) {
-            LOG.error("Error encrypting message", ex);
+            LOG.error("Error decrypting message", ex);
             throw new EncryptionException("Failed to decrypt cipher with AES-CTR", ex);
         }
     }

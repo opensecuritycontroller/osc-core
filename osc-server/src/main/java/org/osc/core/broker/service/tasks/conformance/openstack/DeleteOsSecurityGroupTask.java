@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import org.apache.log4j.Logger;
+import javax.persistence.EntityManager;
+
 import org.openstack4j.model.network.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
@@ -25,14 +26,14 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
+import org.slf4j.Logger;
 
 @Component(service = DeleteOsSecurityGroupTask.class)
 public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(DeleteOsSecurityGroupTask.class);
+    private final Logger log = LoggerFactory.getLogger(DeleteOsSecurityGroupTask.class);
 
     private static final int SLEEP_RETRIES = 5 * 1000; // 5 seconds
     private static final int MAX_ATTEMPTS = 3;
@@ -72,14 +73,18 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
                 SecurityGroup osSg = neutron.getSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
                 if (osSg != null) {
                     while (!success) {
+                        String errorMsg = "";
                         try {
                             success = neutron.deleteSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
                         } catch (IllegalStateException ex) {
                             this.log.info("Failed to remove openstack Security Group: " + ex.getMessage());
+                            errorMsg = ex.getMessage();
                             Thread.sleep(SLEEP_RETRIES);
                         } finally {
                             if (--count <= 0) {
-                                throw new Exception("Unable to delete the Openstack Security Group id: " + this.sgReference.getSgRefId());
+                                throw new Exception(
+                                        String.format("Unable to delete the Openstack Security Group id: %s. Error: %s",
+                                                this.sgReference.getSgRefId(), errorMsg));
                             }
                         }
                     }

@@ -21,7 +21,6 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -45,13 +44,15 @@ import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
         implements QueryVmInfoServiceApi {
 
     private static final Logger log =
-            Logger.getLogger(QueryVmInfoService.class);
+            LoggerFactory.getLogger(QueryVmInfoService.class);
 
     @Reference
     EncryptionApi encryption;
@@ -118,15 +119,15 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                             FlowPortInfo portInfo = flowPortInfo.get(requestId);
 
                             FlowVmInfo flowVmInfo = new FlowVmInfo();
-                            flowVmInfo.flow = portInfo.flow;
+                            flowVmInfo.flow = portInfo.getFlow();
                             flowVmInfo.requestId = requestId;
 
-                            if (portInfo.sourcePortId != null) {
-                                flowVmInfo.sourceVmInfo = findVmByPortId(nova, neutron, dai, portInfo.sourcePortId);
+                            if (portInfo.getSourcePortId() != null) {
+                                flowVmInfo.sourceVmInfo = findVmByPortId(nova, neutron, dai, portInfo.getSourcePortId());
                             }
-                            if (portInfo.destinationPortId != null) {
+                            if (portInfo.getDestinationPortId() != null) {
                                 flowVmInfo.destinationVmInfo = findVmByPortId(nova, neutron, dai,
-                                        portInfo.destinationPortId);
+                                        portInfo.getDestinationPortId());
                             }
                             response.flowVmInfo.put(requestId, flowVmInfo);
                         }
@@ -139,9 +140,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                             flowVmInfo.requestId = requestId;
                             flowVmInfo.flow = flowInfo;
                             flowVmInfo.sourceVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
-                                    flowInfo.sourceMacAddress, flowInfo.sourceIpAddress);
+                                    flowInfo.getSourceMacAddress(), flowInfo.getSourceIpAddress());
                             flowVmInfo.destinationVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
-                                    flowInfo.destinationMacAddress, flowInfo.destinationIpAddress);
+                                    flowInfo.getDestinationMacAddress(), flowInfo.getDestinationIpAddress());
 
                             response.flowVmInfo.put(requestId, flowVmInfo);
                         }
@@ -159,14 +160,20 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         String region = dai.getDeploymentSpec().getRegion();
         String vmId = neutron.getVmIdByPortId(region, portId);
         if (vmId == null) {
-            throw new VmidcBrokerValidationException("Unable to find Server attached to the port " + portId);
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server attached to the port: %s", portId));
         }
         Server vm = nova.getServer(region, vmId);
+        if (vm == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server with Id: %s in region: %s ", vmId, region));
+        }
         return newVmInfo(vm);
     }
 
     private VmInfo findVmByMacOrIp(EntityManager em, Openstack4JNova nova, Openstack4JNeutron neutron,
-                                   DistributedApplianceInstance dai, String macAddress, String ipAddress) throws IOException {
+            DistributedApplianceInstance dai, String macAddress, String ipAddress)
+            throws IOException, VmidcBrokerValidationException {
         VmInfo vmInfo;
         if (macAddress != null) {
             VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
@@ -239,10 +246,18 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
     }
 
     private VmInfo findVmByMacAddress(Openstack4JNova nova, Openstack4JNeutron neutron, DistributedApplianceInstance dai,
-                                      String macAddress) throws IOException {
+                                      String macAddress) throws IOException, VmidcBrokerValidationException {
         String region = dai.getDeploymentSpec().getRegion();
         String vmId = neutron.getVmIdByMacAddress(region, macAddress);
+        if (vmId == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server with mac address: %s ", macAddress));
+        }
         Server server = nova.getServer(region, vmId);
+        if (server == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server with Id: %s in region: %s ", vmId, region));
+        }
         return newVmInfo(server);
     }
 

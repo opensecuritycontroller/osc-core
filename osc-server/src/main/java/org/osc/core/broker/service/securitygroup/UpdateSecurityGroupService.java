@@ -23,12 +23,13 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -43,16 +44,18 @@ import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Component
 public class UpdateSecurityGroupService
-        extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
-        implements UpdateSecurityGroupServiceApi {
+extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
+implements UpdateSecurityGroupServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateSecurityGroupService.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateSecurityGroupService.class);
 
     // this @Ref is used by sub-type UpdateSecurityGroupPropertiesService
     @Reference
-    protected ConformService conformService;
+    protected SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Override
     public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception {
@@ -62,23 +65,26 @@ public class UpdateSecurityGroupService
 
         SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
         UnlockObjectMetaTask unlockTask = null;
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
 
         try {
-
-            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
-                    VirtualizationConnectorEntityMgr.findById(em, dto.getParentId()));
-
+            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup, vc);
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
-
             Set<SecurityGroupMemberItemDto> selectedMembers = request.getMembers();
 
-            Set<String> selectedMemberOsId = new HashSet<>();
+            Set<String> selectedMemberUniqueId = new HashSet<>();
             if (selectedMembers != null) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : selectedMembers) {
-                    validate(securityGroupMemberDto, regions);
-                    String openstackId = securityGroupMemberDto.getOpenstackId();
-                    selectedMemberOsId.add(openstackId);
-                    addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
+
+                    if (vc.getVirtualizationType().isOpenstack()) {
+                        validate(securityGroupMemberDto, regions);
+                    }
+
+                    String externalId =
+                            SecurityGroupMemberType.fromText(securityGroupMemberDto.getType()) == SecurityGroupMemberType.LABEL ?
+                                    securityGroupMemberDto.getLabel() : securityGroupMemberDto.getOpenstackId();
+                                    selectedMemberUniqueId.add(externalId);
+                                    addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }
 
@@ -86,8 +92,8 @@ public class UpdateSecurityGroupService
             Iterator<SecurityGroupMember> sgMemberEntityIterator = securityGroupMembers.iterator();
             while (sgMemberEntityIterator.hasNext()) {
                 SecurityGroupMember sgMemberEntity = sgMemberEntityIterator.next();
-                String entityOpenstackId = getMemberOpenstackId(sgMemberEntity);
-                boolean isMemberSelected = selectedMemberOsId.contains(entityOpenstackId);
+                String entityUniqueId = getMemberUniqueId(sgMemberEntity);
+                boolean isMemberSelected = selectedMemberUniqueId.contains(entityUniqueId);
                 if (!isMemberSelected) {
                     log.info("Removing Member: " + sgMemberEntity.getMemberName());
                     OSCEntityManager.markDeleted(em, sgMemberEntity, this.txBroadcastUtil);
@@ -100,7 +106,7 @@ public class UpdateSecurityGroupService
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                    Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
                     return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {
@@ -150,7 +156,7 @@ public class UpdateSecurityGroupService
         return regions;
     }
 
-    private String getMemberOpenstackId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+    private String getMemberUniqueId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         switch (sgm.getType()) {
         case VM:
             return sgm.getVm().getOpenstackId();
@@ -158,6 +164,8 @@ public class UpdateSecurityGroupService
             return sgm.getNetwork().getOpenstackId();
         case SUBNET:
             return sgm.getSubnet().getOpenstackId();
+        case LABEL:
+            return sgm.getLabel().getValue();
         default:
             throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
         }

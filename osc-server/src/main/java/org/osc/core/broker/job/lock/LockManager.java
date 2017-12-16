@@ -18,16 +18,17 @@ package org.osc.core.broker.job.lock;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public final class LockManager {
 
-    private static final Logger log = Logger.getLogger(LockManager.class);
+    private static final Logger log = LoggerFactory.getLogger(LockManager.class);
 
     private static LockManager lockManager = new LockManager();
 

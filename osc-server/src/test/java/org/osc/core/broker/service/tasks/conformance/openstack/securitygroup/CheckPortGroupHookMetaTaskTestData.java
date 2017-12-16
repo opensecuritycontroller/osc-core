@@ -42,6 +42,8 @@ import org.osc.core.common.virtualization.VirtualizationType;
 public class CheckPortGroupHookMetaTaskTestData {
     public static DistributedApplianceInstance DAI_PROTECTING_PORT = createDAI("DAI_PROTECTING_PORT");
 
+    public static DistributedApplianceInstance DAI_K8S_PROTECTING_PORT = createK8sDAI("DAI_K8S_PROTECTING_PORT");
+
     public static DistributedApplianceInstance DAI_PROTECTING_PORT_EXISTING_HOOK = createDAI("DAI_PROTECTING_PORT_EXISTING_HOOK");
 
     public static DistributedApplianceInstance DAI_DELETION_PROTECTING_PORT_EXISTING_HOOK = createDAI("DAI_DELETION_PROTECTING_PORT_EXISTING_HOOK");
@@ -101,6 +103,13 @@ public class CheckPortGroupHookMetaTaskTestData {
             null,
             "7");
 
+    public static SecurityGroupInterface SGI_K8S_WITHOUT_NET_ELEMENT_WITH_ASSIGNED_DAI =
+            createK8sSGIWithDAI(
+                    "SGI_K8S_WITHOUT_NET_ELEMENT_WITH_ASSIGNED_DAI",
+                    DAI_K8S_PROTECTING_PORT.getVirtualSystem(),
+                    DAI_K8S_PROTECTING_PORT,
+                    "8");
+
     public static TaskGraph createInspectionHookGraph(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.appendTask(new AllocateDAIWithSGIMembersTask().create(sgi, dai));
@@ -133,6 +142,12 @@ public class CheckPortGroupHookMetaTaskTestData {
         SecurityGroupInterface sgi = createSGIWithDAI(name, vs, dai, tag);
         sgi.setNetworkElementId(netElementId);
         sgi.setMarkedForDeletion(deleted);
+        return sgi;
+    }
+
+    private static SecurityGroupInterface createK8sSGIWithDAI(String name, VirtualSystem vs, DistributedApplianceInstance dai, String tag) {
+        SecurityGroupInterface sgi = createSGIWithDAI(name, vs, dai, tag);
+        sgi.getVirtualSystem().getVirtualizationConnector().setVirtualizationType(VirtualizationType.KUBERNETES);
         return sgi;
     }
 
@@ -232,6 +247,17 @@ public class CheckPortGroupHookMetaTaskTestData {
         vs.setMgrId(baseName + "_mgrId");
 
         return vs;
+    }
+
+    private static DistributedApplianceInstance createK8sDAI(String baseName) {
+        DistributedApplianceInstance dai = createDAI(baseName);
+        dai
+        .getDeploymentSpec()
+        .getVirtualSystem()
+        .getVirtualizationConnector()
+        .setVirtualizationType(VirtualizationType.KUBERNETES);
+
+        return dai;
     }
 
     private static DistributedApplianceInstance createDAI(String baseName) {

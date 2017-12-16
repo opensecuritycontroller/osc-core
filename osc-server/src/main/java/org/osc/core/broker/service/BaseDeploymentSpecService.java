@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -27,6 +30,7 @@ import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
+import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.HostAggregateEntityMgr;
 import org.osc.core.broker.service.persistence.HostEntityMgr;
@@ -35,6 +39,7 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.service.validator.DeploymentSpecDtoValidator;
+import org.osc.core.broker.util.ValidateUtil;
 
 public abstract class BaseDeploymentSpecService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
@@ -49,7 +54,7 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
         if (this.vs == null || this.vs.getMarkedForDeletion()) {
             throw new VmidcBrokerValidationException(
                     "Deployment Specification using The associated Virtual System with Id: " + dto.getParentId()
-                            + "  is either not found or is been marked deleted by the user.");
+                    + "  is either not found or is been marked deleted by the user.");
         }
 
         if (dto.getCount() == null || dto.getCount() <= 0) {
@@ -57,18 +62,22 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
                     : dto.getCount() + " specified for Deployment Specification");
         }
 
-        if (!dto.getAvailabilityZones().isEmpty() && (!dto.getHosts().isEmpty() || !dto.getHostAggregates().isEmpty())
-                || !dto.getHosts().isEmpty()
-                && (!dto.getAvailabilityZones().isEmpty() || !dto.getHostAggregates().isEmpty())
-                || !dto.getHostAggregates().isEmpty()
-                && (!dto.getHosts().isEmpty() || !dto.getAvailabilityZones().isEmpty())) {
-            // If multiple units of deployment are specified, throw an error
-            throw new VmidcBrokerValidationException(
-                    "Deployment Specification can only be specified with Availablity zones or Hosts or Host Aggregates.");
-        }
-        if (dto.getHosts().isEmpty() && dto.getCount() != 1) {
-            throw new VmidcBrokerValidationException("Invalid count " + dto.getCount()
-                    + " specified for Deployment Specification. Only valid value is 1.");
+        validateVirtualizationTypeSpecificNullFields(dto);
+
+        if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            if (!dto.getAvailabilityZones().isEmpty() && (!dto.getHosts().isEmpty() || !dto.getHostAggregates().isEmpty())
+                    || !dto.getHosts().isEmpty()
+                    && (!dto.getAvailabilityZones().isEmpty() || !dto.getHostAggregates().isEmpty())
+                    || !dto.getHostAggregates().isEmpty()
+                    && (!dto.getHosts().isEmpty() || !dto.getAvailabilityZones().isEmpty())) {
+                // If multiple units of deployment are specified, throw an error
+                throw new VmidcBrokerValidationException(
+                        "Deployment Specification can only be specified with Availablity zones or Hosts or Host Aggregates.");
+            }
+            if (dto.getHosts().isEmpty() && dto.getCount() != 1) {
+                throw new VmidcBrokerValidationException("Invalid count " + dto.getCount()
+                + " specified for Deployment Specification. Only valid value is 1.");
+            }
         }
     }
 
@@ -95,4 +104,28 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
         return OSCEntityManager.create(em, hs, this.txBroadcastUtil);
     }
 
+    private void validateVirtualizationTypeSpecificNullFields(DeploymentSpecDto dto) throws VmidcBrokerInvalidEntryException {
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            map.put("Project Name", dto.getProjectName());
+            map.put("Project", dto.getProjectId());
+
+            map.put("Region", dto.getRegion());
+
+            map.put("Virtual System Id", dto.getParentId());
+
+            map.put("Management Network Name", dto.getManagementNetworkName());
+            map.put("Management Network Id", dto.getManagementNetworkId());
+
+            map.put("Inspection Network Name", dto.getInspectionNetworkName());
+            map.put("Inspection Network Id", dto.getInspectionNetworkId());
+
+            map.put("Instance Count", dto.getCount());
+        } else if (this.vs.getVirtualizationConnector().getVirtualizationType().isKubernetes()) {
+            map.put("Namespace", dto.getNamespace());
+        }
+
+        ValidateUtil.checkForNullFields(map);
+    }
 }

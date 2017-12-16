@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -28,10 +27,12 @@ import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service = ForceDeleteDSTask.class)
 public class ForceDeleteDSTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(ForceDeleteDSTask.class);
+    private static final Logger log = LoggerFactory.getLogger(ForceDeleteDSTask.class);
 
     private DeploymentSpec ds;
 
@@ -63,11 +64,13 @@ public class ForceDeleteDSTask extends TransactionalTask {
         }
 
         // remove the sg reference from database
-        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(em,
-                this.ds.getVirtualSystem(), this.ds.getProjectId(), this.ds.getRegion()).size() <= 1;
+        if (this.ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(em,
+                    this.ds.getVirtualSystem(), this.ds.getProjectId(), this.ds.getRegion()).size() <= 1;
 
-        if (osSgCanBeDeleted) {
-            OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference(), this.txBroadcastUtil);
+            if (osSgCanBeDeleted && this.ds.getOsSecurityGroupReference() != null) {
+                OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference(), this.txBroadcastUtil);
+            }
         }
 
         // delete DS from the database

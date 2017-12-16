@@ -27,27 +27,29 @@ import org.osc.core.broker.util.ValidateUtil;
 
 public class BindSecurityGroupRequestValidator {
 
-    public static void checkForNullFields(BindSecurityGroupRequest request) throws Exception {
+	public static void checkForNullFields(BindSecurityGroupRequest request) throws Exception {
 
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
+		// build a map of (field,value) pairs to be checked for null/empty
+		// values
+		Map<String, Object> map = new HashMap<>();
 
-        map.put("Security Group Id", request.getSecurityGroupId());
-        List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
-        if (services != null && !services.isEmpty()) {
-            for (VirtualSystemPolicyBindingDto service : services) {
-                if (service.getVirtualSystemId() == null || service.getPolicyId() == null
-                        || StringUtils.isBlank(service.getName()) || service.getOrder() == null) {
-                    map.put("Virtual System Id", service.getVirtualSystemId());
-                    map.put("Service Name", service.getName());
-                    map.put("Service Order", service.getOrder());
-                    break;
-                }
-            }
-        }
+		map.put("Security Group Id", request.getSecurityGroupId());
+		map.put("Virtualization Connector Id", request.getVcId());
+		List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
+		if (services != null && !services.isEmpty()) {
+			for (VirtualSystemPolicyBindingDto service : services) {
+				if (service.getVirtualSystemId() == null || StringUtils.isBlank(service.getName())) {
+					map.put("Virtual System Id", service.getVirtualSystemId());
+					map.put("Service Name", service.getName());
+					break;
+                } else if (!request.isBindSfc() && service.getOrder() == null) {
+				    // In non-sfc case, service order is a required field.
+					map.put("Service Order", service.getOrder());
+					break;
+				}
+			}
+		}
 
-        ValidateUtil.checkForNullFields(map);
-    }
-
+		ValidateUtil.checkForNullFields(map);
+	}
 }

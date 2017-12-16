@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.util.crypto;
 
-import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.server.EncryptionException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.AEADBadTagException;
 import javax.crypto.BadPaddingException;
@@ -26,12 +27,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class AESGCMEncryption {
-    private static final Logger LOG = Logger.getLogger(EncryptionUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EncryptionUtil.class);
     private static final String AESGCM_ALGORITHM = "AES/GCM/NoPadding";
 
     public byte[] encrypt(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {

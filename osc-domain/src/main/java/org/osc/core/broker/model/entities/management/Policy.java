@@ -16,124 +16,138 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.management;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 
 @Entity
 @Table(name = "POLICY")
 public class Policy extends BaseEntity {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+	@Column(name = "name", nullable = false)
+	private String name;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "appliance_manager_connector_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_PO_APPLIANCE_MANAGER_CONNECTOR"))
-    // name our own index
-    private ApplianceManagerConnector applianceManagerConnector;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "appliance_manager_connector_fk",
+			nullable = false,
+			foreignKey = @ForeignKey(name = "FK_PO_APPLIANCE_MANAGER_CONNECTOR"))
+	// name our own index
+	private ApplianceManagerConnector applianceManagerConnector;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "domain_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_PO_DOMAIN"))
-    private Domain domain;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "domain_fk", nullable = false, foreignKey = @ForeignKey(name = "FK_PO_DOMAIN"))
+	private Domain domain;
 
-    @Column(name = "mgr_policy_id", nullable = false)
-    private String mgrPolicyId;
+	@Column(name = "mgr_policy_id", nullable = false)
+	private String mgrPolicyId;
 
-    public Policy() {
-        super();
-    }
+	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "policies")
+	private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<>();
 
-    public Policy(ApplianceManagerConnector applianceManagerConnector, Domain domain) {
-        super();
+	public Policy() {
+		super();
+	}
 
-        this.applianceManagerConnector = applianceManagerConnector;
-        this.domain = domain;
-    }
+	public Policy(ApplianceManagerConnector applianceManagerConnector, Domain domain) {
+		super();
 
-    public String getName() {
-        return this.name;
-    }
+		this.applianceManagerConnector = applianceManagerConnector;
+		this.domain = domain;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public ApplianceManagerConnector getApplianceManagerConnector() {
-        return this.applianceManagerConnector;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    void setApplianceManagerConnector(ApplianceManagerConnector applianceManagerConnector) {
-        this.applianceManagerConnector = applianceManagerConnector;
-    }
+	public ApplianceManagerConnector getApplianceManagerConnector() {
+		return this.applianceManagerConnector;
+	}
 
-    public Domain getDomain() {
-        return this.domain;
-    }
+	void setApplianceManagerConnector(ApplianceManagerConnector applianceManagerConnector) {
+		this.applianceManagerConnector = applianceManagerConnector;
+	}
 
-    public void setDomain(Domain domain) {
-        this.domain = domain;
-    }
+	public Domain getDomain() {
+		return this.domain;
+	}
 
-    public String getMgrPolicyId() {
-        return this.mgrPolicyId;
-    }
+	public void setDomain(Domain domain) {
+		this.domain = domain;
+	}
 
-    public void setMgrPolicyId(String mgrPolicyId) {
-        this.mgrPolicyId = mgrPolicyId;
-    }
+	public String getMgrPolicyId() {
+		return this.mgrPolicyId;
+	}
 
-    @Override
-    public String toString() {
-        return "Policy [name=" + this.name + ", applianceManagerConnector=" + this.applianceManagerConnector + ", mgrPolicyId="
-                + this.mgrPolicyId + ", getId()=" + getId() + "]";
-    }
+	public void setMgrPolicyId(String mgrPolicyId) {
+		this.mgrPolicyId = mgrPolicyId;
+	}
 
-    @Override
-    public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder()
-                .append(getName())
-                .append(getId());
-        if (this.applianceManagerConnector != null) {
-            builder.append(this.applianceManagerConnector.getId());
-        }
+	public Set<SecurityGroupInterface> getSecurityGroupInterfaces() {
+		return this.securityGroupInterfaces;
+	}
 
-        return builder.toHashCode();
-    }
+	public void setSecurityGroupInterfaces(Set<SecurityGroupInterface> securityGroupInterfaces) {
+		this.securityGroupInterfaces = securityGroupInterfaces;
+	}
 
-    @Override
-    public boolean equals(Object object) {
-        if (object == null) {
-            return false;
-        }
-        if (getClass() != object.getClass()) {
-            return false;
-        }
-        if (this == object) {
-            return true;
-        }
+	@Override
+	public String toString() {
+		return "Policy [name=" + this.name + ", applianceManagerConnector=" + this.applianceManagerConnector
+				+ ", domain=" + this.domain + ", mgrPolicyId=" + this.mgrPolicyId + ", securityGroupInterfaces="
+				+ this.securityGroupInterfaces + "]";
+	}
 
-        Policy other = (Policy) object;
-        EqualsBuilder builder =  new EqualsBuilder()
-                .append(getName(), other.getName())
-                .append(getId(), other.getId());
+	@Override
+	public int hashCode() {
+		HashCodeBuilder builder = new HashCodeBuilder().append(getName()).append(getId());
+		if (this.applianceManagerConnector != null) {
+			builder.append(this.applianceManagerConnector.getId());
+		}
 
-        Long mcId = this.applianceManagerConnector != null ? this.applianceManagerConnector.getId() : null;
-        Long otherMcId = other.getApplianceManagerConnector() != null ? other.getApplianceManagerConnector().getId() : null;
-        builder.append(mcId, otherMcId);
+		return builder.toHashCode();
+	}
 
-        return  builder.isEquals();
-    }
+	@Override
+	public boolean equals(Object object) {
+		if (object == null) {
+			return false;
+		}
+		if (getClass() != object.getClass()) {
+			return false;
+		}
+		if (this == object) {
+			return true;
+		}
+
+		Policy other = (Policy) object;
+		EqualsBuilder builder = new EqualsBuilder().append(getName(), other.getName()).append(getId(), other.getId());
+
+		Long mcId = this.applianceManagerConnector != null ? this.applianceManagerConnector.getId() : null;
+		Long otherMcId = other.getApplianceManagerConnector() != null ? other.getApplianceManagerConnector().getId()
+				: null;
+		builder.append(mcId, otherMcId);
+
+		return builder.isEquals();
+	}
 
 }

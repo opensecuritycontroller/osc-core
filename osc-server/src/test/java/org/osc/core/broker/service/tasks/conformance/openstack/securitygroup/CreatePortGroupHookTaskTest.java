@@ -16,14 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -165,7 +160,7 @@ public class CreatePortGroupHookTaskTest extends BasePortGroupHookTaskTest {
         }
     }
 
-    private class NetworkElementMatcher extends ArgumentMatcher<List<NetworkElement>> {
+    private class NetworkElementMatcher extends ArgumentMatcher<NetworkElement> {
         private SecurityGroup sg;
 
         public NetworkElementMatcher(SecurityGroup sg) {
@@ -173,12 +168,12 @@ public class CreatePortGroupHookTaskTest extends BasePortGroupHookTaskTest {
         }
 
         @Override
-        public boolean matches(Object objects) {
-            if (objects == null || !(objects instanceof List<?>)) {
+        public boolean matches(Object object) {
+            if (object == null) {
                 return false;
             }
 
-            NetworkElement netElement = (NetworkElement) ((List<?>)objects).get(0);
+            NetworkElement netElement = (NetworkElement) object;
 
             return netElement.getElementId().equals(this.sg.getNetworkElementId());
         }

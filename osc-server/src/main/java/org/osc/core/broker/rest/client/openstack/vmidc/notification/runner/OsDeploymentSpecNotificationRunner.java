@@ -22,7 +22,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -42,6 +41,7 @@ import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.slf4j.LoggerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -50,6 +50,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -60,7 +61,7 @@ import com.google.common.collect.Multimap;
  *
  */
 @Component(scope=ServiceScope.PROTOTYPE,
- service=OsDeploymentSpecNotificationRunner.class)
+service=OsDeploymentSpecNotificationRunner.class)
 public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
     @Reference
     private NotificationListenerFactory notificationListenerFactory;
@@ -75,7 +76,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
     private final HashMap<Long, VirtualizationConnector> dsToVCMap = new HashMap<Long, VirtualizationConnector>();
     private ServiceRegistration<BroadcastListener> registration;
 
-    private static final Logger log = Logger.getLogger(OsDeploymentSpecNotificationRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(OsDeploymentSpecNotificationRunner.class);
 
     @Activate
     void start(BundleContext ctx) throws InterruptedException, VmidcException {
@@ -90,7 +91,9 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                 List<DeploymentSpec> dsList = dsEmgr.listAll();
 
                 for (DeploymentSpec ds : dsList) {
-                    addListener(ds);
+                    if (ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                        addListener(ds);
+                    }
                 }
                 return null;
             });
@@ -126,7 +129,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                 EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
                 this.dbConnectionManager.getTransactionControl().required(() -> {
                     DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
-                    if (ds != null) {
+                    if (ds != null && ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
                         // if DS is deleted after update notification was sent
                         if (msg.getEventType() == EventType.ADDED) {
                             addListener(ds);
@@ -187,8 +190,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         ArrayList<String> svaIdList = new ArrayList<>();
         if (!ds.getDistributedApplianceInstances().isEmpty()) {
             for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-                if (!dai.getMarkedForDeletion() && dai.getOsServerId() != null) {
-                    svaIdList.add(dai.getOsServerId().toString());
+                if (!dai.getMarkedForDeletion() && dai.getExternalId() != null) {
+                    svaIdList.add(dai.getExternalId().toString());
                 }
             }
         }

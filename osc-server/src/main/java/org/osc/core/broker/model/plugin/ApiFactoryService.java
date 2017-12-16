@@ -46,11 +46,15 @@ import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
 public interface ApiFactoryService {
-    String PLUGINS_DIRECTORY = "plugins";
+    String PLUGINS_DIRECTORY = "data/plugins";
 
     ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception;
 
     Boolean syncsPolicyMapping(String managerType) throws Exception;
+
+    Boolean supportsMultiplePolicies(String managerType) throws Exception;
+
+    Boolean supportsMultiplePolicies(VirtualSystem vs) throws Exception;
 
     Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception;
 
@@ -187,6 +191,12 @@ public interface ApiFactoryService {
     Boolean supportsPortGroup(VirtualSystem vs) throws Exception;
 
     Boolean supportsPortGroup(SecurityGroup sg) throws Exception;
+
+    Boolean supportsNeutronSFC(String controllerType) throws Exception;
+
+    Boolean supportsNeutronSFC(VirtualSystem vs) throws Exception;
+
+    Boolean supportsNeutronSFC(SecurityGroup sg) throws Exception;
 
 
 }

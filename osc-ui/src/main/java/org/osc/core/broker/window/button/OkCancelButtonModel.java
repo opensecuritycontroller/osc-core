@@ -28,7 +28,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 
 /**
- * A Button model which has OK and cancel buttons. The button model allows you to set click listners on the
+ * A Button model which has OK and cancel buttons. The button model allows you to set click listeners on the
  * button so custom application logic can be run when the buttons are clicked
  */
 public class OkCancelButtonModel implements ComponentModel {

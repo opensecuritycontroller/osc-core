@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,35 +31,23 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.job.JobRecord;
-import org.osc.core.broker.model.entities.job.LastJobContainer;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
-public class VirtualizationConnector extends BaseEntity implements LastJobContainer {
-
-    private static final String NO_CONTROLLER = "NONE";
+public class VirtualizationConnector extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
-
-    public static final String ATTRIBUTE_KEY_HTTPS = "ishttps";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
-    public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
 
     @Column(name = "name", unique = true, nullable = false)
     private String name;
@@ -88,13 +78,16 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     private String virtualizationSoftwareVersion;
 
     @Column(name = "controller_type", nullable = false)
-    private String controllerType = NO_CONTROLLER;
+    private String controllerType = NO_CONTROLLER_TYPE;
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY)
-    private Set<VirtualSystem> virtualSystems = new HashSet<VirtualSystem>();
+    private Set<VirtualSystem> virtualSystems = new HashSet<>();
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<SecurityGroup> securityGroups = new HashSet<SecurityGroup>();
+    private Set<SecurityGroup> securityGroups = new HashSet<>();
+
+    @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<ServiceFunctionChain> serviceFunctionChains = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "key")
@@ -107,10 +100,6 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
     inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_MC_LAST_JOB"))
-    private JobRecord lastJob;
 
     @Column(name = "admin_project_name")
     private String adminProjectName;
@@ -144,7 +133,6 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
         this.providerAttributes = originalVc.providerAttributes;
         this.adminProjectName = originalVc.adminProjectName;
         this.adminDomainId = originalVc.adminDomainId;
-        this.lastJob = originalVc.lastJob;
     }
 
     public String getName() {
@@ -224,11 +212,11 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     }
 
     public void setControllerType(String controllerType) {
-        this.controllerType = controllerType != null ? controllerType : NO_CONTROLLER;
+        this.controllerType = controllerType != null ? controllerType : NO_CONTROLLER_TYPE;
     }
 
     public boolean isControllerDefined() {
-        return !getControllerType().equals(NO_CONTROLLER);
+        return !getControllerType().equals(NO_CONTROLLER_TYPE);
     }
 
     public Set<VirtualSystem> getVirtualSystems() {
@@ -264,7 +252,7 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     }
 
     public boolean isProviderHttps() {
-        String httpsValue = this.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS);
+        String httpsValue = this.providerAttributes.get(ATTRIBUTE_KEY_HTTPS);
         return httpsValue != null && httpsValue.equals(Boolean.TRUE.toString());
     }
 
@@ -281,6 +269,10 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
         return this.securityGroups;
     }
 
+    public Set<ServiceFunctionChain> getServiceFunctionChains() {
+        return this.serviceFunctionChains;
+    }
+
     /**
      * Gets the RabbitMQ IP address
      * @return The RabbitMQ IP address from the provider attributes if found, otherwise returns the provider IP address.
@@ -288,15 +280,5 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     public String getRabbitMQIP() {
         String rabbitMQIP = getProviderAttributes() != null ? getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_IP) : null;
         return rabbitMQIP == null || rabbitMQIP.isEmpty() ? getProviderIpAddress() : rabbitMQIP;
-    }
-
-    @Override
-    public JobRecord getLastJob() {
-        return this.lastJob;
-    }
-
-    @Override
-    public void setLastJob(JobRecord lastJob) {
-        this.lastJob = lastJob;
     }
 }

@@ -16,16 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api.test;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.osc.core.broker.rest.server.ApiUtil;
-
-import java.util.Arrays;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.when;
 
 public class BaseJerseyTest extends JerseyTest {
 

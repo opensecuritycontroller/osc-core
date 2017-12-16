@@ -16,9 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
+import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.common.Payload;
 import org.openstack4j.model.common.Payloads;
@@ -27,15 +31,13 @@ import org.openstack4j.model.image.v2.DiskFormat;
 import org.openstack4j.model.image.v2.Image;
 import org.openstack4j.model.image.v2.builder.ImageBuilder;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 public class Openstack4jGlance extends BaseOpenstack4jApi {
 
-    private static final Logger log = Logger.getLogger(Openstack4jGlance.class);
+    private static final Logger log = LoggerFactory.getLogger(Openstack4jGlance.class);
 
     public Openstack4jGlance(Endpoint endPoint) {
         super(endPoint);
@@ -67,7 +69,10 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
         if (actionResponse.isSuccess()) {
             log.info("Image uploaded with Id: " + imageId);
         } else {
-            log.info("Failed to upload image: " + actionResponse.getFault());
+            String message = String.format("Failed to upload image: %s to region: %s. error: %s", imageName, region,
+                    actionResponse.getFault());
+            log.warn(message);
+            throw new ResponseException(message, actionResponse.getCode());
         }
 
         return imageId;
@@ -85,7 +90,10 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().imagesV2().delete(id);
         if (!actionResponse.isSuccess()) {
-            log.warn("Image Id: " + id + " cannot be removed: " + actionResponse.getFault());
+            String message = String.format("Image Id: %s in region: %s cannot be removed. Error: %s", id, region,
+                    actionResponse.getFault());
+            log.warn(message);
+            throw new ResponseException(message, actionResponse.getCode());
         }
         return actionResponse.isSuccess();
     }

@@ -18,9 +18,9 @@ package org.osc.core.broker.service.api;
 
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.response.BaseResponse;
 
 public interface AddVirtualizationConnectorServiceApi
         extends ServiceDispatcherApi<DryRunRequest<VirtualizationConnectorRequest>,
-        BaseJobResponse> {
+        BaseResponse> {
 }

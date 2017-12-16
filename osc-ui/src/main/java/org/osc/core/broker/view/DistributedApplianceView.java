@@ -23,11 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
-import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
@@ -45,12 +43,13 @@ import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
-import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.SyncDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
@@ -62,8 +61,8 @@ import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
+import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.ConformRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -79,6 +78,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -93,7 +94,7 @@ import com.vaadin.ui.Notification;
 public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceDto, VirtualSystemDto> {
 
     private static final String DA_HELP_GUID = "GUID-3FB92C5B-7F20-4B6A-B368-CA37C3E67007.html";
-    private static final Logger log = Logger.getLogger(DistributedApplianceView.class);
+    private static final Logger log = LoggerFactory.getLogger(DistributedApplianceView.class);
 
     // objects of all the sub views this View supports
     private DeploymentSpecSubView dsSubView = null;
@@ -163,7 +164,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListProjectServiceApi listProjectService;
 
     @Reference
-    private ConformServiceApi conformService;
+    private SyncDistributedApplianceServiceApi syncDistributedApplianceService;
 
     @Reference
     private AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
@@ -298,12 +299,11 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
 
     public void conformDistributedAppliace(Long daId) {
         log.info("Syncing DA " + daId.toString());
-        ConformRequest request = new ConformRequest();
-        request.setDaId(daId);
+        BaseIdRequest request = new BaseIdRequest(daId);
         BaseJobResponse response = new BaseJobResponse();
 
         try {
-            response = this.conformService.dispatch(request);
+            response = this.syncDistributedApplianceService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId(), this.server);
         } catch (Exception e) {
             log.error("Error!", e);

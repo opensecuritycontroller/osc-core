@@ -39,42 +39,46 @@ public class DeploymentSpecDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(value = "The id of the project on behalf of which the service function instances will be deployed",
-            required = true,
             readOnly = true)
     private String projectId;
 
+    @ApiModelProperty(value = "The external system id corresponding to this deployment spec",
+            readOnly = true)
+    private String externalId;
+
+    @ApiModelProperty(value = "The virtualization environment namespace for the entities created by this deployment. For instance, a Kubernetes namespace.")
+    private String namespace;
+
     @ApiModelProperty(
             value = "The name of the project on behalf of which the service function instances will be deployed",
-            required = true,
             readOnly = true)
     private String projectName;
 
     @ApiModelProperty(value = "The region to which the service function instances will be deployed",
-            required = true,
             readOnly = true)
     private String region;
 
     @ApiModelProperty(
             value = "The name of the management network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String managementNetworkName;
 
     @ApiModelProperty(value = "The id of management network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String managementNetworkId;
 
     @ApiModelProperty(
             value = "The name of the inspection network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String inspectionNetworkName;
 
     @ApiModelProperty(value = "The id of inspection network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String inspectionNetworkId;
+
+    @ApiModelProperty(value = "The port group under which all the distributed appliance instances are registered under.",
+            readOnly = true)
+    private String portGroupId;
 
     @ApiModelProperty(
             value = "The floating ip pool from which floating ips will be allocated in case of NAT'ed environments",
@@ -82,13 +86,13 @@ public class DeploymentSpecDto extends BaseDto {
     private String floatingIpPoolName;
 
     @ApiModelProperty(value = "The Availablity zones to deploy instances to", readOnly = true)
-    private Set<AvailabilityZoneDto> availabilityZones = new HashSet<AvailabilityZoneDto>();
+    private Set<AvailabilityZoneDto> availabilityZones = new HashSet<>();
 
     @ApiModelProperty(value = "The hosts to deploy instances to", readOnly = true)
-    private Set<HostDto> hosts = new HashSet<HostDto>();
+    private Set<HostDto> hosts = new HashSet<>();
 
     @ApiModelProperty(value = "The Host Aggregates to deploy instances to", readOnly = true)
-    private Set<HostAggregateDto> hostAggregates = new HashSet<HostAggregateDto>();
+    private Set<HostAggregateDto> hostAggregates = new HashSet<>();
 
     @ApiModelProperty(
             value = "The number of instances to deploy. This is applicable only for host based deployment, for all other deployments count is expected to be 1",
@@ -100,7 +104,7 @@ public class DeploymentSpecDto extends BaseDto {
             value = "Indicates whether the Deployment specification is exclusive for that project or if its shared across projects",
             required = true,
             readOnly = true)
-    private boolean isShared;
+    private boolean shared;
 
     @ApiModelProperty(value = "Indicates whether the deployment specification is marked for deletion",
             required = true,
@@ -146,6 +150,22 @@ public class DeploymentSpecDto extends BaseDto {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public String getManagementNetworkName() {
@@ -205,11 +225,11 @@ public class DeploymentSpecDto extends BaseDto {
     }
 
     public boolean isShared() {
-        return this.isShared;
+        return this.shared;
     }
 
-    public void setShared(boolean isShared) {
-        this.isShared = isShared;
+    public void setShared(boolean shared) {
+        this.shared = shared;
     }
 
     public String getInspectionNetworkName() {
@@ -226,6 +246,14 @@ public class DeploymentSpecDto extends BaseDto {
 
     public void setInspectionNetworkId(String inspectionNetworkId) {
         this.inspectionNetworkId = inspectionNetworkId;
+    }
+
+    public String getPortGroupId() {
+        return this.portGroupId;
+    }
+
+    public void setPortGroupId(String portGroupId) {
+        this.portGroupId = portGroupId;
     }
 
     public String getFloatingIpPoolName() {

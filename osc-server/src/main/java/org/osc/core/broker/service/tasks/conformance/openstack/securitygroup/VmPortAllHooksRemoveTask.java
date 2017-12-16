@@ -18,17 +18,18 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This task is responsible for removing all the inspection appliances
@@ -39,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=VmPortAllHooksRemoveTask.class)
 public class VmPortAllHooksRemoveTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(VmPortAllHooksRemoveTask.class);
+    private final Logger log = LoggerFactory.getLogger(VmPortAllHooksRemoveTask.class);
 
     private SecurityGroupMember sgm;
     private VMPort port;
@@ -72,9 +73,12 @@ public class VmPortAllHooksRemoveTask extends TransactionalTask {
 
         this.port.removeAllDais();
 
-        // If port group is not supported also remove the inspection hooks from the controller.
-        if (!this.apiFactoryService.supportsPortGroup(this.sgm.getSecurityGroup())) {
-            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm)) {
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm)) {
+            if (this.apiFactoryService.supportsNeutronSFC(this.sgm.getSecurityGroup())) {
+                // In case of SFC, removing the flow classifier(Inspection hook) is effectively removing all
+                // inspection hooks for that port.
+                controller.removeInspectionHook(this.port.getInspectionHookId());
+            } else {
                 controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
             }
         }

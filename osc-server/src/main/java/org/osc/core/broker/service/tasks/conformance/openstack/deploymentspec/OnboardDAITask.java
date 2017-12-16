@@ -22,21 +22,24 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.Element;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service=OnboardDAITask.class)
 public class OnboardDAITask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(OnboardDAITask.class);
+    private static final Logger log = LoggerFactory.getLogger(OnboardDAITask.class);
     private DistributedApplianceInstance dai;
 
     @Reference
@@ -61,22 +64,42 @@ public class OnboardDAITask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
-        try {
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai)) {
+
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
-                DeploymentSpec ds = this.dai.getDeploymentSpec();
+            DeploymentSpec ds = this.dai.getDeploymentSpec();
+
+            if (this.apiFactoryService.supportsNeutronSFC(this.dai.getVirtualSystem())) {
+                String portGroupId = ds.getPortGroupId();
+                boolean pgAlreadyCreatedByOther = (portGroupId != null);
+
+                Element element = controller
+                        .registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
+
+                portGroupId = element.getParentId();
+
+                log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
+
+                if (!pgAlreadyCreatedByOther) {
+                    ds = em.find(DeploymentSpec.class, ds.getId());
+                    ds.setPortGroupId(portGroupId);
+                    OSCEntityManager.update(em, ds, this.txBroadcastUtil);
+                }
+
+            } else if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
+
                 String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(
-                                Arrays.asList(ingressPort)));
+                        ds.getVirtualSystem().getVirtualizationConnector(),
+                        new ArrayList<>(Arrays.asList(ingressPort)));
                 ingressPort.setParentId(domainId);
                 egressPort.setParentId(domainId);
-                if (domainId != null){
-                	//Element Object is not used in DefaultInstepctionPort for now, hence null
+                if (domainId != null) {
+                    //Element Object is not used in DefaultInstepctionPort for now, hence null
                     controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
                 } else {
                     log.warn("DomainId is missing, cannot be null");
@@ -85,10 +108,6 @@ public class OnboardDAITask extends TransactionalTask {
             } else {
                 controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
-
-
-        } finally {
-            controller.close();
         }
     }
 

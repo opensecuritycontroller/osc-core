@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,9 +33,11 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.UpdateOrDeleteK8sSecurityGroupMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
@@ -98,7 +100,9 @@ public class SecurityGroupCheckMetaTaskTest {
                this.em.persist(sgi.getVirtualSystem().getDistributedAppliance());
                this.em.persist(sgi.getVirtualSystem().getApplianceSoftwareVersion());
                this.em.persist(sgi.getVirtualSystem().getDomain());
-               this.em.persist(sgi.getPolicy());
+				for (Policy policy : sgi.getPolicies()) {
+					this.em.persist(policy);
+				}
                this.em.persist(sgi.getVirtualSystem());
                this.em.persist(sgi);
            }
@@ -114,6 +118,7 @@ public class SecurityGroupCheckMetaTaskTest {
         SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
         task.securityGroupUpdateOrDeleteMetaTask = new SecurityGroupUpdateOrDeleteMetaTask();
+        task.updateOrDeleteK8sSecurityGroupMetaTask = new UpdateOrDeleteK8sSecurityGroupMetaTask();
         task.validateSecurityGroupProjectTask = new ValidateSecurityGroupProjectTask();
 
         task = task.create(this.sg);
@@ -134,10 +139,12 @@ public class SecurityGroupCheckMetaTaskTest {
         // entities retain state between tests (which is bad!)
         SecurityGroupCheckMetaTaskTestData sgcmttd1 = new SecurityGroupCheckMetaTaskTestData();
         SecurityGroupCheckMetaTaskTestData sgcmttd2 = new SecurityGroupCheckMetaTaskTestData();
+        SecurityGroupCheckMetaTaskTestData sgcmttd3 = new SecurityGroupCheckMetaTaskTestData();
 
         return Arrays.asList(new Object[][] {
             {sgcmttd1, sgcmttd1.NO_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd1.createNoMcPolicyMappingGraph(sgcmttd1.NO_MC_POLICY_MAPPING_SUPPORTED_SG)},
             {sgcmttd2, sgcmttd2.SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd2.createSingleMcPolicyMappingGraph(sgcmttd2.SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG)},
+            {sgcmttd3, sgcmttd3.NO_MC_POLICY_MAPPING_SUPPORTED_K8S_SG, sgcmttd3.createNoMcPolicyMappingK8sGraph(sgcmttd3.NO_MC_POLICY_MAPPING_SUPPORTED_K8S_SG)}
         });
     }
 }

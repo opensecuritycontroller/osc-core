@@ -20,11 +20,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
@@ -34,10 +33,12 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SyncSecurityGroupJob implements Job {
 
-    private static final Logger log = Logger.getLogger(SyncSecurityGroupJob.class);
+    private static final Logger log = LoggerFactory.getLogger(SyncSecurityGroupJob.class);
 
     public SyncSecurityGroupJob() {
 
@@ -46,7 +47,8 @@ public class SyncSecurityGroupJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
-        ConformService conformService = (ConformService) context.getMergedJobDataMap().get(ConformService.class.getName());
+        SecurityGroupConformJobFactory sgConformJobFactory =
+                (SecurityGroupConformJobFactory) context.getMergedJobDataMap().get(SecurityGroupConformJobFactory.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
@@ -55,6 +57,11 @@ public class SyncSecurityGroupJob implements Job {
             });
 
             for (final SecurityGroup sg : sgs) {
+                // TODO emanoel: remove this condition once SG sync is implemented.
+                if (sg.getVirtualizationConnector().getVirtualizationType().isKubernetes()) {
+                    continue;
+                }
+
                 Thread sgSync = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -64,7 +71,7 @@ public class SyncSecurityGroupJob implements Job {
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     SecurityGroup found = em.find(SecurityGroup.class, sg.getId());
-                                    conformService.startSecurityGroupConformanceJob(found);
+                                    sgConformJobFactory.startSecurityGroupConformanceJob(found);
                                 } catch (Exception ex) {
                                     StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
                                             new LockObjectReference(sg),

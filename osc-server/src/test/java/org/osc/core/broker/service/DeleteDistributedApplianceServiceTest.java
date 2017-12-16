@@ -31,14 +31,12 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -53,14 +51,16 @@ import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformance
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.osc.core.test.util.TaskGraphMatcher;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
+import org.osc.core.test.util.mockito.matchers.TaskGraphMatcher;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({LockUtil.class, JobEngine.class})
+@PrepareForTest({ LockUtil.class, JobEngine.class })
 public class DeleteDistributedApplianceServiceTest {
 
     private static final Long VALID_ID = 1L;
@@ -86,7 +86,7 @@ public class DeleteDistributedApplianceServiceTest {
     @Mock
     EntityTransaction tx;
 
-    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
     TestTransactionControl txControl;
 
     @Mock
@@ -141,13 +141,15 @@ public class DeleteDistributedApplianceServiceTest {
 
         VALID_DA_WITH_SYSTEMS.addVirtualSystem(openStackVirtualSystem);
 
-        Mockito.when(this.validatorMock.validateAndLoad(INVALID_REQUEST)).thenThrow(new VmidcBrokerValidationException(""));
+        Mockito.when(this.validatorMock.validateAndLoad(INVALID_REQUEST))
+                .thenThrow(new VmidcBrokerValidationException(""));
         Mockito.when(this.validatorMock.validateAndLoad(VALID_REQUEST_FORCE_DELETE)).thenReturn(VALID_DA);
-        Mockito.when(this.validatorMock.validateAndLoad(VALID_REQUEST_NOT_FORCE_DELETE)).thenReturn(VALID_DA_WITH_SYSTEMS);
+        Mockito.when(this.validatorMock.validateAndLoad(VALID_REQUEST_NOT_FORCE_DELETE))
+                .thenReturn(VALID_DA_WITH_SYSTEMS);
         Mockito.when(this.validatorMock.validateAndLoad(UNLOCKABLE_DA_REQUEST)).thenReturn(UNLOCKABLE_DA);
 
         Mockito.when(this.em.find(DistributedAppliance.class, VALID_REQUEST_NOT_FORCE_DELETE.getId()))
-            .thenReturn(VALID_DA_WITH_SYSTEMS);
+                .thenReturn(VALID_DA_WITH_SYSTEMS);
 
         UnlockObjectMetaTask ult = new UnlockObjectMetaTask(null);
         PowerMockito.mockStatic(LockUtil.class);
@@ -164,7 +166,8 @@ public class DeleteDistributedApplianceServiceTest {
         taskGraphWithForceDeleteTask.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         TaskGraph taskGraphWithDeleteTask = new TaskGraph();
-        taskGraphWithDeleteTask.appendTask(new DeleteDAFromDbTask().create(VALID_DA), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        taskGraphWithDeleteTask.appendTask(new DeleteDAFromDbTask().create(VALID_DA),
+                TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTask.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
@@ -172,13 +175,25 @@ public class DeleteDistributedApplianceServiceTest {
         TaskGraph openStackVsDeleteTaskGraph = new TaskGraph();
         openStackVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(openStackVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(openStackVsDeleteTaskGraph);
-        taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask().create(VALID_DA_WITH_SYSTEMS), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask().create(VALID_DA_WITH_SYSTEMS),
+                TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         Mockito.when(JobEngine.getEngine()).thenReturn(this.jobEngine);
-        Mockito.when(this.jobEngine.submit(Matchers.eq("Force Delete Distributed Appliance '" + VALID_DA.getName() + "'"), Mockito.argThat(new TaskGraphMatcher(taskGraphWithForceDeleteTask)), Matchers.eq(LockObjectReference.getObjectReferences(VALID_DA)))).thenReturn(job);
-        Mockito.when(this.jobEngine.submit(Matchers.eq("Delete Distributed Appliance '" + VALID_DA.getName() + "'"), Mockito.argThat(new TaskGraphMatcher(taskGraphWithDeleteTask)), Matchers.eq(LockObjectReference.getObjectReferences(VALID_DA)), Matchers.any(Job.JobCompletionListener.class))).thenReturn(job);
-        Mockito.when(this.jobEngine.submit(Matchers.eq("Delete Distributed Appliance '" + VALID_DA_WITH_SYSTEMS.getName() + "'"), Mockito.argThat(new TaskGraphMatcher(taskGraphWithDeleteTaskAndVsTasks)), Matchers.eq(LockObjectReference.getObjectReferences(VALID_DA_WITH_SYSTEMS)), Matchers.any(Job.JobCompletionListener.class))).thenReturn(job);
+        Mockito.when(
+                this.jobEngine.submit(Matchers.eq("Force Delete Distributed Appliance '" + VALID_DA.getName() + "'"),
+                        Matchers.argThat(new TaskGraphMatcher(taskGraphWithForceDeleteTask)),
+                        Matchers.eq(LockObjectReference.getObjectReferences(VALID_DA))))
+                .thenReturn(job);
+        Mockito.when(this.jobEngine.submit(Matchers.eq("Delete Distributed Appliance '" + VALID_DA.getName() + "'"),
+                Matchers.argThat(new TaskGraphMatcher(taskGraphWithDeleteTask)),
+                Matchers.eq(LockObjectReference.getObjectReferences(VALID_DA)),
+                Matchers.any(Job.JobCompletionListener.class))).thenReturn(job);
+        Mockito.when(this.jobEngine.submit(
+                Matchers.eq("Delete Distributed Appliance '" + VALID_DA_WITH_SYSTEMS.getName() + "'"),
+                Matchers.argThat(new TaskGraphMatcher(taskGraphWithDeleteTaskAndVsTasks)),
+                Matchers.eq(LockObjectReference.getObjectReferences(VALID_DA_WITH_SYSTEMS)),
+                Matchers.any(Job.JobCompletionListener.class))).thenReturn(job);
         Mockito.when(job.getId()).thenReturn(JOB_ID);
     }
 
@@ -206,7 +221,8 @@ public class DeleteDistributedApplianceServiceTest {
         BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.dispatch(VALID_REQUEST_FORCE_DELETE);
 
         // Assert
-        Assert.assertEquals("The received JobID in force delete case is different than expected.", JOB_ID, baseJobResponse.getJobId());
+        Assert.assertEquals("The received JobID in force delete case is different than expected.", JOB_ID,
+                baseJobResponse.getJobId());
         Mockito.verify(this.tx, Mockito.times(1)).begin();
         Mockito.verify(this.tx, Mockito.times(1)).commit();
     }
@@ -214,10 +230,12 @@ public class DeleteDistributedApplianceServiceTest {
     @Test
     public void testExec_WithNonForceDeleteRequestAndValidDA_ExpectsSuccess() throws Exception {
         // Act
-        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.dispatch(VALID_REQUEST_NOT_FORCE_DELETE);
+        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService
+                .dispatch(VALID_REQUEST_NOT_FORCE_DELETE);
 
         // Assert
-        Assert.assertEquals("The received JobID in non force delete case is different than expected.", JOB_ID, baseJobResponse.getJobId());
+        Assert.assertEquals("The received JobID in non force delete case is different than expected.", JOB_ID,
+                baseJobResponse.getJobId());
         // The task commits part way then runs another transaction
         Mockito.verify(this.tx, Mockito.times(2)).begin();
         Mockito.verify(this.tx, Mockito.times(2)).commit();

@@ -16,12 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
+import static org.osc.core.broker.view.common.VmidcMessages.getString;
+import static org.osc.core.broker.view.common.VmidcMessages_.*;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -31,14 +33,14 @@ import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.ssl.TruststoreChangedListener;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ThemeResource;
@@ -54,9 +56,8 @@ import com.vaadin.ui.themes.Reindeer;
 public class SslConfigurationLayout extends FormLayout implements TruststoreChangedListener {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(SslConfigurationLayout.class);
+    private static final Logger log = LoggerFactory.getLogger(SslConfigurationLayout.class);
     private final int CERT_MONTHLY_THRESHOLD = 3;
-    public static final String INTERNAL_CERTIFICATE_ALIAS = "internal";
 
     private Table sslConfigTable;
     private VmidcWindow<OkCancelButtonModel> deleteWindow;
@@ -69,24 +70,14 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
             ListSslCertificatesServiceApi listSslCertificateService,
             X509TrustManagerApi trustManager, BundleContext ctx) {
         super();
+
         this.deleteSslCertificateService = deleteSslCertificate;
         this.listSslCertificateService = listSslCertificateService;
-        VerticalLayout sslUploadContainer = new VerticalLayout();
-        try {
-            SslCertificateUploader certificateUploader = new SslCertificateUploader(trustManager);
-            certificateUploader.setSizeFull();
-            certificateUploader.setUploadNotifier(uploadStatus -> {
-                if (uploadStatus) {
-                    buildSslConfigurationTable();
-                }
-            });
-            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Upload certificate", null));
-            sslUploadContainer.addComponent(certificateUploader);
-        } catch (Exception e) {
-            log.error("Cannot add upload component. Trust manager factory failed to initialize", e);
-            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD_INIT_FAILED, new Date()),
-                    null, Notification.Type.TRAY_NOTIFICATION);
-        }
+
+        SslCertificateUploader certificateUploader = new SslCertificateUploader(trustManager);
+        VerticalLayout sslUploadContainer = makeSslUploadContainer(certificateUploader, getString(CERTIFICATE_UPLOAD_TITLE));
+        InternalCertReplacementUploader internalCertReplacementUploader = new InternalCertReplacementUploader(trustManager);
+        VerticalLayout sslReplaceInternalContainer = makeSslUploadContainer(internalCertReplacementUploader, getString(KEYPAIR_UPLOAD_TITLE));
 
         VerticalLayout sslListContainer = new VerticalLayout();
         sslListContainer.addComponent(createHeaderForSslList());
@@ -108,10 +99,30 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
         sslConfigTablePanel.setContent(this.sslConfigTable);
         sslListContainer.addComponent(sslConfigTablePanel);
 
+        addComponent(sslReplaceInternalContainer);
         addComponent(sslUploadContainer);
         addComponent(sslListContainer);
 
         this.registration = ctx.registerService(TruststoreChangedListener.class, this, null);
+    }
+
+    private VerticalLayout makeSslUploadContainer(SslCertificateUploader certificateUploader, String title) {
+        VerticalLayout sslUploadContainer = new VerticalLayout();
+        try {
+            certificateUploader.setSizeFull();
+            certificateUploader.setUploadNotifier(uploadStatus -> {
+                if (uploadStatus) {
+                    buildSslConfigurationTable();
+                }
+            });
+            sslUploadContainer.addComponent(ViewUtil.createSubHeader(title, null));
+            sslUploadContainer.addComponent(certificateUploader);
+        } catch (Exception e) {
+            log.error("Cannot add upload component. Trust manager factory failed to initialize", e);
+            ViewUtil.iscNotification(getString(MAINTENANCE_SSLCONFIGURATION_UPLOAD_INIT_FAILED, new Date()),
+                    null, Notification.Type.TRAY_NOTIFICATION);
+        }
+        return sslUploadContainer;
     }
 
     private HorizontalLayout createHeaderForSslList() {
@@ -197,7 +208,7 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
         deleteArchiveButton.setData(certificateModel);
         deleteArchiveButton.addClickListener(this.removeButtonListener);
 
-        if (certificateModel.getAlias().contains(SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS)) {
+        if (certificateModel.getAlias().contains(getString(KEYPAIR_INTERNAL_DISPLAY_ALIAS))) {
             deleteArchiveButton.setEnabled(false);
         }
 
@@ -213,12 +224,12 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
             final CertificateBasicInfoModel certificateModel = (CertificateBasicInfoModel) event.getButton().getData();
             if (certificateModel.isConnected()) {
                 SslConfigurationLayout.this.deleteWindow = WindowUtil.createAlertWindow(
-                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_TITLE),
-                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
+                        getString(MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_TITLE),
+                        getString(MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
             } else {
                 SslConfigurationLayout.this.deleteWindow = WindowUtil.createAlertWindow(
-                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_TITLE),
-                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
+                        getString(MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_TITLE),
+                        getString(MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
             }
             SslConfigurationLayout.this.deleteWindow.getComponentModel().getOkButton().setData(certificateModel.getAlias());
             SslConfigurationLayout.this.deleteWindow.getComponentModel().setOkClickedListener(SslConfigurationLayout.this.acceptRemoveButtonListener);
@@ -249,8 +260,8 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
             SslConfigurationLayout.this.buildSslConfigurationTable();
             SslConfigurationLayout.this.deleteWindow.close();
 
-            String outputMessage = (succeed) ? VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVED : VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_FAILURE;
-            ViewUtil.iscNotification(VmidcMessages.getString(outputMessage, new Date()), null, Notification.Type.TRAY_NOTIFICATION);
+            String outputMessage = (succeed) ? MAINTENANCE_SSLCONFIGURATION_REMOVED : MAINTENANCE_SSLCONFIGURATION_REMOVE_FAILURE;
+            ViewUtil.iscNotification(getString(outputMessage, new Date()), null, Notification.Type.TRAY_NOTIFICATION);
         }
     };
 

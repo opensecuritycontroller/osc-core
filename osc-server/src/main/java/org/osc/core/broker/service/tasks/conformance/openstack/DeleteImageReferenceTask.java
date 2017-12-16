@@ -21,17 +21,18 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = DeleteImageReferenceTask.class)
 public class DeleteImageReferenceTask  extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(DeleteImageReferenceTask.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeleteImageReferenceTask.class);
 
     private OsImageReference imageReference;
     private VirtualSystem vs;

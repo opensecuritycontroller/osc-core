@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static java.util.stream.Collectors.*;
+
+import static java.util.stream.Collectors.toSet;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +76,12 @@ public class VirtualizationConnectorEntityMgr {
         vc.setAdminProjectName(dto.getAdminProjectName());
         vc.setAdminDomainId(dto.getAdminDomainId());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
+
+        // For rabbit MQ password, encrypt it before setting it on the entity.
+        String rabbitMqPassword = vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+        vc.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                encryption.encryptAESCTR(rabbitMqPassword));
+
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
                 .stream()
                 .map(SslCertificateAttrEntityMgr::createEntity)
@@ -101,24 +109,24 @@ public class VirtualizationConnectorEntityMgr {
         dto.setAdminProjectName(vc.getProviderAdminProjectName());
         dto.setAdminDomainId(vc.getAdminDomainId());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
+
+        // For rabbit MQ password, decrypt it before setting it on the dto.
+        String rabbitMqPassword = dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD);
+        dto.getProviderAttributes().put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                encryption.decryptAESCTR(rabbitMqPassword));
+
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));
 
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
-
-        if (vc.getLastJob() != null) {
-            dto.setLastJobStatus(vc.getLastJob().getStatus().name());
-            dto.setLastJobState(vc.getLastJob().getState().name());
-            dto.setLastJobId(vc.getLastJob().getId());
-        }
     }
 
     public static VirtualizationConnector findByName(EntityManager em, String name,
             TransactionalBroadcastUtil txBroadcastUtil) {
 
         // Initializing Entity Manager
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
                 VirtualizationConnector.class, em, txBroadcastUtil);
 
         return emgr.findByFieldName("name", name);
@@ -128,15 +136,15 @@ public class VirtualizationConnectorEntityMgr {
             TransactionalBroadcastUtil txBroadcastUtil) {
 
         // get appliance software version based on software version provided
-        OSCEntityManager<ApplianceSoftwareVersion> emgr1 = new OSCEntityManager<ApplianceSoftwareVersion>(
+        OSCEntityManager<ApplianceSoftwareVersion> emgr1 = new OSCEntityManager<>(
                 ApplianceSoftwareVersion.class, em, txBroadcastUtil);
         List<ApplianceSoftwareVersion> asvList = emgr1.listByFieldName("applianceSoftwareVersion", swVersion);
 
         // Initializing Entity Manager
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
                 VirtualizationConnector.class, em, txBroadcastUtil);
 
-        ArrayList<VirtualizationConnector> vcList = new ArrayList<VirtualizationConnector>();
+        ArrayList<VirtualizationConnector> vcList = new ArrayList<>();
 
         // get all VCs based on the appliance software version
         // and virtualization software version.

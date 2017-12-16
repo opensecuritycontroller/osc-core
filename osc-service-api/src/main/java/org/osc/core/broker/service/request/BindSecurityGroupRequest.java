@@ -31,6 +31,9 @@ public class BindSecurityGroupRequest extends BaseRequest<BaseDto> {
      */
     private Long vcId;
     private Long securityGroupId;
+    private Long sfcId;
+    private boolean isBindSfc;
+
     private List<VirtualSystemPolicyBindingDto> servicesToBindTo = new ArrayList<>();
 
     public boolean isUnBindSecurityGroup() {
@@ -64,5 +67,22 @@ public class BindSecurityGroupRequest extends BaseRequest<BaseDto> {
     public void setVcId(Long vcId) {
         this.vcId = vcId;
     }
+
+	public Long getSfcId() {
+		return this.sfcId;
+	}
+
+	public void setSfcId(Long sfcId) {
+		this.sfcId = sfcId;
+	}
+
+    public boolean isBindSfc() {
+        return this.isBindSfc;
+    }
+
+    public void setBindSfc(boolean isBindSfc) {
+        this.isBindSfc = isBindSfc;
+    }
+
 
 }

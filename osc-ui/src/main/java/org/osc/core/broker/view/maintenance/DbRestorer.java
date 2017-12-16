@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
@@ -31,6 +30,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
 import org.osc.core.broker.window.add.PasswordWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -48,7 +49,7 @@ import com.vaadin.ui.VerticalLayout;
 
 @SuppressWarnings("serial")
 public class DbRestorer extends CustomComponent implements Receiver, FailedListener, SucceededListener {
-    private static final Logger log = Logger.getLogger(DbRestorer.class);
+    private static final Logger log = LoggerFactory.getLogger(DbRestorer.class);
     private final Upload upload;
     private File file;
     private final Panel panel = new Panel();

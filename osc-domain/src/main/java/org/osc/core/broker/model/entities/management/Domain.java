@@ -46,8 +46,9 @@ public class Domain extends BaseEntity {
     private ApplianceManagerConnector applianceManagerConnector;
 
     @OneToMany(mappedBy = "domain", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Policy> policies = new HashSet<Policy>();
+    private Set<Policy> policies = new HashSet<>();
 
+    // mgr domain id
     @Column(name = "mgr_id")
     private String mgrId;
 

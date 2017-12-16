@@ -18,6 +18,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -163,8 +164,9 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
         Object[] expectedProtectedPorts = this.protectedPorts.stream()
                 .sorted(Comparator.comparing(VMPort::getOsNetworkId)).toArray(size -> new VMPort[size]);
 
-        VMPort[] actualProtectedPorts = dai.getProtectedPorts().stream()
-                .sorted(Comparator.comparing(VMPort::getOsNetworkId)).toArray(size -> new VMPort[size]);
+        @SuppressWarnings("unchecked")
+        VMPort[] actualProtectedPorts = ((Set<VMPort>) dai.getProtectedPorts()).stream()
+        .sorted(Comparator.comparing(VMPort::getOsNetworkId)).toArray(size -> new VMPort[size]);
 
         Assert.assertArrayEquals("The expected ports are different than the dai ports.", expectedProtectedPorts,
                 actualProtectedPorts);

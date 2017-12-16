@@ -16,9 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import static org.osc.core.common.virtualization.VirtualizationType.KUBERNETES;
+import static org.osc.core.common.virtualization.VirtualizationType.OPENSTACK;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
@@ -32,6 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.UpdateOrDeleteK8sSecurityGroupMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -40,40 +46,26 @@ class SecurityGroupCheckMetaTaskTestData {
     public final static String POLICY_MAPPING_SUPPORTED_MGR_TYPE = "NSM";
     public final static String POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE = "SMC";
 
-    public static String NO_MC_POLICY_MAPPING_SUPPORTED = "NO_MC_POLICY_MAPPING_SUPPORTED";
-    public static String SINGLE_MC_POLICY_MAPPING_SUPPORTED = "SINGLE_MC_POLICY_MAPPING_SUPPORTED";
-    public static String MULTIPLE_MC_POLICY_MAPPING_SUPPORTED = "MULTIPLE_MC_POLICY_MAPPING_SUPPORTED";
+    public final static String NO_MC_POLICY_MAPPING_SUPPORTED = "NO_MC_POLICY_MAPPING_SUPPORTED";
+    public final static String NO_MC_POLICY_MAPPING_SUPPORTED_K8S = "NO_MC_POLICY_MAPPING_SUPPORTED_K8S";
+    public final static String SINGLE_MC_POLICY_MAPPING_SUPPORTED = "SINGLE_MC_POLICY_MAPPING_SUPPORTED";
+    public final static String MULTIPLE_MC_POLICY_MAPPING_SUPPORTED = "MULTIPLE_MC_POLICY_MAPPING_SUPPORTED";
 
-    public VirtualSystem MC_POLICY_MAPPING_NOT_SUPPORTED_VS = createVirtualSystem(NO_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE);
-    public VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS = createVirtualSystem(SINGLE_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_SUPPORTED_MGR_TYPE);
-    public VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS_2 = createVirtualSystem(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_SUPPORTED_MGR_TYPE);
+    public VirtualSystem MC_POLICY_MAPPING_NOT_SUPPORTED_VS = createVirtualSystem(NO_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE, OPENSTACK);
+    public VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS = createVirtualSystem(SINGLE_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_SUPPORTED_MGR_TYPE, OPENSTACK);
+    public VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS_2 = createVirtualSystem(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_SUPPORTED_MGR_TYPE, OPENSTACK);
+    public VirtualSystem MC_POLICY_MAPPING_NOT_SUPPORTED_K8S_VS = createVirtualSystem(NO_MC_POLICY_MAPPING_SUPPORTED_K8S, POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE, KUBERNETES);
+
     public List<VirtualSystem> MC_POLICY_MAPPING_SUPPORTED_VS_LIST = Arrays.asList(this.MC_POLICY_MAPPING_SUPPORTED_VS, this.MC_POLICY_MAPPING_SUPPORTED_VS_2);
 
-    public List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<SecurityGroup>();
-
+    public List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<>();
 
     public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
+            this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
     public SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(SINGLE_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_SUPPORTED_VS);
-
-    {
-        VirtualSystem vs = this.MC_POLICY_MAPPING_SUPPORTED_VS_2;
-        String baseName = MULTIPLE_MC_POLICY_MAPPING_SUPPORTED + "2";
-        Policy policy = new Policy(
-                vs.getDistributedAppliance().getApplianceManagerConnector(),
-                vs.getDomain());
-        policy.setName(baseName + "_policy");
-        policy.setMgrPolicyId(baseName + "_mgrPolicy");
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policy, baseName + "_tag", FailurePolicyType.NA, 1L);
-        sgi.setName(baseName + "_sgi");
-
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
-        sg.setName(baseName + "_sg");
-        sg.addSecurityGroupInterface(sgi);
-        sgi.setSecurityGroup(sg);
-    }
+            this.MC_POLICY_MAPPING_SUPPORTED_VS);
+    public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_K8S_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED_K8S,
+            this.MC_POLICY_MAPPING_NOT_SUPPORTED_K8S_VS);
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -99,6 +91,13 @@ class SecurityGroupCheckMetaTaskTestData {
         return expectedGraph;
     }
 
+    public TaskGraph createNoMcPolicyMappingK8sGraph(SecurityGroup sg) {
+        TaskGraph expectedGraph = new TaskGraph();
+        expectedGraph.addTask(new UpdateOrDeleteK8sSecurityGroupMetaTask().create(sg));
+        return expectedGraph;
+    }
+
+
     private SecurityGroup createSecurityGroup(String baseName,
             VirtualSystem vs) {
 
@@ -107,8 +106,10 @@ class SecurityGroupCheckMetaTaskTestData {
                 vs.getDomain());
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
+        Set<Policy> policySet = new HashSet<>();
+        policySet.add(policy);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policy, baseName + "_tag", FailurePolicyType.NA, 2L);
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policySet, baseName + "_tag", FailurePolicyType.NA, 2L);
         sgi.setName(baseName + "_sgi");
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
@@ -121,10 +122,10 @@ class SecurityGroupCheckMetaTaskTestData {
     }
 
     private VirtualSystem createVirtualSystem(String baseName,
-            String mgrType) {
+            String mgrType, VirtualizationType virtualizationType) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
+        vc.setVirtualizationType(virtualizationType);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");

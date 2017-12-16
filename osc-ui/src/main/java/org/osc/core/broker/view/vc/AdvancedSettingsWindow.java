@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.server.EncryptionApi;
-import org.osc.core.broker.service.api.server.EncryptionException;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -41,7 +42,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
 
     private static final String ADVANCED_SETTINGS_CAPTION = VmidcMessages.getString(VmidcMessages_.ADVANCED);
 
-    private static final Logger LOG = Logger.getLogger(AdvancedSettingsWindow.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AdvancedSettingsWindow.class);
 
     private CheckBox providerHttps = null;
     private TextField rabbitMQIp = null;
@@ -49,11 +50,9 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
     private PasswordField rabbitMQUserPassword = null;
     private TextField rabbitMQPort = null;
     private final BaseVCWindow baseVCWindow;
-    private final EncryptionApi encrypter;
 
-    public AdvancedSettingsWindow(BaseVCWindow baseVCWindow, EncryptionApi encrypter) throws Exception {
+    public AdvancedSettingsWindow(BaseVCWindow baseVCWindow) throws Exception {
         this.baseVCWindow = baseVCWindow;
-        this.encrypter = encrypter;
         createWindow(ADVANCED_SETTINGS_CAPTION);
         getComponentModel().setOkClickedListener(new ClickListener() {
             /**
@@ -88,23 +87,19 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
         this.rabbitMQPort.setRequiredError(this.rabbitMQPort.getCaption() + " cannot be empty");
 
         //fill this form with default/previous values
-        this.providerHttps.setValue(new Boolean(this.baseVCWindow.providerAttributes
-                .get(BaseVCWindow.ATTRIBUTE_KEY_HTTPS)));
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_IP) != null) {
-            this.rabbitMQIp.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_IP));
+        this.providerHttps.setValue(new Boolean(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_HTTPS)));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_IP) != null) {
+            this.rabbitMQIp.setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_IP));
         }
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER) != null) {
-            this.rabbitMQUserName.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER) != null) {
+            this.rabbitMQUserName.setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER));
         }
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
-            this.rabbitMQUserPassword.setValue(this.encrypter.decryptAESCTR(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
+            this.rabbitMQUserPassword
+                    .setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
         }
-        if (this.baseVCWindow.providerAttributes.get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
-            this.rabbitMQPort.setValue(this.baseVCWindow.providerAttributes
-                    .get(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT));
+        if (this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
+            this.rabbitMQPort.setValue(this.baseVCWindow.providerAttributes.get(ATTRIBUTE_KEY_RABBITMQ_PORT));
         }
 
         this.form.addComponent(this.providerHttps);
@@ -136,18 +131,17 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
             try {
                 //override all default values with user provided ones...
                 this.baseVCWindow.providerAttributes.clear();
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_HTTPS, this.providerHttps
-                        .getValue().toString());
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_IP,
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_HTTPS, this.providerHttps.getValue().toString());
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_IP,
                         this.rabbitMQIp.getValue().toString());
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER,
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER,
                         this.rabbitMQUserName.getValue().toString());
-                    this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                            this.encrypter.encryptAESCTR(this.rabbitMQUserPassword.getValue().toString()));
-                this.baseVCWindow.providerAttributes.put(BaseVCWindow.ATTRIBUTE_KEY_RABBITMQ_PORT,
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                        this.rabbitMQUserPassword.getValue().toString());
+                this.baseVCWindow.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_PORT,
                         this.rabbitMQPort.getValue().toString());
                 close();
-            } catch (EncryptionException e) {
+            } catch (Exception e) {
                 String msg = "Failed to encrypt rabbit MQ user password";
                 LOG.error(msg, e);
                 ViewUtil.iscNotification(msg, Notification.Type.ERROR_MESSAGE);

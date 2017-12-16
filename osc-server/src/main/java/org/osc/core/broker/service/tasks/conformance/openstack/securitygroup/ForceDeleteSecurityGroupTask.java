@@ -20,17 +20,20 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 /**
  *
@@ -39,7 +42,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service=ForceDeleteSecurityGroupTask.class)
 public class ForceDeleteSecurityGroupTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(ForceDeleteSecurityGroupTask.class);
+    private static final Logger log = LoggerFactory.getLogger(ForceDeleteSecurityGroupTask.class);
 
     private SecurityGroup securityGroup;
 
@@ -105,6 +108,20 @@ public class ForceDeleteSecurityGroupTask extends TransactionalTask {
 
                 // remove Network from database
                 OSCEntityManager.delete(em, sgm.getSubnet(), this.txBroadcastUtil);
+            }
+
+            if (sgm.getType().equals(SecurityGroupMemberType.LABEL)) {
+                for (Pod pod : sgm.getLabel().getPods()) {
+
+                    for (PodPort port : pod.getPorts()) {
+                        OSCEntityManager.delete(em, port, this.txBroadcastUtil);
+                    }
+
+                    OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
+                }
+
+                // remove Label from database
+                OSCEntityManager.delete(em, sgm.getLabel(), this.txBroadcastUtil);
             }
 
             // remove SGM from database

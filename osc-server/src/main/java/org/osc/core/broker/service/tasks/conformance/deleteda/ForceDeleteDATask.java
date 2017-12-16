@@ -20,18 +20,19 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 @Component(service = ForceDeleteDATask.class)
 public class ForceDeleteDATask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(ForceDeleteDATask.class);
+    private static final Logger log = LoggerFactory.getLogger(ForceDeleteDATask.class);
 
     private DistributedAppliance da;
 

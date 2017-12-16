@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.job;
 
+import static java.util.Collections.emptySet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -27,9 +28,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -42,6 +40,7 @@ import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.osc.core.broker.job.Job.JobCompletionListener;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.tasks.BaseTask;
@@ -49,6 +48,7 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.common.job.JobStatus;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.job.TaskStatus;
 import org.osc.core.test.util.TestTransactionControl;
@@ -137,16 +137,16 @@ public class JobEngineTest {
 
     @BeforeClass
     public static void initTests() {
-        Logger hibernateLogger = Logger.getLogger("org.hibernate");
-        hibernateLogger.setLevel(Level.ERROR);
-
-        Logger logger = Logger.getLogger("org.osc.core.broker.job.Job");
-        logger.setLevel(Level.DEBUG);
-        logger = Logger.getLogger("org.osc.core.broker.job.JobEngine");
-        logger.setLevel(Level.DEBUG);
-        logger = Logger.getLogger("org.osc.core.broker.job.TaskNode");
-        logger.setLevel(Level.DEBUG);
-        BasicConfigurator.configure();
+//        Logger hibernateLogger = LoggerFactory.getLogger("org.hibernate");
+//        hibernateLogger.setLevel(Level.ERROR);
+//
+//        Logger logger = LoggerFactory.getLogger("org.osc.core.broker.job.Job");
+//        logger.setLevel(Level.DEBUG);
+//        logger = LoggerFactory.getLogger("org.osc.core.broker.job.JobEngine");
+//        logger.setLevel(Level.DEBUG);
+//        logger = LoggerFactory.getLogger("org.osc.core.broker.job.TaskNode");
+//        logger.setLevel(Level.DEBUG);
+//        BasicConfigurator.configure();
     }
 
     @AfterClass
@@ -245,6 +245,91 @@ public class JobEngineTest {
 
         verifyJobPersistence(this.job);
     }
+
+    // To address defect #550
+    // See https://github.com/opensecuritycontroller/osc-core/issues/550
+    @Test
+    public void testConcurrentGraphModification() throws Exception {
+        String jobName = "Test-Concurrent-Graph-Modification";
+        this.tg = new TaskGraph();
+
+        for (int i = 0; i < 200; i++) {
+           this.tg.addTask(new EmptyTask("Task " + i));
+        }
+
+        this.tg.addTask(new BaseTask("Reader task") {
+
+            @Override
+            public void execute() throws Exception {
+                Set<TaskNode> predecessors =JobEngineTest.this.tg.getGraph().getPredecessors(JobEngineTest.this.tg.getEndTaskNode());
+                System.out.println(getName() + " : I have a task with " + predecessors.size() + " nodes");
+            }
+
+            @Override
+            public Set<LockObjectReference> getObjects() {
+                return emptySet();
+            }});
+
+        this.tg.addTask(new BaseTask("Appender task") {
+
+            @Override
+            public void execute() throws Exception {
+                JobEngineTest.this.tg.appendTask(new EmptyTask("A dummy task just to be appended"));
+            }
+
+            @Override
+            public Set<LockObjectReference> getObjects() {
+                return emptySet();
+            }});
+
+        this.job = this.je.submit(jobName, this.tg,
+                new JobCompletionListener() {
+                    @Override
+                    public void completed(Job job) {
+                        System.out.println(job.getName() +" : " + job.getStatus());
+                    }
+                }, false);
+
+        this.job.waitForCompletion();
+
+        Assert.assertNotNull(this.job);
+        Assert.assertEquals(JobStatus.PASSED, this.job.getStatus().getStatus());
+    }
+
+    @Test
+    public void testConcurrentAppends() throws Exception {
+        String jobName = "Test-Concurrent-Appends";
+        this.tg = new TaskGraph();
+
+        for (int i = 0; i < 20; i++) {
+            this.tg.addTask(new BaseTask("Appender task " + i) {
+
+                @Override
+                public void execute() throws Exception {
+                    JobEngineTest.this.tg.appendTask(new EmptyTask("A dummy task just to be appended"));
+                }
+
+                @Override
+                public Set<LockObjectReference> getObjects() {
+                    return emptySet();
+                }});
+
+        }
+
+        this.job = this.je.submit(jobName, this.tg,
+                new JobCompletionListener() {
+                    @Override
+                    public void completed(Job job) {
+                        System.out.println(job.getName() +" : " + job.getStatus());
+                    }
+                }, false);
+
+        this.job.waitForCompletion();
+
+        Assert.assertNotNull(this.job);
+        Assert.assertEquals(JobStatus.PASSED, this.job.getStatus().getStatus());
+    }
+
 
     private void verifyJobPersistence(Job job) throws Exception {
         EntityManager em = this.testEmf.createEntityManager();

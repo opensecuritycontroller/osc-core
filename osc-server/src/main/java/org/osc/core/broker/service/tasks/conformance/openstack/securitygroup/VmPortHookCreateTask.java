@@ -16,21 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
@@ -38,11 +36,16 @@ import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
+/**
+ * This gets called from VmPortHookCheckTask and is tied to a specifc sgi. This should only be called in case of an
+ * sdn controller which does NOT support portgroups and SFC.
+ */
 @Component(service = VmPortHookCreateTask.class)
 public class VmPortHookCreateTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(VmPortHookCreateTask.class);
+    private final Logger log = LoggerFactory.getLogger(VmPortHookCreateTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -90,21 +93,10 @@ public class VmPortHookCreateTask extends TransactionalTask {
 
             TagEncapsulationType encapsulationType = vs.getEncapsulationType() != null
                     ? TagEncapsulationType.valueOf(vs.getEncapsulationType().name()) : null;
-            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
-                String portGroupId = this.securityGroupInterface.getSecurityGroup().getNetworkElementId();
-                if (portGroupId != null){
-                    PortGroup portGroup = new PortGroup();
-                    portGroup.setPortGroupId(portGroupId);
-                    controller.installInspectionHook(Arrays.asList(portGroup), new DefaultInspectionPort(ingressPort, egressPort, null),
-                            this.securityGroupInterface.getTagValue(), encapsulationType,
-                            this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
-                }
-            } else {
-                controller.installInspectionHook(Arrays.asList(new NetworkElementImpl(this.vmPort)),
-                        new DefaultInspectionPort(ingressPort, egressPort, null),
-                        this.securityGroupInterface.getTagValue(), encapsulationType,
-                        this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
-            }
+            controller.installInspectionHook(new NetworkElementImpl(this.vmPort),
+                    new DefaultInspectionPort(ingressPort, egressPort, null), this.securityGroupInterface.getTagValue(),
+                    encapsulationType, this.securityGroupInterface.getOrder(),
+                    FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
         } finally {
             controller.close();
         }

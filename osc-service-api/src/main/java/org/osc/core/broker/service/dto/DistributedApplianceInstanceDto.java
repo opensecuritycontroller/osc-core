@@ -59,6 +59,12 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     private String virtualConnectorName;
 
     @ApiModelProperty(readOnly = true)
+    private String inspectionElementId;
+
+    @ApiModelProperty(readOnly = true)
+    private String inspectionElementParentId;
+
+    @ApiModelProperty(readOnly = true)
     private String hostname;
 
     @ApiModelProperty(
@@ -76,9 +82,9 @@ public class DistributedApplianceInstanceDto extends BaseDto {
             readOnly = true)
     private String inspectionReady;
 
-    @ApiModelProperty(value = "The Id of the corresponding server instance on openstack.(Openstack Only)",
+    @ApiModelProperty(value = "The Id of the corresponding VNF instance deployed in the virtualization environment.",
             readOnly = true)
-    private String osVmId;
+    private String externalId;
 
     @ApiModelProperty(
             value = "The Hypervisor Host name where the server instance is running on openstack.(Openstack Only)",
@@ -117,15 +123,15 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     private String mgmtGateway;
 
     @ApiModelProperty(readOnly = true, value = "Determines whether the appliance manager enables retrieval of appliance status.")
-    private Boolean isApplianceStatusEnabled;
+    private Boolean applianceStatusEnabled;
 
     public DistributedApplianceInstanceDto() {
 
     }
 
-    public DistributedApplianceInstanceDto(Boolean isApplianceStatusEnabled,
+    public DistributedApplianceInstanceDto(Boolean applianceStatusEnabled,
             String discovered, String inspectionReady, String lastStatus) {
-        this.isApplianceStatusEnabled = isApplianceStatusEnabled;
+        this.applianceStatusEnabled = applianceStatusEnabled;
         this.discovered = discovered;
         this.inspectionReady = inspectionReady;
         this.lastStatus = lastStatus;
@@ -139,6 +145,22 @@ public class DistributedApplianceInstanceDto extends BaseDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getInspectionElementId() {
+        return this.inspectionElementId;
+    }
+
+    public void setInspectionElementId(String inspectionElementId) {
+        this.inspectionElementId = inspectionElementId;
+    }
+
+    public String getInspectionElementParentId() {
+        return this.inspectionElementParentId;
+    }
+
+    public void setInspectionElementParentId(String inspectionElementParentId) {
+        this.inspectionElementParentId = inspectionElementParentId;
     }
 
     public String getIpAddress() {
@@ -166,7 +188,7 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     }
 
     public Boolean isApplianceStatusEnabled() {
-        return this.isApplianceStatusEnabled;
+        return this.applianceStatusEnabled;
     }
 
     public String getDistributedApplianceName() {
@@ -209,12 +231,12 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         return this.inspectionReady;
     }
 
-    public String getOsVmId() {
-        return this.osVmId;
+    public String getExternalId() {
+        return this.externalId;
     }
 
-    public void setOsVmId(String osVmId) {
-        this.osVmId = osVmId;
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public String getOsHostname() {
@@ -275,7 +297,7 @@ public class DistributedApplianceInstanceDto extends BaseDto {
                 + this.applianceManagerConnectorName + ", virtualConnectorName=" + this.virtualConnectorName
                 + ", hostname=" + this.hostname + ", lastStatus="
                 + this.lastStatus + ", discovered=" + this.discovered + ", inspectionReady=" + this.inspectionReady
-                + ", osVmId=" + this.osVmId + ", osHostname=" + this.osHostname + ", osInspectionIngressPortId="
+                + ", osVmId=" + this.externalId + ", osHostname=" + this.osHostname + ", osInspectionIngressPortId="
                 + this.osInspectionIngressPortId + ", osInspectionIngressMacAddress="
                 + this.osInspectionIngressMacAddress + ", osInspectionEgressPortId=" + this.osInspectionEgressPortId
                 + ", osInspectionEgressMacAddress=" + this.osInspectionEgressMacAddress + ", mgmtIpAddress="

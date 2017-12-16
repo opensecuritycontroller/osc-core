@@ -18,7 +18,6 @@ package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.JobEngine;
@@ -42,17 +41,19 @@ import org.osc.core.broker.service.validator.RequestValidator;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component exposes both the API and the implementation so that the
- * {@link ConformService} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
+ * {@link DistributedApplianceConformJobFactory} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
  * method.
  */
 @Component(service = { DeleteDistributedApplianceServiceApi.class, DeleteDistributedApplianceService.class })
 public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
 implements DeleteDistributedApplianceServiceApi {
 
-    private static final Logger log = Logger.getLogger(DeleteDistributedApplianceService.class);
+    private static final Logger log = LoggerFactory.getLogger(DeleteDistributedApplianceService.class);
     private RequestValidator<BaseDeleteRequest, DistributedAppliance> validator;
 
     @Reference

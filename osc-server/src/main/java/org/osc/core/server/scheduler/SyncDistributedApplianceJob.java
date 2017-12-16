@@ -20,11 +20,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
@@ -34,10 +33,12 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SyncDistributedApplianceJob implements Job {
 
-    private static final Logger log = Logger.getLogger(SyncDistributedApplianceJob.class);
+    private static final Logger log = LoggerFactory.getLogger(SyncDistributedApplianceJob.class);
 
     public SyncDistributedApplianceJob() {
 
@@ -46,7 +47,7 @@ public class SyncDistributedApplianceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
-        ConformService conformService = (ConformService) context.getMergedJobDataMap().get(ConformService.class.getName());
+        DistributedApplianceConformJobFactory daConformJobFactory = (DistributedApplianceConformJobFactory) context.getMergedJobDataMap().get(DistributedApplianceConformJobFactory.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
@@ -68,7 +69,7 @@ public class SyncDistributedApplianceJob implements Job {
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     DistributedAppliance found = em.find(DistributedAppliance.class, da.getId());
-                                    conformService.startDAConformJob(em, found, null, false);
+                                    daConformJobFactory.startDAConformJob(em, found, null, false);
                                 } catch (Exception ex) {
                                     StaticRegistry.alertGenerator().processSystemFailureEvent(
                                             SystemFailureType.SCHEDULER_FAILURE,

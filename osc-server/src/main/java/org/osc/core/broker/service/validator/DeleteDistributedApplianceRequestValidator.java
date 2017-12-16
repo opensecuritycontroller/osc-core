@@ -20,11 +20,13 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 
 public class DeleteDistributedApplianceRequestValidator implements RequestValidator<BaseDeleteRequest,DistributedAppliance> {
 
     private EntityManager em;
+
 
     public DeleteDistributedApplianceRequestValidator(EntityManager em) {
         this.em = em;
@@ -44,12 +46,20 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
             throw new VmidcBrokerValidationException("Distributed Appliance entry with ID '" + request.getId() + "' is not found.");
         }
 
+        if (DistributedApplianceEntityMgr.isProtectingWorkload(da)) {
+            throw new VmidcBrokerValidationException(
+                    String.format("The distributed appliance with name '%s' and id '%s' is currently protecting a workload",
+                            da.getName(),
+                            da.getId()));
+        }
+
         if (!da.getMarkedForDeletion() && request.isForceDelete()) {
             throw new VmidcBrokerValidationException(
                     "Distributed Appilance with ID "
                             + request.getId()
                             + " is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
         }
+
         return da;
     }
 }

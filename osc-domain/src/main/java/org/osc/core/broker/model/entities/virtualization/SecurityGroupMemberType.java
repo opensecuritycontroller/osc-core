@@ -17,7 +17,7 @@
 package org.osc.core.broker.model.entities.virtualization;
 
 public enum SecurityGroupMemberType {
-    VM("VM"), NETWORK("NETWORK"), IP("IP"), MAC("MAC"), SUBNET("SUBNET");
+    VM("VM"), NETWORK("NETWORK"), IP("IP"), MAC("MAC"), SUBNET("SUBNET"), LABEL("LABEL");
 
     private final String text;
 

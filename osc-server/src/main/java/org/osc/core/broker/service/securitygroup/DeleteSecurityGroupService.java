@@ -18,15 +18,14 @@ package org.osc.core.broker.service.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -40,15 +39,17 @@ import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
 implements DeleteSecurityGroupServiceApi {
 
-    private static final Logger log = Logger.getLogger(DeleteSecurityGroupService.class);
+    private static final Logger log = LoggerFactory.getLogger(DeleteSecurityGroupService.class);
 
     @Reference
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Reference
     ForceDeleteSecurityGroupTask forceDeleteSecurityGroupTask;
@@ -63,6 +64,9 @@ implements DeleteSecurityGroupServiceApi {
         try {
             unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
                     securityGroup.getVirtualizationConnector());
+            //remove sfc link to SG
+            securityGroup.setServiceFunctionChain(null);
+
             if (request.isForceDelete()) {
                 TaskGraph tg = new TaskGraph();
                 tg.addTask(this.forceDeleteSecurityGroupTask.create(securityGroup));
@@ -79,7 +83,7 @@ implements DeleteSecurityGroupServiceApi {
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {
-                        Job job = this.conformService.startSecurityGroupConformanceJob(em, securityGroup,
+                        Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(em, securityGroup,
                                 forLambda, false);
                         response.setJobId(job.getId());
                         return response;

@@ -24,10 +24,11 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class NetworkUtil {
-    private static final Logger log = Logger.getLogger(NetworkUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(NetworkUtil.class);
 
     static final List<String> validNetMasks = Arrays.asList("255.255.255.255", "255.255.255.254", "255.255.255.252",
             "255.255.255.248", "255.255.255.240", "255.255.255.224", "255.255.255.192", "255.255.255.128",

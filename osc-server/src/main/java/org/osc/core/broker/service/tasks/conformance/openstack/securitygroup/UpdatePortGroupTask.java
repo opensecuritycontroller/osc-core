@@ -19,31 +19,33 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdatePortGroupTask.class)
-public class UpdatePortGroupTask  extends TransactionalTask{
+public class UpdatePortGroupTask extends TransactionalTask {
 
     @Reference
     private ApiFactoryService apiFactoryService;
 
     private SecurityGroup securityGroup;
-    private PortGroup portGroup;
+    private NetworkElementImpl portGroup;
 
-    public UpdatePortGroupTask create(SecurityGroup sg, PortGroup portGroup) {
+    public UpdatePortGroupTask create(SecurityGroup sg, NetworkElementImpl portGroup) {
         UpdatePortGroupTask task = new UpdatePortGroupTask();
         task.securityGroup = sg;
         task.portGroup = portGroup;
@@ -60,37 +62,64 @@ public class UpdatePortGroupTask  extends TransactionalTask{
 
         Set<SecurityGroupMember> members = this.securityGroup.getSecurityGroupMembers();
         List<NetworkElement> protectedPorts = new ArrayList<>();
+        String domainId = null;
+        if (this.securityGroup.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            for (SecurityGroupMember sgm : members) {
+                protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
+            }
 
-        for (SecurityGroupMember sgm : members) {
-            protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
+            // ??? how do we know all protected ports are within same domain?
+            domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
+                    this.securityGroup.getVirtualizationConnector(), protectedPorts);
+            if (domainId == null){
+                throw new Exception(String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
+                        this.securityGroup.getProjectName(), this.securityGroup.getName()));
+            }
+            this.portGroup.setParentId(domainId);
+
+            for (NetworkElement elem : protectedPorts) {
+                ((NetworkElementImpl) elem).setParentId(domainId);
+            }
+        } else {
+            for (SecurityGroupMember sgm : members) {
+                if (domainId == null && !sgm.getPodPorts().isEmpty()) {
+                    domainId = sgm.getPodPorts().iterator().next().getParentId();
+                }
+
+                List<NetworkElementImpl> podPorts = getPodPorts(sgm);
+                for (NetworkElementImpl podPort : podPorts) {
+                    podPort.setParentId(domainId);
+                }
+
+                protectedPorts.addAll(podPorts);
+                this.portGroup.setParentId(domainId);
+            }
         }
 
-        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
-                this.securityGroup.getVirtualizationConnector(), protectedPorts);
-        if (domainId == null){
-            throw new Exception(String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
-                    this.securityGroup.getProjectName(), this.securityGroup.getName()));
-        }
-        this.portGroup.setParentId(domainId);
-        for (NetworkElement elem : protectedPorts) {
-            ((NetworkElementImpl) elem).setParentId(domainId);
-        }
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        NetworkElement portGrp = controller.updateNetworkElement(this.portGroup, protectedPorts);
-        if (portGrp == null) {
-            throw new Exception(String.format("Failed to update Port Group : '%s'", this.portGroup.getElementId()));
-        }
-        if (!portGrp.getElementId().equals(this.portGroup.getElementId())) {
-            //portGroup was deleted outside OSC, recreated portGroup above
-            this.securityGroup.setNetworkElementId(portGrp.getElementId());
-            em.merge(this.securityGroup);
+        try (SdnRedirectionApi controller = this.apiFactoryService
+                .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
+            NetworkElement portGrp = controller.updateNetworkElement(this.portGroup, protectedPorts);
+            if (portGrp == null) {
+                throw new Exception(String.format("Failed to update Port Group : '%s'", this.portGroup.getElementId()));
+            }
+            if (!portGrp.getElementId().equals(this.portGroup.getElementId())) {
+                //portGroup was deleted outside OSC, recreated portGroup above
+                this.securityGroup.setNetworkElementId(portGrp.getElementId());
+                em.merge(this.securityGroup);
+            }
         }
     }
 
     @Override
     public String getName() {
         return String.format("Update Port Group for security group: %s ", this.securityGroup.getName());
+    }
+
+    private static List<NetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        Set<PodPort> ports = sgm.getPodPorts();
+        return ports.stream()
+                .map(NetworkElementImpl::new)
+                .collect(Collectors.toList());
     }
 }
 

@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "virtualSystemPolicyBinding")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class VirtualSystemPolicyBindingDto {
+public class VirtualSystemPolicyBindingDto extends BaseVirtualSystemPoliciesDto {
 
     /**
      * Compares the VirtualSystemPolicyBindingDto using the order.
@@ -44,15 +44,6 @@ public class VirtualSystemPolicyBindingDto {
         }
     }
 
-    @ApiModelProperty(required = true)
-    private Long virtualSystemId;
-
-    @ApiModelProperty(required = true)
-    private String name;
-
-    @ApiModelProperty(required = true)
-    private Long policyId;
-
     @ApiModelProperty(
             value = "Failure policy required only if the SDN controller supports Failure policy else defaults to NA",
             required = true)
@@ -63,45 +54,24 @@ public class VirtualSystemPolicyBindingDto {
             required = true)
     private Long order;
 
-    /**
-     * List of Policies owned by the Virtual System
-     */
-    private List<PolicyDto> policies = new ArrayList<>();
-
     @ApiModelProperty(required = true)
-    private boolean isBinded;
-
-    @ApiModelProperty(readOnly = true)
-    private boolean markedForDeletion;
+    private boolean binded;
 
     public VirtualSystemPolicyBindingDto() {
+
     }
 
-    public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Long policyId,
-            FailurePolicyType failurePolicyType, long order) {
-        super();
-        this.virtualSystemId = virtualSystemId;
-        this.name = name;
-        this.policyId = policyId;
+    public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds, List<PolicyDto> policies) {
+		super(virtualSystemId, name, policyIds, policies);
+    }
+
+	public VirtualSystemPolicyBindingDto(Long virtualSystemId, String name, Set<Long> policyIds,
+            FailurePolicyType failurePolicyType, Long order) {
+		super(virtualSystemId, name, policyIds);
         this.failurePolicyType = failurePolicyType;
         this.order = order;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Long getVirtualSystemId() {
-        return this.virtualSystemId;
-    }
-
-    public Long getPolicyId() {
-        return this.policyId;
-    }
 
     public FailurePolicyType getFailurePolicyType() {
         return this.failurePolicyType;
@@ -119,35 +89,19 @@ public class VirtualSystemPolicyBindingDto {
         this.order = order;
     }
 
-    public List<PolicyDto> getPolicies() {
-        return this.policies;
-    }
-
-    public void addPolicies(PolicyDto policy) {
-        this.policies.add(policy);
-    }
-
     public boolean isBinded() {
-        return this.isBinded;
+        return this.binded;
     }
 
     public void setBinded(boolean selected) {
-        this.isBinded = selected;
-    }
-
-    public boolean isMarkedForDeletion() {
-        return this.markedForDeletion;
-    }
-
-    public void setMarkedForDeletion(boolean markedForDeletion) {
-        this.markedForDeletion = markedForDeletion;
+        this.binded = selected;
     }
 
     @Override
     public String toString() {
-        return "VirtualSystemPolicyBindingDto [virtualSystemId=" + this.virtualSystemId + ", name=" + this.name + ", policyId="
-                + this.policyId + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
-                + ", policies=" + this.policies + ", isBinded=" + this.isBinded + ", markedForDeletion=" + this.markedForDeletion
+        return "VirtualSystemPolicyBindingDto [virtualSystemId=" + getVirtualSystemId() + ", name=" + getName() + ", policyId="
+                + getPolicyIds() + ", failurePolicyType=" + this.failurePolicyType + ", order=" + this.order
+                + ", policies=" + getPolicies() + ", binded=" + this.binded + ", markedForDeletion=" + isMarkedForDeletion()
                 + "]";
     }
 

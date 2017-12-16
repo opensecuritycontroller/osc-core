@@ -18,11 +18,10 @@ package org.osc.core.broker.service.securityinterface;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -33,37 +32,37 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class AddSecurityGroupInterfaceService
         extends BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJobResponse>
         implements AddSecurityGroupInterfaceServiceApi {
 
-    private static final Logger log = Logger.getLogger(AddSecurityGroupInterfaceService.class);
+    private static final Logger log = LoggerFactory.getLogger(AddSecurityGroupInterfaceService.class);
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
         SecurityGroupInterfaceDto dto = request.getDto();
         VirtualSystem vs = validateAndLoad(em, dto);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface(
-                vs,
-                null,
-                null,
-                FailurePolicyType.valueOf(dto.getFailurePolicyType().name()),
-                0L);
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, null,
+                FailurePolicyType.valueOf(dto.getFailurePolicyType().name()), 0L);
 
-        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findById(em, dto.getPolicyId()),
-                SecurityGroupInterface.ISC_TAG_PREFIX);
+		SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto,
+				PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds(),
+						vs.getDistributedAppliance().getApplianceManagerConnector()),
+				SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Creating SecurityGroupInterface: " + sgi.toString());
         OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
         chain(() -> {
-            Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+            Long jobId = this.daConformJobFactory.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
 
             BaseJobResponse response = new BaseJobResponse(sgi.getId());
             response.setJobId(jobId);
@@ -77,20 +76,24 @@ public class AddSecurityGroupInterfaceService
     protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
         VirtualSystem vs = super.validateAndLoad(em, dto);
 
-        if (!dto.isUserConfigurable()) {
-            throw new VmidcBrokerValidationException(
-                    "Invalid request. Only User configured Traffic Policy Mappings can be Created.");
-        }
+		if (!dto.isUserConfigurable()) {
+			throw new VmidcBrokerValidationException(
+					"Invalid request. Only User configured Traffic Policy Mappings can be Created.");
+		} else {
+			if (dto.getPolicies().size() > 1) {
+				throw new VmidcBrokerValidationException(
+						"Invalid request. User configured Traffic Policy Mappings cannot have more than one policy.");
+			}
+		}
 
-        SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(
-                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
+		Long policyId = dto.getPolicies().iterator().next().getId();
+        SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsTagAndPolicy(
+                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString(), policyId);
 
         if (existingSGI != null) {
             throw new VmidcBrokerValidationException("A Traffic Policy Mapping: " + existingSGI.getName()
             + " exists for the specified virtual system and tag combination.");
         }
         return vs;
-
     }
-
 }

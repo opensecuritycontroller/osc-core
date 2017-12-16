@@ -27,6 +27,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -183,4 +184,8 @@ public class VirtualSystemEntityMgr {
         return prevVal;
     }
 
+    public static boolean isProtectingWorkload(VirtualSystem vs) {
+        return !vs.getServiceFunctionChains().isEmpty() ||
+                CollectionUtils.emptyIfNull(vs.getDeploymentSpecs()).stream().anyMatch(ds -> DeploymentSpecEntityMgr.isProtectingWorkload(ds));
+    }
 }

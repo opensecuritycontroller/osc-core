@@ -20,13 +20,12 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -39,6 +38,8 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The implementation is advertised so that it can be used in
@@ -47,12 +48,12 @@ import org.osgi.service.component.annotations.Reference;
 // TODO this service causes circularity. DS references are optional+dynamic as work around.
 @Component(service={AddSecurityGroupService.class, AddSecurityGroupServiceApi.class})
 public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
-        implements AddSecurityGroupServiceApi {
+implements AddSecurityGroupServiceApi {
 
-    private static final Logger LOG = Logger.getLogger(AddSecurityGroupService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AddSecurityGroupService.class);
 
     @Reference
-    private ConformService conformService;
+    private SecurityGroupConformJobFactory sgConformJobFactory;
 
     @Override
     public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception,
@@ -60,6 +61,9 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
 
         SecurityGroupDto dto = request.getDto();
         List<String> regions = validateAndLoad(em, dto);
+
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
+
         if (dto.isProtectAll()
                 && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(em, dto.getProjectId(),
                         dto.getParentId())) {
@@ -74,7 +78,6 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
         UnlockObjectMetaTask unlockTask = null;
 
         try {
-            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
             unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
 
             SecurityGroup securityGroup = new SecurityGroup(vc, dto.getProjectId(), dto.getProjectName());
@@ -85,17 +88,19 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
 
             if (!securityGroup.isProtectAll()) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : request.getMembers()) {
-                    validate(securityGroupMemberDto, regions);
+                    if (vc.getVirtualizationType().isOpenstack()) {
+                        validate(securityGroupMemberDto, regions);
+                    }
+
                     addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }
 
             OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
-
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                    Job job = this.sgConformJobFactory.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
                     return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {

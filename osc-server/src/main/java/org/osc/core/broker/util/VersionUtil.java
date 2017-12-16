@@ -22,12 +22,13 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
 
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class VersionUtil {
-    private static final Logger log = Logger.getLogger(VersionUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(VersionUtil.class);
 
     public static final String DEBUG_VERSION_STRING = "DEBUG";
 
@@ -81,7 +82,8 @@ public class VersionUtil {
 
         @JsonIgnore
         public Long getBuildNumber() {
-            return Long.parseLong(this.build.split("-")[0]);
+            // The build string can be null for DEBUG builds.
+            return this.build != null ? Long.parseLong(this.build.split("-")[0]) : null;
         }
 
         public void setBuild(String build) {

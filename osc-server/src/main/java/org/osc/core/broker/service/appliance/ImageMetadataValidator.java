@@ -16,17 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.VersionUtil.Version;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.virtualization.VirtualizationType;
+import org.slf4j.Logger;
 
 public class ImageMetadataValidator {
 
-    private static final Logger log = Logger.getLogger(ImageMetadataValidator.class);
+    private static final Logger log = LoggerFactory.getLogger(ImageMetadataValidator.class);
 
     public void validate(ImageMetadata imageMetadata, ApiFactoryService apiFactoryService) throws Exception {
         ImageMetadata.checkForNullFields(imageMetadata);

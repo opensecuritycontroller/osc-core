@@ -16,10 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
+import java.util.List;
+
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.service.request.Request;
-
-import java.util.List;
 
 public interface ListRequestValidator<T extends Request, E extends BaseEntity> extends RequestValidator<T, E> {
     /**

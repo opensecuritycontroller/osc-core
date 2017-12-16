@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.InterfaceAttachment;
 import org.openstack4j.model.compute.PortState;
 import org.openstack4j.model.compute.Server;
@@ -43,17 +42,16 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.HostAvailabilityZoneMapping;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -63,10 +61,12 @@ import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpenstackUtil {
 
-    private static final Logger LOG = Logger.getLogger(OpenstackUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OpenstackUtil.class);
 
     private static final int SLEEP_DISCOVERY_RETRIES = 10 * 1000; // 10 seconds
     private static final int MAX_DISCOVERY_RETRIES = 40;
@@ -91,14 +91,13 @@ public class OpenstackUtil {
 
             Set<String> regions = nova.listRegions();
 
-            outerloop:
             for (String region : regions) {
                 for (NetworkElement elem : protectedPorts) {
                     port = neutron.getPortById(region, elem.getElementId());
                     if (port != null) {
                         domainId = neutron.getNetworkPortRouterDeviceId(projectId, region, port);
                         if (domainId != null) {
-                            break outerloop;
+                            return domainId;
                         }
                     }
                 }
@@ -109,13 +108,7 @@ public class OpenstackUtil {
 
     public static VMPort getAnyProtectedPort(SecurityGroup sg) {
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-            if (sgm.getType() == SecurityGroupMemberType.VM) {
-                return sgm.getVm().getPorts().iterator().next();
-            } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
-                return sgm.getNetwork().getPorts().iterator().next();
-            } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
-                return sgm.getSubnet().getPorts().iterator().next();
-            }
+            return sgm.getVmPorts().iterator().next();
         }
 
         return null;
@@ -252,20 +245,7 @@ public class OpenstackUtil {
 
     public static List<NetworkElement> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
 
-        Set<VMPort> ports;
-        switch (sgm.getType()) {
-            case VM:
-                ports = sgm.getVm().getPorts();
-                break;
-            case NETWORK:
-                ports = sgm.getNetwork().getPorts();
-                break;
-            case SUBNET:
-                ports = sgm.getSubnet().getPorts();
-                break;
-            default:
-                throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
-        }
+        Set<VMPort> ports = sgm.getVmPorts();
 
         return ports.stream()
                 .map(NetworkElementImpl::new)
@@ -406,7 +386,7 @@ public class OpenstackUtil {
      *             end of the current job.
      */
     public static void scheduleSecurityGroupJobsRelatedToDai(EntityManager em, DistributedApplianceInstance dai,
-                                                             Task task, ConformService conformService) {
+                                                             Task task, SecurityGroupConformJobFactory sgConformJobFactory) {
         // Check if existing SG members
         Set<SecurityGroup> sgs = SecurityGroupEntityMgr.listByDai(em, dai);
 
@@ -414,26 +394,26 @@ public class OpenstackUtil {
             Job job = JobEngine.getEngine().getJobByTask(task);
             for (SecurityGroup sg : sgs) {
                 LOG.info("Scheduling SG job for sg: " + sg + " on behalf of DAI: " + dai);
-                job.addListener(new StartSecurityGroupJobListener(sg, conformService));
+                job.addListener(new StartSecurityGroupJobListener(sg, sgConformJobFactory));
             }
         }
     }
 
     private static final class StartSecurityGroupJobListener implements JobCompletionListener {
-        private final Logger log = Logger.getLogger(StartSecurityGroupJobListener.class);
+        private final Logger log = LoggerFactory.getLogger(StartSecurityGroupJobListener.class);
 
         private final SecurityGroup sg;
-        private final ConformService conformService;
+        private final SecurityGroupConformJobFactory sgConformJobFactory;
 
-        private StartSecurityGroupJobListener(SecurityGroup sg, ConformService conformService) {
+        private StartSecurityGroupJobListener(SecurityGroup sg, SecurityGroupConformJobFactory sgConformJobFactory) {
             this.sg = sg;
-            this.conformService = conformService;
+            this.sgConformJobFactory = sgConformJobFactory;
         }
 
         @Override
         public void completed(Job job) {
             try {
-                this.conformService.startSecurityGroupConformanceJob(this.sg);
+                this.sgConformJobFactory.startSecurityGroupConformanceJob(this.sg);
             } catch (Exception e) {
                 StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, new LockObjectReference(
                         this.sg), "Failed to submit a dependent Security Group sync job " + e.getMessage());

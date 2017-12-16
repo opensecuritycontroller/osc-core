@@ -20,19 +20,16 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service=PortGroupCheckMetaTask.class)
+@Component(service = PortGroupCheckMetaTask.class)
 public class PortGroupCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger LOG = Logger.getLogger(PortGroupCheckMetaTask.class);
-
     @Reference
     CreatePortGroupTask createPortGroupTask;
 
@@ -63,14 +60,11 @@ public class PortGroupCheckMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        LOG.info("Start executing PortGroupCheckMetaTask Task. Security Group '" + this.securityGroup + "'");
         this.tg = new TaskGraph();
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 
         String portGroupId = this.securityGroup.getNetworkElementId();
-        PortGroup portGroup = new PortGroup();
-        portGroup.setPortGroupId(portGroupId);
-        portGroup.setParentId(this.domainId);
+        NetworkElementImpl portGroup = new NetworkElementImpl(portGroupId, this.domainId);
 
         if (portGroupId != null) {
             if (this.deleteTg) {

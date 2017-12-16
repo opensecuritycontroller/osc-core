@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,6 +54,11 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
                 VirtualizationConnector.class, this.em, this.txBroadcastUtil);
 
+        if (dto.getType().isKubernetes() && !dto.isControllerDefined()) {
+            throw new VmidcBrokerValidationException(
+                    "Virtualization connectors for Kubernetes must have a SDN controller.");
+        }
+
         boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(dto.getControllerType());
         VirtualizationConnectorDtoValidator.checkForNullFields(dto, usesProviderCreds);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
@@ -64,7 +71,6 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
         // check for uniqueness of vc name
         if (emgr.isExisting("name", dto.getName())) {
-
             throw new VmidcBrokerValidationException(
                     "Virtualization Connector Name: " + dto.getName() + " already exists.");
         }
@@ -87,8 +93,6 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
             throw new VmidcBrokerValidationException(
                     "Provider IP Address: " + dto.getProviderIP() + " already exists.");
         }
-
-
     }
 
     @Override
@@ -118,33 +122,39 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         notNullFieldsMap.put("Type", dto.getType());
         ValidateUtil.checkForNullFields(notNullFieldsMap);
 
-        if (dto.getType().isOpenstack()) {
-            notNullFieldsMap.put("Admin Project Name", dto.getAdminProjectName());
-            notNullFieldsMap.put("Admin Domain Id", dto.getAdminDomainId());
-            if (!dto.isControllerDefined()) {
+        if (!dto.isControllerDefined()) {
+            nullFieldsMap.put("Controller IP Address", dto.getControllerIP());
+            nullFieldsMap.put("Controller User Name", dto.getControllerUser());
+            nullFieldsMap.put("Controller Password", dto.getControllerPassword());
+        } else {
+            if (!usesProviderCreds) {
+                notNullFieldsMap.put("Controller IP Address", dto.getControllerIP());
+                notNullFieldsMap.put("Controller User Name", dto.getControllerUser());
+                if (!skipPasswordNullCheck) {
+                    notNullFieldsMap.put("Controller Password", dto.getControllerPassword());
+                }
+            } else {
                 nullFieldsMap.put("Controller IP Address", dto.getControllerIP());
                 nullFieldsMap.put("Controller User Name", dto.getControllerUser());
                 nullFieldsMap.put("Controller Password", dto.getControllerPassword());
-            } else {
-                if (!usesProviderCreds) {
-                    notNullFieldsMap.put("Controller IP Address", dto.getControllerIP());
-                    notNullFieldsMap.put("Controller User Name", dto.getControllerUser());
-                    if (!skipPasswordNullCheck) {
-                        notNullFieldsMap.put("Controller Password", dto.getControllerPassword());
-                    }
-                } else {
-                    nullFieldsMap.put("Controller IP Address", dto.getControllerIP());
-                    nullFieldsMap.put("Controller User Name", dto.getControllerUser());
-                    nullFieldsMap.put("Controller Password", dto.getControllerPassword());
-                }
             }
-            notNullFieldsMap.put("Rabbit MQ User",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER));
-            notNullFieldsMap.put("Rabbit MQ Password",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
-            notNullFieldsMap.put("Rabbit MQ Port",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT));
         }
+
+        if (dto.getType().isOpenstack()) {
+            notNullFieldsMap.put("Admin Project Name", dto.getAdminProjectName());
+            notNullFieldsMap.put("Admin Domain Id", dto.getAdminDomainId());
+
+            notNullFieldsMap.put("Rabbit MQ User",
+                    dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER));
+            notNullFieldsMap.put("Rabbit MQ Password",
+                    dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
+            notNullFieldsMap.put("Rabbit MQ Port",
+                    dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_PORT));
+        } else {
+            nullFieldsMap.put("Admin Project Name", dto.getAdminProjectName());
+            nullFieldsMap.put("Admin Domain Id", dto.getAdminDomainId());
+        }
+
         notNullFieldsMap.put("Provider IP Address", dto.getProviderIP());
         notNullFieldsMap.put("Provider User Name", dto.getProviderUser());
         if (!skipPasswordNullCheck) {
@@ -174,9 +184,9 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         map.put("Provider Password", dto.getProviderPassword());
         if (dto.getType().isOpenstack()) {
             map.put("Admin Project Name", dto.getAdminProjectName());
-            String rabbitMqPort = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT);
+            String rabbitMqPort = dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_PORT);
             if (!StringUtils.isNumeric(rabbitMqPort)) {
-                throw new VmidcBrokerInvalidEntryException(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT
+                throw new VmidcBrokerInvalidEntryException(ATTRIBUTE_KEY_RABBITMQ_PORT
                         + " expected to be an Integer. Value is: " + rabbitMqPort);
             }
             map.put("Admin Domain Id", dto.getAdminDomainId());
@@ -195,17 +205,16 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         ValidateUtil.checkForValidIpAddressFormat(dto.getProviderIP());
 
         if (dto.getType().isOpenstack() && dto.getProviderAttributes() != null) {
-            String rabbitMqPort = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT);
+            String rabbitMqPort = dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_PORT);
             if (!StringUtils.isNumeric(rabbitMqPort)) {
-                throw new VmidcBrokerInvalidEntryException(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT
-                        + " expected to be an Integer. Value is: " + rabbitMqPort);
+                throw new VmidcBrokerInvalidEntryException(
+                        ATTRIBUTE_KEY_RABBITMQ_PORT + " expected to be an Integer. Value is: " + rabbitMqPort);
             }
 
-            String rabbitMQIP = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_IP);
+            String rabbitMQIP = dto.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_IP);
             if (!StringUtils.isBlank(rabbitMQIP)) {
                 ValidateUtil.checkForValidIpAddressFormat(rabbitMQIP);
             }
         }
     }
-
 }

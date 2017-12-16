@@ -22,7 +22,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service=VmPortHookOrderUpdateTask.class)
 public class VmPortHookOrderUpdateTask extends TransactionalTask {
 
-    //private final Logger log = Logger.getLogger(VmPortHookOrderUpdateTask.class);
+    //private final Logger log = LoggerFactory.getLogger(VmPortHookOrderUpdateTask.class);
 
     private String vmName;
     private String serviceName;

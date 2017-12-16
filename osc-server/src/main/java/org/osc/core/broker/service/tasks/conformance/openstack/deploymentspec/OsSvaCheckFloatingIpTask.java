@@ -16,8 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.model.network.NetFloatingIP;
 import org.openstack4j.model.network.Network;
 import org.osc.core.broker.job.TaskGraph;
@@ -30,15 +33,14 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
+import org.slf4j.Logger;
 
 @Component(service = OsSvaCheckFloatingIpTask.class)
 public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
 
-    private final Logger log = Logger.getLogger(OsSvaCheckFloatingIpTask.class);
+    private final Logger log = LoggerFactory.getLogger(OsSvaCheckFloatingIpTask.class);
 
     private TaskGraph tg;
     private DistributedApplianceInstance dai;
@@ -82,7 +84,7 @@ public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
                 Network floatingPoolNetwork = neutron.getNetworkByName(ds.getRegion(), ds.getFloatingIpPoolName());
                 // Floating ip is invalid or has never been assigned to this sva for some reason, try adding it now.
                 NetFloatingIP allocatedFloatingIp = neutron.createFloatingIp(ds.getRegion(),
-                        floatingPoolNetwork.getId(), this.dai.getOsServerId(), this.dai.getMgmtOsPortId());
+                        floatingPoolNetwork.getId(), this.dai.getExternalId(), this.dai.getMgmtOsPortId());
                 this.dai.setIpAddress(allocatedFloatingIp.getFloatingIpAddress());
                 this.dai.setFloatingIpId(allocatedFloatingIp.getId());
                 this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);

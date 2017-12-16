@@ -16,18 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
 
 @Component(service = SecurityGroupMemberNetworkCheckTask.class)
 public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
@@ -43,6 +44,9 @@ public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
 
     @Reference
     SecurityGroupMemberNetworkUpdateTask securityGroupMemberNetworkUpdateTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private TaskGraph tg;
     private SecurityGroupMember sgm;
@@ -61,6 +65,7 @@ public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
         task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
         task.securityGroupMemberHookCheckTask = this.securityGroupMemberHookCheckTask;
         task.securityGroupMemberNetworkUpdateTask = this.securityGroupMemberNetworkUpdateTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -73,22 +78,24 @@ public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
         this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
         this.network = this.sgm.getNetwork();
 
-        boolean isControllerDefined = this.sgm.getSecurityGroup().getVirtualizationConnector().isControllerDefined();
-
         SecurityGroup sg = this.sgm.getSecurityGroup();
+
+        // If port grouping is supported, adding/removing hooks is done at the port group level.
+        boolean shouldHandleHooks = sg.getVirtualizationConnector().isControllerDefined()
+                && !this.apiFactoryService.supportsPortGroup(sg);
 
         Endpoint endPoint = new Endpoint(sg.getVirtualizationConnector(), sg.getProjectName());
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             org.openstack4j.model.network.Network neutronNetwork = neutron.getNetworkById(this.network.getRegion(),
                     this.network.getOpenstackId());
             if (neutronNetwork == null || this.sgm.getMarkedForDeletion()) {
-                if (isControllerDefined) {
+                if (shouldHandleHooks) {
                     this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
                 }
                 this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
             } else {
                 this.tg.addTask(this.securityGroupMemberNetworkUpdateTask.create(this.sgm, neutronNetwork.getName()));
-                if (isControllerDefined) {
+                if (shouldHandleHooks) {
                     this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
                 }
             }

@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.vmidc.notification.runner;
 
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.*;
+
 import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -43,6 +44,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -53,7 +56,7 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 service=RabbitMQRunner.class)
 public class RabbitMQRunner implements BroadcastListener {
 
-    private static final Logger log = Logger.getLogger(RabbitMQRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(RabbitMQRunner.class);
     private static HashMap<Long, Thread> vcToRabbitMQRunnerThreadMap = new HashMap<>();
     private static HashMap<Long, OsRabbitMQClient> vcToRabbitMQClientMap = new HashMap<>();
 
@@ -173,13 +176,12 @@ public class RabbitMQRunner implements BroadcastListener {
                  * of the given Virtualization Connector of type OpenStack
                  */
                 if (!client.getServerIP().equals(vc.getRabbitMQIP())
-                        || !client.getUser().equals(
-                                vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER))
-                        || !client.getPassword().equals(
-                                this.encryption.decryptAESCTR(vc.getProviderAttributes().get(
-                                        VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)))
-                        || client.getPort() != Integer.parseInt(vc.getProviderAttributes().get(
-                                VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT))) {
+                        || !client.getUser().equals(vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER))
+                        || !client.getPassword()
+                                .equals(this.encryption.decryptAESCTR(
+                                        vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)))
+                        || client.getPort() != Integer
+                                .parseInt(vc.getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_PORT))) {
 
                     closeAndDestroy(vc.getId(), false);
                     // Add new one based on the new Updated VC object

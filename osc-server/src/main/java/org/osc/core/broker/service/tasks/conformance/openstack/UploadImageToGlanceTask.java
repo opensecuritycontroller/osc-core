@@ -16,7 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import org.apache.log4j.Logger;
+import java.io.File;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -26,20 +30,18 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jGlance;
 import org.osc.core.broker.service.appliance.UploadConfig;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
-
-import javax.persistence.EntityManager;
-import java.io.File;
-import java.util.Set;
+import org.slf4j.Logger;
 
 @Component(service = UploadImageToGlanceTask.class,
         configurationPid = "org.osc.core.broker.upload",
         configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class UploadImageToGlanceTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(UploadImageToGlanceTask.class);
+    private final Logger log = LoggerFactory.getLogger(UploadImageToGlanceTask.class);
 
     private String region;
     private VirtualSystem vs;

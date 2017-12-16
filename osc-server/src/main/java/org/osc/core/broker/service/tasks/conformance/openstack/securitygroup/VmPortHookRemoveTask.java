@@ -16,33 +16,28 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.Arrays;
-
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-import org.osc.core.broker.model.entities.virtualization.openstack.Network;
-import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
-import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 @Component(service = VmPortHookRemoveTask.class)
 public class VmPortHookRemoveTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(VmPortHookRemoveTask.class);
+    private final Logger log = LoggerFactory.getLogger(VmPortHookRemoveTask.class);
 
     private SecurityGroupMember sgm;
     private String serviceName;
@@ -73,38 +68,15 @@ public class VmPortHookRemoveTask extends TransactionalTask {
         if (this.dai != null) {
             this.dai = OSCEntityManager.loadPessimistically(em, this.dai);
 
-            VM vm = this.sgm.getVm();
-            Network network = this.sgm.getNetwork();
-            Subnet subnet = this.sgm.getSubnet();
-
-            if (this.sgm.getType() == SecurityGroupMemberType.VM && vm != null) {
-                this.log.info(String.format(
-                        "Removing Inspection Hooks for Security Group VM Member '%s' for service '%s'",
-                        this.sgm.getMemberName(), this.serviceName));
-            } else if (this.sgm.getType() == SecurityGroupMemberType.NETWORK && network != null) {
-                this.log.info(String
-                        .format("Removing Inspection Hooks for Port with mac '%s' belonging to Security Group Network Member '%s' for service '%s'",
-                                this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName));
-            } else if (this.sgm.getType() == SecurityGroupMemberType.SUBNET && subnet != null) {
-                this.log.info(String
-                        .format("Removing Inspection Hooks for Port with mac '%s' belonging to Security Group Subnet Member '%s' for service '%s'",
-                                this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName));
-            }
+            this.log.info(getTaskMessage());
 
             try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                         this.dai.getInspectionIngressMacAddress());
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                         this.dai.getInspectionEgressMacAddress());
-                if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
-                    String portGroupId = this.sgm.getSecurityGroup().getNetworkElementId();
-                    PortGroup portGroup = new PortGroup();
-                    portGroup.setPortGroupId(portGroupId);
-                    //Element object in DefaultInpectionPort will only be used in case of SFC , hence pass null
-                    controller.removeInspectionHook(Arrays.asList(portGroup), new DefaultInspectionPort(ingressPort, egressPort, null));
-                } else {
-                    controller.removeInspectionHook(Arrays.asList(new NetworkElementImpl(this.vmPort)), new DefaultInspectionPort(ingressPort, egressPort, null));
-                }
+                controller.removeInspectionHook(new NetworkElementImpl(this.vmPort),
+                        new DefaultInspectionPort(ingressPort, egressPort, null));
             }
             this.vmPort.removeDai(this.dai);
             OSCEntityManager.update(em, this.vmPort, this.txBroadcastUtil);
@@ -113,17 +85,21 @@ public class VmPortHookRemoveTask extends TransactionalTask {
 
     @Override
     public String getName() {
+       return getTaskMessage();
+    }
+
+    private String getTaskMessage() {
         if (this.sgm.getType() == SecurityGroupMemberType.VM && this.sgm.getVm() != null) {
             return String.format("Removing Inspection Hooks for Security Group VM Member '%s' for service '%s'",
                     this.sgm.getMemberName(), this.serviceName);
         } else if (this.sgm.getType() == SecurityGroupMemberType.NETWORK && this.sgm.getNetwork() != null) {
-            return String
-                    .format("Removing Inspection Hooks for Port with MAC '%s' belonging to Security Group Network Member '%s' for service '%s'",
-                            this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName);
+            return String.format(
+                    "Removing Inspection Hooks for Port with MAC '%s' belonging to Security Group Network Member '%s' for service '%s'",
+                    this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName);
         } else if (this.sgm.getType() == SecurityGroupMemberType.SUBNET && this.sgm.getSubnet() != null) {
-            return String
-                    .format("Removing Inspection Hooks for Port with MAC '%s' belonging to Security Group Subnet Member '%s' for service '%s'",
-                            this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName);
+            return String.format(
+                    "Removing Inspection Hooks for Port with MAC '%s' belonging to Security Group Subnet Member '%s' for service '%s'",
+                    this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName);
         }
         // We should never get here
         throw new IllegalStateException(

@@ -31,7 +31,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ApiUtil;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
@@ -49,8 +48,11 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.common.job.AcknowledgementStatus;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -67,7 +69,7 @@ import io.swagger.annotations.Authorization;
 @OscAuth
 public class AlertApis {
 
-    private static final Logger logger = Logger.getLogger(AlertApis.class);
+    private static final Logger logger = LoggerFactory.getLogger(AlertApis.class);
 
     @Reference
     private ApiUtil apiUtil;
@@ -134,7 +136,7 @@ public class AlertApis {
     @Path("/{alertId}")
     @PUT
     public Response updateAlert(@Context HttpHeaders headers, @PathParam("alertId") Long alertId,
-                                @ApiParam(required = true) AlertDto alertDto) {
+            @ApiParam(required = true) AlertDto alertDto) {
 
         logger.info("Updating Alert " + alertId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
@@ -181,7 +183,7 @@ public class AlertApis {
         List<AlertDto> alertList = new ArrayList<AlertDto>();
         alertList.add(alertDto);
         alertRequest.setDtoList(alertList);
-        if (alertDto.getStatus().equals(AlertDto.AcknowledgementStatus_ACKNOWLEDGED)) {
+        if (alertDto.getStatus().equals(AcknowledgementStatus.ACKNOWLEDGED)) {
             alertRequest.setAcknowledge(true);
         } else {
             alertRequest.setAcknowledge(false);

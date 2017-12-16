@@ -19,30 +19,31 @@ package org.osc.core.tools;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Enumeration;
+import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 
 public class ResourceBundleKeyGenerator {
 
-	private static final String COPYRIGHT_AND_LICENSE =
-			"/*******************************************************************************\n"+
-			" * Copyright (c) Intel Corporation\n"+
-			" * Copyright (c) 2017\n"+
-			" *\n"+
-			" * Licensed under the Apache License, Version 2.0 (the \"License\");\n"+
-			" * you may not use this file except in compliance with the License.\n"+
-			" * You may obtain a copy of the License at\n"+
-			" *\n"+
-			" *    http://www.apache.org/licenses/LICENSE-2.0\n"+
-			" *\n"+
-			" * Unless required by applicable law or agreed to in writing, software\n"+
-			" * distributed under the License is distributed on an \"AS IS\" BASIS,\n"+
-			" * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"+
-			" * See the License for the specific language governing permissions and\n"+
-			" * limitations under the License.\n"+
-			" *******************************************************************************/\n";
-	
+    private static final String COPYRIGHT_AND_LICENSE =
+            "/*******************************************************************************\n"+
+            " * Copyright (c) Intel Corporation\n"+
+            " * Copyright (c) 2017\n"+
+            " *\n"+
+            " * Licensed under the Apache License, Version 2.0 (the \"License\");\n"+
+            " * you may not use this file except in compliance with the License.\n"+
+            " * You may obtain a copy of the License at\n"+
+            " *\n"+
+            " *    http://www.apache.org/licenses/LICENSE-2.0\n"+
+            " *\n"+
+            " * Unless required by applicable law or agreed to in writing, software\n"+
+            " * distributed under the License is distributed on an \"AS IS\" BASIS,\n"+
+            " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"+
+            " * See the License for the specific language governing permissions and\n"+
+            " * limitations under the License.\n"+
+            " *******************************************************************************/\n";
+
     private String generatedCodeFolder;
     private String bundleName;
 
@@ -62,21 +63,25 @@ public class ResourceBundleKeyGenerator {
 
         try {
             StringBuilder fileContent = new StringBuilder();
-            		
+
             fileContent.append(COPYRIGHT_AND_LICENSE);
 
             fileContent.append("package ");
             fileContent.append(packageName);
             fileContent.append(";\n\n");
 
-            fileContent.append("public class ");
+            fileContent.append("public final class ");
             fileContent.append(className);
             fileContent.append("_ {\n\n");
 
-            Enumeration<String> keys = resourceBundle.getKeys();
+            fileContent.append("\tprivate ");
+            fileContent.append(className);
+            fileContent.append("_() {}\n\n");
 
-            while (keys.hasMoreElements()) {
-                String keyName = keys.nextElement();
+            List<String> keys = Collections.list(resourceBundle.getKeys());
+            Collections.sort(keys);
+
+            for (String keyName : keys) {
                 String keyValue = resourceBundle.getString(keyName);
                 String generatedFieldName = keyName.trim().replaceAll("\\.", "_").toUpperCase();
                 fileContent.append("\t/**\n\t * " + keyValue + "\n\t */\n");

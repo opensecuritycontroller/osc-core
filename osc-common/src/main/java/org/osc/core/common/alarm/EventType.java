@@ -27,22 +27,8 @@ public enum EventType {
         this.text = text;
     }
 
-    public static EventType fromText(String text) {
-        for (EventType type : EventType.values()) {
-            if (type.getText().equals(text)) {
-                return type;
-            }
-        }
-        throw new IllegalArgumentException("No enum constant " + EventType.class.getCanonicalName() + " Found for "
-                + text);
-    }
-
-    private String getText() {
-        return this.text;
-    }
-
     @Override
     public String toString() {
-        return text;
+        return this.text;
     }
 }

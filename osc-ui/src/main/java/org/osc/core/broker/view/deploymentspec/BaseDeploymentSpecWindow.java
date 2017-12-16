@@ -19,7 +19,6 @@ package org.osc.core.broker.view.deploymentspec;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
@@ -41,6 +40,8 @@ import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.LoadingIndicatorCRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.vaadin.risto.stepper.IntStepper;
 
 import com.vaadin.data.Property;
@@ -65,7 +66,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
      *
      */
     private static final long serialVersionUID = 1L;
-    private static Logger log = Logger.getLogger(BaseDeploymentSpecWindow.class);
+    private static Logger log = LoggerFactory.getLogger(BaseDeploymentSpecWindow.class);
 
     protected static final String AVAILABILITY_ZONES = "By Availability Zone";
     protected static final String HOSTS = "By Host";

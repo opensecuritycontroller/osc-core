@@ -39,7 +39,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -56,6 +55,7 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.powermock.api.mockito.PowerMockito;
@@ -82,7 +82,7 @@ public class UpdateDistributedApplianceServiceTest {
     private DistributedApplianceDtoValidator validatorMock;
 
     @Mock
-    private ConformService conformServiceMock;
+    private DistributedApplianceConformJobFactory daConformJobFactoryMock;
 
     @Mock
     private UserContextApi userContext;
@@ -170,7 +170,7 @@ public class UpdateDistributedApplianceServiceTest {
         }).when(this.validatorMock)
         .validateForUpdate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.daDto.getName())));
 
-        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class),
+        Mockito.when(this.daConformJobFactoryMock.startDAConformJob(Mockito.any(EntityManager.class),
                 (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)),
                 Mockito.any(UnlockObjectMetaTask.class))).thenReturn(JOB_ID);
 
@@ -274,15 +274,6 @@ public class UpdateDistributedApplianceServiceTest {
         this.em.getTransaction().commit();
         this.em.clear();
      }
-
-    @Test
-    public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
-        // Arrange.
-        this.exception.expect(NullPointerException.class);
-
-        // Act.
-        this.service.dispatch(null);
-    }
 
     @Test
     public void testDispatch_WhenDistributedApplianceValidationFails_ThrowsInvalidEntryException() throws Exception {

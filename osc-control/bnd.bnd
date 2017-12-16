@@ -19,8 +19,13 @@
     org.osc.core.broker.service.common,\
     com.google.gson.*
 
+# *.dep variables are defined in depend.bnd
+# The @ prefix unwraps the jar files
 -includeresource: \
-    @${log4j.dep},\
+    logback.xml=target/logback.xml,\
+    @${slf4j-api.dep},\
+    @${logback-core.dep},\
+    @${logback-classic.dep},\
     @${osc-service-api.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\
@@ -45,6 +50,6 @@
     @${hk2-utils.dep},\
     @${hk2-api.dep},\
     @${h2.dep},\
-	@${gson.dep}
+    @${gson.dep}
 
 #

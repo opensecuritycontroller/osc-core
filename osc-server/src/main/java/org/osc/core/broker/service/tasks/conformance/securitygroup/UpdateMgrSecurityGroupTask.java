@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
@@ -31,18 +32,20 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdateMgrSecurityGroupTask.class)
 public class UpdateMgrSecurityGroupTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
+    //private static final Logger log = LoggerFactory.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
 
     private SecurityGroup sg;
+    private SecurityGroupInterface sgi;
     private VirtualSystem vs;
 
-    public UpdateMgrSecurityGroupTask create(VirtualSystem vs, SecurityGroup securityGroup) {
+    public UpdateMgrSecurityGroupTask create(VirtualSystem vs, SecurityGroup securityGroup, SecurityGroupInterface sgi) {
         UpdateMgrSecurityGroupTask task = new UpdateMgrSecurityGroupTask();
         task.vs = vs;
         task.sg = securityGroup;
+        task.sgi = sgi;
         task.name = task.getName();
         task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
@@ -57,8 +60,8 @@ public class UpdateMgrSecurityGroupTask extends TransactionalTask {
 
         ManagerSecurityGroupApi mgrApi = this.apiFactoryService.createManagerSecurityGroupApi(this.vs);
         try {
-            mgrApi.updateSecurityGroup(this.sg.getMgrId(), this.sg.getName(),
-                    CreateMgrSecurityGroupTask.getSecurityGroupMemberListElement(this.sg));
+			mgrApi.updateSecurityGroup(this.sgi.getMgrSecurityGroupId(), this.sg.getName(),
+					CreateMgrSecurityGroupTask.getSecurityGroupMemberListElement(this.sg));
         } finally {
             mgrApi.close();
         }

@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.appliance;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Basic;
@@ -29,6 +31,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -37,6 +40,7 @@ import javax.persistence.UniqueConstraint;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
@@ -100,6 +104,9 @@ public class VirtualSystem extends BaseEntity {
     @Column(name = "encapsulation_type")
     @Enumerated(EnumType.STRING)
     private TagEncapsulationType encapsulationType;
+    
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "virtualSystems")
+    private List<ServiceFunctionChain> serviceFunctionChains = new ArrayList<ServiceFunctionChain>();
 
     public VirtualSystem(DistributedAppliance distributedAppliance) {
         super();
@@ -227,7 +234,15 @@ public class VirtualSystem extends BaseEntity {
     public void setEncapsulationType(TagEncapsulationType encapsulationType) {
         this.encapsulationType = encapsulationType;
     }
+    
+    public List<ServiceFunctionChain> getServiceFunctionChains() {
+        return serviceFunctionChains;
+    }
 
+    public void setServiceFunctionChains(List<ServiceFunctionChain> serviceFunctionChains) {
+        this.serviceFunctionChains = serviceFunctionChains;
+    }
+	
     @Override
     public Boolean getMarkedForDeletion() {
         return super.getMarkedForDeletion() || this.distributedAppliance.getMarkedForDeletion();

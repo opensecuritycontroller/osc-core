@@ -16,38 +16,34 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import org.apache.log4j.Logger;
+import static org.osc.core.common.virtualization.VirtualizationConnectorProperties.NO_CONTROLLER_TYPE;
+
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
-import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
-import org.osc.core.broker.view.util.ViewUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateVirtualizationConnectorWindow.class);
 
     final String CAPTION = "Edit Virtualization Connector";
 
     private final UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
 
-    private final ServerApi server;
-
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
             UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
             PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager, ServerApi server,
-            EncryptionApi encryption) throws Exception {
-        super(pluginService, validator, trustManager, encryption);
-        this.server = server;
+            X509TrustManagerApi trustManager, ServerApi server) throws Exception {
+        super(pluginService, validator, trustManager);
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;
         createWindow(this.CAPTION);
@@ -73,7 +69,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
             this.controllerPW.setValue(vcObject.getControllerPassword());
             this.controllerType.setValue(vcObject.getControllerType());
         } else {
-            this.controllerType.setValue(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE);
+            this.controllerType.setValue(NO_CONTROLLER_TYPE);
             this.controllerType.setEnabled(true);
         }
 
@@ -95,9 +91,8 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
                 updateRequest.getDto().setId(this.currentVCObject.getBean().getId());
                 log.debug("Updating virtualization connector - " + this.name.getValue().trim());
                 // no response needed for update request
-                BaseJobResponse response = this.updateVirtualizationConnectorService.dispatch(updateRequest);
+                this.updateVirtualizationConnectorService.dispatch(updateRequest);
                 close();
-                ViewUtil.showJobNotification(response.getJobId(), this.server);
             }
         } catch (Exception exception) {
             sslAwareHandleException(exception);

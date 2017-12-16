@@ -22,6 +22,8 @@ language:
     - java
 jdk:
     - oraclejdk8
+git:
+  depth: 99999
 addons:
   apt:
     packages:
@@ -32,5 +34,18 @@ before_install:
     - wget -O $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher/biz.aQute.launcher-3.3.0.jar http://central.maven.org/maven2/biz/aQute/bnd/biz.aQute.launcher/3.3.0/biz.aQute.launcher-3.3.0.jar
 install: 
     true
+addons:
+  sonarcloud:
+    organization: "opensecuritycontroller-org"
+    token:
+      secure: "Xn/0H8skbWNMuZOj26JxmFvd0NpRdXgeCRFKOkvMTy1fYM2MOmz/QDmi8TYCtrSafrt0sU2F89mNbx6cp8B8J/aI/jZhgqEZyq4ZsRBrqozJFaUZHvB9I0Tiq2babV5e+NXjLnux9gajhZII4zolb3nG1Dz6vxwKe0+KBGocQ5DMm7LeNnHgqfb5FvVpnYlAP+jeEUX81cKeJ+CQSOhB8BUhC7QIMnzjsUAtOL3r009hGGE6oSYfzmCqu+cBfxcCNr6VLqd93Y33PyIvF3r0BiLD7CUWF+zHcopi/JGeox55U/Cav56PnFb1D8ksw82puPIdjQm5gP5mUWBTfglJehRf2vBjvKdDFpO8+XVgyN1w+a63eaqNlgQCg7kzrXHdvRhErsXZPCvZk+MXMN5vqkx2MZCp08qNZPNZs3rf150yLkSUnVKPsxGBRUKnDs9cFAr4mC7+A5jZXfgPFR85nBXHE9ls2j70Ze/SljBfFp5ed/HHVyjFUsgSUtck39CogXDY1g+lwst4kE/b2pKQq4E1EWoFO6Ac4l9R5Zk5huTj10lT7vIipFnp4jLMIH4meJ6vQsjkAI2MABN9szv0EQnsVl2nf1T8AIHf/5IgGAFznLxgGcWorFlStfKrSieapGmYqO0K0ccdQhwhMxdoB5Us2rOeuIgLx2eZGnqZtnA="
 script:
-    mvn install
+# the following command line builds the project, executes the SonarCloud analysis
+    - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" || "$(cut -d'/' -f1 <<<${TRAVIS_REPO_SLUG})" != opensecuritycontroller ]]; then
+        echo "Skipping sonar analysis as this is a pull request or a build of a fork";
+        mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report;
+      else
+        mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report sonar:sonar;
+      fi
+after_success:
+    - bash <(curl -s https://codecov.io/bash)

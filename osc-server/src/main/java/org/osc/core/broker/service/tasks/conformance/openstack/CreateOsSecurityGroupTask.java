@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
 import org.openstack4j.model.network.SecurityGroup;
 import org.openstack4j.model.network.SecurityGroupRule;
@@ -33,12 +32,14 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = CreateOsSecurityGroupTask.class)
 public class CreateOsSecurityGroupTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(CreateOsSecurityGroupTask.class);
+    private final Logger log = LoggerFactory.getLogger(CreateOsSecurityGroupTask.class);
     final static String INGRESS = "ingress";
     final static String EGRESS = "egress";
     final static String IPV4 = "IPv4";
@@ -66,7 +67,7 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
 
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(this.osEndPoint)) {
             this.log.info("Creating Openstack Security Group " + this.sgName + " in project " + this.ds.getProjectName()
-                    + " for region " + this.ds.getRegion());
+            + " for region " + this.ds.getRegion());
 
             SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
             neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
@@ -86,7 +87,7 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format("Creating Openstack Security Group '%s' in project '%s' for region '%s'", this.sgName, this.ds.getProjectName(), this.ds.getRegion());
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

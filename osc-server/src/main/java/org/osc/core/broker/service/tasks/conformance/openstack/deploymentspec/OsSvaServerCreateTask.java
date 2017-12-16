@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -40,14 +39,17 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.Element;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -79,7 +81,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
     }
 
-    private final Logger log = Logger.getLogger(OsSvaServerCreateTask.class);
+    private final Logger log = LoggerFactory.getLogger(OsSvaServerCreateTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -92,7 +94,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     private String availabilityZone;
     private String hypervisorHostName;
 
-    public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
+    public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName,
+            String availabilityZone) {
         OsSvaServerCreateTask task = new OsSvaServerCreateTask();
         task.apiFactoryService = this.apiFactoryService;
         task.activeRunner = this.activeRunner;
@@ -114,12 +117,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
         VirtualizationConnector vc = vs.getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
-        SdnRedirectionApi controller = null;
 
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-        if (vc.isControllerDefined()) {
-            controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
-        }
 
         String applianceName = this.dai.getName();
         String imageRefId = getImageRefIdByRegion(vs, ds.getRegion());
@@ -131,59 +130,78 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         // meta_data.json file within openstack. We hardcode and look for content within 0000 file
         String availabilityZone = this.availabilityZone.concat(":").concat(this.hypervisorHostName);
 
-        ApplianceSoftwareVersion applianceSoftwareVersion = this.dai.getVirtualSystem()
-                .getApplianceSoftwareVersion();
+        ApplianceSoftwareVersion applianceSoftwareVersion = this.dai.getVirtualSystem().getApplianceSoftwareVersion();
         CreatedServerDetails createdServer;
 
         // TODO: sjallapx - Hack to workaround issue SimpleDateFormat parse errors due to JCloud on some partner environments.
-        boolean createServerWithNoOSTSecurityGroup = this.dai.getVirtualSystem().getVirtualizationConnector().isControllerDefined()
-                ? this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem()) : false;
+        boolean createServerWithNoOSTSecurityGroup = this.dai.getVirtualSystem().getVirtualizationConnector()
+                .isControllerDefined() ? this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem()) : false;
 
         String sgRefName = createServerWithNoOSTSecurityGroup ? null : sgReference.getSgRefName();
 
         try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
-            createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
-                    imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
-                    ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
-                    sgRefName);
+            createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName, imageRefId, flavorRef,
+                    generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(), ds.getInspectionNetworkId(),
+                    applianceSoftwareVersion.hasAdditionalNicForInspection(), sgRefName);
         }
 
-
         this.dai.updateDaiOpenstackSvaInfo(createdServer.getServerId(),
-                createdServer.getIngressInspectionMacAddr(),
-                createdServer.getIngressInspectionPortId(),
-                createdServer.getEgressInspectionMacAddr(),
-                createdServer.getEgressInspectionPortId()
-        );
+                                           createdServer.getIngressInspectionMacAddr(),
+                                           createdServer.getIngressInspectionPortId(),
+                                           createdServer.getEgressInspectionMacAddr(),
+                                           createdServer.getEgressInspectionPortId());
+
         // Add new server ID to VM notification listener for this DS
 
         this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
-            if (vc.isControllerDefined()) {
-                try {
-                    DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
-                            createdServer.getIngressInspectionMacAddr());
-                    DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
-                            createdServer.getEgressInspectionMacAddr());
+        if (vc.isControllerDefined()) {
+            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
+                DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
+                        createdServer.getIngressInspectionMacAddr());
+                DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
+                        createdServer.getEgressInspectionMacAddr());
 
-                    if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
-                        String domainId = OpenstackUtil.extractDomainId(
-                                ds.getProjectId(),
-                                ds.getProjectName(),
-                                ds.getVirtualSystem().getVirtualizationConnector(),
-                                Arrays.asList(ingressPort));
-                        ingressPort.setParentId(domainId);
-                        egressPort.setParentId(domainId);
+                if (this.apiFactoryService.supportsNeutronSFC(this.dai.getVirtualSystem())) {
+                    // In case of neutron SFC, port group id needs to be used when registering and updated in the DS
+                    String portGroupId = ds.getPortGroupId();
+                    boolean pgAlreadyCreatedByOther = (portGroupId != null);
+
+                    Element element = controller
+                            .registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
+
+                    portGroupId = element.getParentId();
+
+                    this.log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                            portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
+
+                    if (!pgAlreadyCreatedByOther) {
+                        ds = em.find(DeploymentSpec.class, ds.getId());
+                        ds.setPortGroupId(portGroupId);
+                        OSCEntityManager.update(em, ds, this.txBroadcastUtil);
                     }
-                    //Element object in DefaultInspectionport is not used at this point, hence null
-                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
-            } finally {
-                controller.close();
+
+                } else if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
+                    String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(),
+                                                    ds.getProjectName(),
+                                                    ds.getVirtualSystem().getVirtualizationConnector(),
+                                                    Arrays.asList(ingressPort));
+
+                    ingressPort.setParentId(domainId);
+                    egressPort.setParentId(domainId);
+
+                  //Element object in DefaultInspectionport is not used at this point, hence null
+                    controller.registerInspectionPort(
+                            new DefaultInspectionPort(ingressPort, egressPort, null));
+                } else {
+                    controller.registerInspectionPort(
+                            new DefaultInspectionPort(ingressPort, egressPort, null));
+                }
             }
         }
 
-        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getOsServerId());
+        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getExternalId());
 
         OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
     }
@@ -207,13 +225,14 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     }
 
     private ApplianceBootstrapInformationElement generateBootstrapInfo(final VirtualSystem vs,
-                                                                       final String applianceName) throws Exception {
+            final String applianceName) throws Exception {
 
-        ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs);
-        Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();
+        try (ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs)) {
+            Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();
 
-        return deviceApi
-                .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
+            return deviceApi
+                    .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
+        }
     }
 
     @Override

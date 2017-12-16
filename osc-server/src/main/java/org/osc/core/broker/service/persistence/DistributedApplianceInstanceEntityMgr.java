@@ -28,6 +28,7 @@ import javax.persistence.criteria.Root;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
@@ -59,7 +60,7 @@ public class DistributedApplianceInstanceEntityMgr {
                 .getApplianceManagerConnector().getName());
         dto.setVirtualConnectorName(dai.getVirtualSystem().getVirtualizationConnector().getName());
 
-        dto.setOsVmId(dai.getOsServerId());
+        dto.setExternalId(dai.getExternalId());
         dto.setOsHostname(dai.getOsHostName());
         dto.setOsInspectionIngressPortId(dai.getInspectionOsIngressPortId());
         dto.setOsInspectionIngressMacAddress(dai.getInspectionIngressMacAddress());
@@ -69,6 +70,10 @@ public class DistributedApplianceInstanceEntityMgr {
         dto.setMgmtIpAddress(dai.getMgmtIpAddress());
         dto.setMgmtSubnetPrefixLength(dai.getMgmtSubnetPrefixLength());
         dto.setMgmtGateway(dai.getMgmtGateway());
+
+        dto.setExternalId(dai.getExternalId());
+        dto.setInspectionElementId(dai.getInspectionElementId());
+        dto.setInspectionElementParentId(dai.getInspectionElementParentId());
 
         return dto;
     }
@@ -176,7 +181,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
 
-        query = query.select(from.get("osServerId")).distinct(true).where(
+        query = query.select(from.get("externalId")).distinct(true).where(
                 cb.equal(from.join("virtualSystem").join("virtualizationConnector")
                         .get("id"), vcId));
 
@@ -244,7 +249,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.join("deploymentSpec").get("id"), dsId),
-                       cb.equal(root.get("osAvailabilityZone"), availabilityZone));
+                        cb.equal(root.get("osAvailabilityZone"), availabilityZone));
 
         List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
@@ -266,7 +271,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.get("deploymentSpec"), ds),
-                       cb.equal(root.get("osHostName"), hostName));
+                        cb.equal(root.get("osHostName"), hostName));
 
         List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
@@ -301,7 +306,7 @@ public class DistributedApplianceInstanceEntityMgr {
         Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
 
         query = query.select(root)
-                .where(cb.equal(root.get("osServerId"), osServerId));
+                .where(cb.equal(root.get("externalId"), osServerId));
 
         List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
@@ -312,17 +317,18 @@ public class DistributedApplianceInstanceEntityMgr {
         return list.get(0);
     }
 
-    public static DistributedApplianceInstance findByVirtualSystemAndPort(EntityManager em, VirtualSystem vs, VMPort port) {
+    public static DistributedApplianceInstance findByVirtualSystemAndPort(EntityManager em, VirtualSystem vs, Long portId, Class<? extends VirtualPort> portType) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
 
         Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+        String portFieldName = portType.equals(VMPort.class) ? "protectedPorts" : "protectedPodPorts";
 
         query = query.select(root)
                 .where(cb.equal(root.join("virtualSystem").get("id"), vs.getId()),
-                       cb.equal(root.join("protectedPorts").get("id"), port.getId()));
+                        cb.equal(root.join(portFieldName).get("id"), portId));
 
         try {
             return em.createQuery(query).getSingleResult();
@@ -330,5 +336,4 @@ public class DistributedApplianceInstanceEntityMgr {
             return null;
         }
     }
-
 }

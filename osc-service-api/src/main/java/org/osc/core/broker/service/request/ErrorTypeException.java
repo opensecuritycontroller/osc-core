@@ -24,9 +24,15 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 @SuppressWarnings("serial")
 public class ErrorTypeException extends VmidcBrokerValidationException {
 
-    public enum ErrorType {
-        CONTROLLER_EXCEPTION, PROVIDER_EXCEPTION, IP_CHANGED_EXCEPTION, MANAGER_CONNECTOR_EXCEPTION, RABBITMQ_EXCEPTION;
-    }
+	public enum ErrorType {
+		CONTROLLER_EXCEPTION,
+		PROVIDER_EXCEPTION,
+		PROVIDER_CONNECT_EXCEPTION,
+		PROVIDER_AUTH_EXCEPTION,
+		IP_CHANGED_EXCEPTION,
+		MANAGER_CONNECTOR_EXCEPTION,
+		RABBITMQ_EXCEPTION;
+	}
 
     private ErrorType type;
 

@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
@@ -38,13 +37,14 @@ import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.common.job.FreqType;
 import org.osc.core.common.job.ThresholdType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
  * create a single record in ReleaseInfo database table to manage this.
  */
 public class ReleaseUpgradeMgr {
-
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
@@ -52,47 +52,40 @@ public class ReleaseUpgradeMgr {
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
-    private static final Logger log = Logger.getLogger(ReleaseUpgradeMgr.class);
+    private static final Logger log = LoggerFactory.getLogger(ReleaseUpgradeMgr.class);
 
     public static void initDb(EncryptionApi encrypter, DBConnectionParameters params,
             DBConnectionManager dbMgr) throws Exception {
-
         if (!isLastUpgradeSucceeded()) {
             // If last upgrade wasn't successful (upgrade marker file is still present), revert back to previous backed up DB.
             // We're doing file reversal before we opening the database, otherwise, file will be opened and copy will not succeed.
             revertToBackupDbFile();
         }
 
-    	// if DB password is set to default then replace it with the secure one
+        // if DB password is set to default then replace it with the secure one
         replaceDefaultDBPassword(params, dbMgr);
-
         ReleaseInfo currentRecord = getCurrentReleaseInfo(dbMgr);
 
         if (currentRecord == null) { // not found, initial version
             log.info("Fresh-installing security broker database");
-
             // create db schema first
             Schema.createSchema(dbMgr);
-
         } else {
-
             int curDbVer = currentRecord.getDbVersion();
-            log.info("Current database schema version: " + curDbVer);
+            log.info("Current database schema version: {}", curDbVer);
 
             if (TARGET_DB_VERSION > curDbVer) {
-
                 if (isLastUpgradeSucceeded()) {
                     backupDbFile();
                 }
                 createUpgradeMarkerFile();
 
-                log.info("Upgrading security broker database from current version: " + curDbVer
-                        + " to target version: " + TARGET_DB_VERSION);
+                log.info("Upgrading security broker database from current version: {} to target version: {}", curDbVer,
+                        TARGET_DB_VERSION);
 
                 // call upgrade process logics here. After done with the upgrade,
                 // make sure to update the ReleaseInfo record with the TARGET DB VERSION
                 // use switch statement without break statement (fall-thru flow) to force incremental upgrade chain.
-
                 try (Connection connection = dbMgr.getSQLConnection();
                      Statement stmt = connection.createStatement()) {
                     connection.setAutoCommit(false);
@@ -102,13 +95,11 @@ public class ReleaseUpgradeMgr {
                         connection.commit();
                     } catch (Exception ex) {
                         log.error("Error while initializing database.", ex);
-
                         try {
                             connection.rollback();
                         } catch (Exception he) {
                             log.error("Error rolling back transaction", he);
                         }
-
                         throw ex;
                     }
                 }
@@ -119,11 +110,15 @@ public class ReleaseUpgradeMgr {
         deleteUpgradeMarkerFile();
     }
 
+    public static boolean isLastUpgradeSucceeded() {
+        return !new File(DB_UPGRADE_IN_PROGRESS_MARKER_FILE).exists();
+    }
+
     private static void replaceDefaultDBPassword(DBConnectionParameters params,
             DBConnectionManager dbMgr) throws Exception {
-    	if (params.isDefaultPasswordSet()) {
-    	    dbMgr.replaceDefaultDBPassword();
-    	}
+        if (params.isDefaultPasswordSet()) {
+            dbMgr.replaceDefaultDBPassword();
+        }
     }
 
     /**
@@ -136,7 +131,6 @@ public class ReleaseUpgradeMgr {
      */
     @SuppressWarnings("fallthrough")
     private static void performUpdateChain(int curDbVer, Statement stmt, EncryptionApi encrypter) throws Exception {
-
         switch (curDbVer) {
             case 12:
                 upgrade12to13(stmt); // v1.00 -> v1.20
@@ -244,6 +238,30 @@ public class ReleaseUpgradeMgr {
                 upgrade81to82(stmt);
             case 82:
                 upgrade82to83(stmt);
+            case 83:
+                upgrade83to84(stmt);
+            case 84:
+                upgrade84to85(stmt);
+            case 85:
+                upgrade85to86(stmt);
+            case 86:
+                upgrade86to87(stmt);
+            case 87:
+                upgrade87to88(stmt);
+            case 88:
+                upgrade88to89(stmt);
+            case 89:
+                upgrade89to90(stmt);
+            case 90:
+            	upgrade90to91(stmt);
+            case 91:
+            	upgrade91to92(stmt);
+            case 92:
+            	upgrade92to93(stmt);
+            case 93:
+            	upgrade93to94(stmt);
+            case 94:
+            	upgrade94to95(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -255,17 +273,230 @@ public class ReleaseUpgradeMgr {
         }
     }
 
-    private static void upgrade82to83(Statement stmt) throws SQLException {
+    private static void upgrade94to95(Statement stmt) throws SQLException {
+		execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR drop constraint FK_VC_LAST_JOB;");
+		execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR drop constraint FK_VC_LAST_JOB_UNIQUE;");
+		execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR drop column if exists last_job_id_fk;");
+	}
 
+	private static void upgrade93to94(Statement stmt) throws SQLException {
+        execSql(stmt, "create table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT (" +
+                    "dai_fk bigint not null, " +
+                    "pod_port_fk bigint not null," +
+                    "primary key (dai_fk, pod_port_fk));");
+
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT " +
+                    "add constraint FK_DAI_PODP_DAI " +
+                    "foreign key (dai_fk) " +
+                    "references DISTRIBUTED_APPLIANCE_INSTANCE;");
+
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT " +
+                "add constraint FK_DAI_PODP_PODP " +
+                "foreign key (pod_port_fk) " +
+                "references POD_PORT;");
+    }
+
+    private static void upgrade92to93(Statement stmt) throws SQLException {
+    	execSql(stmt,
+                "alter table SECURITY_GROUP add column sfc_fk bigint;");
+
+    	execSql(stmt,
+					"alter table SECURITY_GROUP " +
+					"add constraint FK_SG_SFC " +
+					"foreign key (sfc_fk) " +
+					"references SERVICE_FUNCTION_CHAIN;");
+    }
+
+    private static void upgrade91to92(Statement stmt) throws SQLException {
+    	execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM add column vs_order bigint not null;");
+
+    	execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN add column vc_fk bigint;");
+
+    	execSql(stmt,
+    			"alter table SERVICE_FUNCTION_CHAIN " +
+    			"add constraint FK_SFC_VC " +
+    			"foreign key (vc_fk) " +
+    			"references VIRTUALIZATION_CONNECTOR;");
+    }
+
+	private static void upgrade90to91(Statement stmt) throws SQLException {
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop constraint UK_SGI_VS_TAG;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop constraint FK_SGI_POLICY;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE add column mgr_security_group_id varchar(255);");
+
+		execSql(stmt, "update SECURITY_GROUP_INTERFACE AS sgi SET sgi.mgr_security_group_id = "
+				+ "(select sg.mgr_id from SECURITY_GROUP sg where sg.id = sgi.security_group_fk);");
+
+		execSql(stmt, "alter table SECURITY_GROUP drop column if exists mgr_id;");
+
+		execSql(stmt, "create table SECURITY_GROUP_INTERFACE_POLICY (sgi_fk bigint not null, "
+				+ "policy_fk bigint not null, primary key (sgi_fk, policy_fk));");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE_POLICY add constraint FK_SGI_POLICY_SGI "
+				+ "foreign key (sgi_fk) references SECURITY_GROUP_INTERFACE;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE_POLICY add constraint FK_SGI_POLICY_POLICY "
+				+ "foreign key (policy_fk) references POLICY;");
+
+		execSql(stmt, "INSERT INTO SECURITY_GROUP_INTERFACE_POLICY "
+				+ "(sgi_fk, policy_fk) SELECT ID, policy_fk FROM SECURITY_GROUP_INTERFACE where policy_fk is not null;");
+
+		execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists policy_fk;");
+	}
+
+    private static void upgrade89to90(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table VM_PORT add column inspection_hook_id varchar(255) " +
+                "after mac_address;");
+    }
+
+    private static void upgrade88to89(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS external_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE alter column os_server_id RENAME TO " + "external_id;");
+    }
+
+    private static void upgrade87to88(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table DEPLOYMENT_SPEC add column port_group_id varchar(255) " +
+                      "after inspection_network_id;");
+    }
+
+    private static void upgrade86to87(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table APPLIANCE_SOFTWARE_VERSION add column image_pull_secret_name varchar(255);");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC add column namespace varchar(255);");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC add column external_id varchar(255);");
+
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE add column external_id varchar(255);");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE add column inspection_element_id varchar(255);");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE add column inspection_element_parent_id varchar(255);");
+
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column region varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column project_name varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column project_id varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column management_network_name varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column management_network_id varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column inspection_network_name varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column inspection_network_id varchar(255) NULL;");
+    }
+
+    private static void upgrade85to86(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table LABEL add column name varchar(255) not null;");
+    }
+
+    private static void upgrade83to84(Statement stmt) throws SQLException {
+        execSql(stmt, "CREATE TABLE SERVICE_FUNCTION_CHAIN (" +
+                "id bigint generated by default as identity," +
+                "created_by varchar(255)," +
+                "created_timestamp timestamp," +
+                "deleted_by varchar(255)," +
+                "deleted_timestamp timestamp," +
+                "marked_for_deletion boolean," +
+                "updated_by varchar(255)," +
+                "updated_timestamp timestamp," +
+                "version bigint," +
+                "name varchar(255) not null," +
+                "primary key (id));");
+
+        execSql(stmt, "CREATE TABLE SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM (" +
+                        "sfc_fk bigint not null, " +
+                        "virtual_system_fk bigint not null," +
+                        "primary key (sfc_fk, virtual_system_fk));");
+        execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM " +
+                "add constraint FK_SFC_VS_SFC " +
+                "foreign key (sfc_fk) " +
+                "references SERVICE_FUNCTION_CHAIN;");
+        execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM " +
+                "add constraint FK_SFC_VS_VS " +
+                "foreign key (virtual_system_fk) " +
+                "references VIRTUAL_SYSTEM;");
+        execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN " +
+                "add constraint UK_SFC_NAME unique (name);");
+    }
+
+    private static void upgrade84to85(Statement stmt) throws SQLException {
+        execSql(stmt, "create table POD (" +
+                "id bigint generated by default as identity," +
+                "created_by varchar(255)," +
+                "created_timestamp timestamp," +
+                "deleted_by varchar(255)," +
+                "deleted_timestamp timestamp," +
+                "marked_for_deletion boolean," +
+                "updated_by varchar(255)," +
+                "updated_timestamp timestamp," +
+                "version bigint," +
+                "external_id varchar(255) not null," +
+                "node varchar(255) not null," +
+                "name varchar(255) not null," +
+                "namespace varchar(255) not null," +
+                "primary key (id));");
+        execSql(stmt, "create table POD_PORT (" +
+                "id bigint generated by default as identity," +
+                "created_by varchar(255)," +
+                "created_timestamp timestamp," +
+                "deleted_by varchar(255)," +
+                "deleted_timestamp timestamp," +
+                "marked_for_deletion boolean," +
+                "updated_by varchar(255)," +
+                "updated_timestamp timestamp," +
+                "version bigint," +
+                "external_id varchar(255) not null," +
+                "mac_address varchar(255) not null," +
+                "pod_fk bigint," +
+                "parent_id varchar(255)," +
+                "primary key (id)" +
+                ");");
+        execSql(stmt, "create table LABEL (" +
+                "id bigint generated by default as identity," +
+                "created_by varchar(255)," +
+                "created_timestamp timestamp," +
+                "deleted_by varchar(255)," +
+                "deleted_timestamp timestamp," +
+                "marked_for_deletion boolean," +
+                "updated_by varchar(255)," +
+                "updated_timestamp timestamp," +
+                "version bigint," +
+                "value varchar(255) not null," +
+                "primary key (id)" +
+                ");");
+        execSql(stmt, "create table POD_PORT_IP_ADDRESS ("
+                    + "pod_port_fk bigint not null, ip_address varchar(255));");
+        execSql(stmt, "create table POD_LABEL (" +
+                 "pod_fk bigint not null, " +
+                 "label_fk bigint not null," +
+                 "primary key (pod_fk, label_fk) );");
+        execSql(stmt, "alter table POD_PORT_IP_ADDRESS add constraint " +
+                 "FK_POD_PORT_IP_ADDRESS foreign key (pod_port_fk) references POD_PORT;");
+        execSql(stmt, "alter table POD " +
+                "add constraint UK_POD_EXT_ID unique (" +
+                "external_id);");
+        execSql(stmt,
+                "alter table SECURITY_GROUP_MEMBER add column label_fk bigint;");
+        execSql(stmt, "alter table SECURITY_GROUP_MEMBER " +
+                "add constraint FK_SGM_LABEL " +
+                "foreign key (label_fk) " +
+                "references LABEL;");
+    }
+
+	private static void upgrade82to83(Statement stmt) throws SQLException {
         execSql(stmt,
                 "alter table SECURITY_GROUP_INTERFACE add column security_group_fk bigint;");
-
         execSql(stmt,
                 "update SECURITY_GROUP_INTERFACE AS sgi SET sgi.security_group_fk = "
                 + "(select gi.security_group_fk from GROUP_INTERFACE gi where gi.security_group_interface_fk = sgi.id);");
-
         execSql(stmt, "drop table GROUP_INTERFACE;");
-
         execSql(stmt,
                 "alter table SECURITY_GROUP_INTERFACE add constraint FK_SECURITY_GROUP foreign key "
                 + "(security_group_fk) references SECURITY_GROUP;");
@@ -274,13 +505,10 @@ public class ReleaseUpgradeMgr {
     private static void upgrade81to82(Statement stmt) throws SQLException {
         // DS references
         execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION;");
-
         execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_name RENAME TO " + "project_name;");
         execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_id RENAME TO " + "project_id;");
-
         execSql(stmt,
                 "alter table DEPLOYMENT_SPEC add constraint UK_VS_PROJECT_REGION unique (vs_fk, project_id, region);");
-
         // SG references
         execSql(stmt, "alter table SECURITY_GROUP drop constraint UK_NAME_TENANT;");
 
@@ -301,21 +529,22 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void upgrade79to80(Statement stmt) throws SQLException {
-        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id, "
-                + "nsx_host_id, nsx_host_name, nsx_host_vsm_uuid, nsx_vm_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_name;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_host_vsm_uuid;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_vm_id;");
         execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN IF EXISTS nsx_agent_id;");
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN IF EXISTS nsx_vsm_uuid;");
-        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id, "
-                + "nsx_service_instance_id, nsx_service_manager_id, nsx_vsm_uuid;");
-
-        execSql(stmt, "drop table VIRTUAL_SYSTEM_POLICY;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_instance_id;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_manager_id;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_vsm_uuid;");
+        execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_POLICY;");
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists virtual_system_policy_fk;");
-
-        execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
+        execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
         execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
-
-        execSql(stmt, "DROP table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
-
+        execSql(stmt, "drop table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
     }
 
@@ -370,17 +599,18 @@ public class ReleaseUpgradeMgr {
 
         String sqlQuery = "SELECT vc_fk, value FROM virtualization_connector_provider_attr WHERE key = 'rabbitMQPassword';";
 
-        ResultSet result = stmt.executeQuery(sqlQuery);
         Map<Integer, String> attrs = new HashMap<>();
 
-        while (result.next()) {
-            String value = result.getString("value");
-            try {
-                value = encrypter.decryptDES(value);
-            } catch (EncryptionException e){
-                log.warn("Password is not encrypted with DES",e);
+        try (ResultSet result = stmt.executeQuery(sqlQuery)) {
+            while (result.next()) {
+                String value = result.getString("value");
+                try {
+                    value = encrypter.decryptDES(value);
+                } catch (EncryptionException e) {
+                    log.warn("Password is not encrypted with DES", e);
+                }
+                attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(value));
             }
-            attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(value));
         }
 
         try (PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'")) {
@@ -408,13 +638,11 @@ public class ReleaseUpgradeMgr {
                 "VERSION BIGINT," +
                 "SSL_ALIAS VARCHAR(255) NOT NULL," +
                 "SSL_SHA1 VARCHAR(255) NOT NULL);");
-
         execSql(stmt, "CREATE TABLE SSL_CERTIFICATE_ATTR_VIRTUALIZATION_CONNECTOR(" +
                 "VIRTUALIZATION_CONNECTOR_ID BIGINT NOT NULL," +
                 "SSL_CERTIFICATE_ATTR_ID BIGINT NOT NULL," +
                 "CONSTRAINT VC_ID_FK FOREIGN KEY (VIRTUALIZATION_CONNECTOR_ID) REFERENCES VIRTUALIZATION_CONNECTOR (ID) ON UPDATE CASCADE ON DELETE CASCADE," +
                 "CONSTRAINT SSL_CERT_ATTR_VC_FK FOREIGN KEY (SSL_CERTIFICATE_ATTR_ID) REFERENCES SSL_CERTIFICATE_ATTR (ID) ON UPDATE CASCADE ON DELETE CASCADE);");
-
         execSql(stmt, "CREATE TABLE SSL_CERTIFICATE_ATTR_APPL_MAN_CONNECTOR(" +
                 "APPLIANCE_MANAGER_CONNECTOR_ID BIGINT NOT NULL," +
                 "SSL_CERTIFICATE_ATTR_ID BIGINT NOT NULL," +
@@ -423,13 +651,11 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void upgrade70to71(Statement stmt) throws SQLException {
-
         execSql(stmt, "alter table VM_PORT"
                 + " ADD COLUMN parent_id varchar(255);");
     }
 
     private static void upgrade69to70(Statement stmt) throws SQLException {
-
         execSql(stmt, "alter table SECURITY_GROUP"
                 + " ADD COLUMN network_elem_id varchar(255);");
     }
@@ -450,7 +676,6 @@ public class ReleaseUpgradeMgr {
      * We added upgrade66to67 to support different upgrade scenario's.
      * Merging 2.5 to trunk had database version mismatch.
      */
-
     private static void upgrade66to67(Statement stmt) throws SQLException {
         if (!tableExists(stmt.getConnection(), "OS_SECURITY_GROUP_REFERENCE")) {
             upgrade63to64(stmt);
@@ -460,73 +685,50 @@ public class ReleaseUpgradeMgr {
     private static void upgrade65to66(Statement stmt) throws SQLException {
         if (!existsDepolymentSpecs(stmt) || areAllDeploymentSpecsDynamic(stmt) || areAllDeploymentSpecsStatic(stmt)){
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint FK_DEPLOYMENT_SPEC_VS;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION_DYNAMIC;");
-
             execSql(stmt, "drop table DEPLOYMENT_SPEC_SECURITY_GROUP_INTERFACE;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop column dynamic;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint UK_VS_TENANT_REGION unique (vs_fk, tenant_id, region);");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint FK_DEPLOYMENT_SPEC_VS foreign key (vs_fk) references VIRTUAL_SYSTEM(id);");
 
         } else {
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint FK_DEPLOYMENT_SPEC_VS;");
-
             execSql(stmt, "alter table HOST drop constraint UK_HOST_ID;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION_DYNAMIC;");
 
             deleteDynamicHost(stmt);
             //change FK from dynamic to static DS for a dual of D/S in a given R/T/VS
             updateDeploymentSpecFK(stmt, "HOST", "ds_host_fk");
-
             updateDeploymentSpecFK(stmt, "DISTRIBUTED_APPLIANCE_INSTANCE", "deployment_spec_fk");
-
             execSql(stmt, "drop table DEPLOYMENT_SPEC_SECURITY_GROUP_INTERFACE;");
-
             deleteDynamicDeploymentSpecs(stmt);
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop column dynamic;");
-
             execSql(stmt, "alter table HOST add constraint UK_HOST_ID unique (" +
                     "ds_host_fk, openstack_id);");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint UK_VS_TENANT_REGION unique (vs_fk, tenant_id, region);");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint FK_DEPLOYMENT_SPEC_VS foreign key (vs_fk) references VIRTUAL_SYSTEM(id);");
         }
 
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE "
                 + "alter column tag varchar(255) NULL;");
-
         execSql(stmt, "alter table  VIRTUAL_SYSTEM "
                 + "alter column domain_fk bigint NULL;");
 
       //support for two interface
         execSql(stmt, "alter table APPLIANCE_SOFTWARE_VERSION ADD COLUMN additional_nic_for_inspection bit not null default 0;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE alter column inspection_os_port_id RENAME TO "
                 + "inspection_os_ingress_port_id;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE alter column inspection_mac_address RENAME TO "
                 + "inspection_ingress_mac_address;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN inspection_os_egress_port_id varchar(255);");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN inspection_egress_mac_address varchar(255);");
-
         execSql(stmt, "update DISTRIBUTED_APPLIANCE_INSTANCE "
                 + "set inspection_os_egress_port_id = inspection_os_ingress_port_id;");
-
         execSql(stmt, "update DISTRIBUTED_APPLIANCE_INSTANCE "
                 + "set inspection_egress_mac_address = inspection_ingress_mac_address;");
-
     }
 
     private static void upgrade64to65(Statement stmt) throws SQLException {
-
         execSql(stmt, "alter table DEPLOYMENT_SPEC ADD COLUMN IF NOT EXISTS os_sg_reference_fk bigint;");
 
         execSql(stmt, "alter table DEPLOYMENT_SPEC "
@@ -539,8 +741,8 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table OS_SECURITY_GROUP_REFERENCE drop column if exists region;");
     }
 
-	private static void upgrade63to64(Statement stmt) throws SQLException {
-		// @formatter:off
+    private static void upgrade63to64(Statement stmt) throws SQLException {
+        // @formatter:off
       execSql(stmt, "create table OS_SECURITY_GROUP_REFERENCE (" +
               "id bigint generated by default as identity," +
               "created_by varchar(255)," +
@@ -567,8 +769,8 @@ public class ReleaseUpgradeMgr {
               + "foreign key (vs_fk) "
               + "references VIRTUAL_SYSTEM;");
 
-		// @formatter:on
-	}
+        // @formatter:on
+    }
 
     private static void upgrade62to63(Statement stmt) throws SQLException {
         // @formatter:off
@@ -591,7 +793,7 @@ public class ReleaseUpgradeMgr {
 
         execSql(stmt, "alter table VIRTUAL_SYSTEM drop column nsx_deployment_spec_id ;");
 
-		// @formatter:on
+        // @formatter:on
     }
 
     private static void upgrade61to62(Statement stmt) throws SQLException {
@@ -632,7 +834,6 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table SECURITY_GROUP_MEMBER ADD COLUMN subnet_fk bigint;");
 
         execSql(stmt, "alter table VM_PORT ADD COLUMN subnet_fk bigint;");
-
 
         execSql(stmt,"create table OS_SUBNET (" +
                 "id bigint generated by default as identity," +
@@ -736,7 +937,6 @@ public class ReleaseUpgradeMgr {
 
     private static void upgrade53to54(Statement stmt) throws SQLException {
         // @formatter:off
-
         execSql(stmt, "alter table DEPLOYMENT_SPEC " +
                 "add column last_job_id_fk bigint;");
 
@@ -918,19 +1118,15 @@ public class ReleaseUpgradeMgr {
 
     private static void upgrade38to39(Statement stmt) throws SQLException {
         // @formatter:off
-
         execSql(stmt, "alter table VM drop column dai_fk;");
-
         execSql(stmt, "create table DISTRIBUTED_APPLIANCE_INSTANCE_VM_PORT (" +
                 "dai_fk bigint not null, " +
                 "vm_port_fk bigint not null," +
                 "primary key (dai_fk, vm_port_fk));");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_VM_PORT " +
                 "add constraint FK_DAI_VMP_DAI " +
                 "foreign key (dai_fk) " +
                 "references DISTRIBUTED_APPLIANCE_INSTANCE;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE_VM_PORT " +
                 "add constraint FK_DAI_VMP_VMP " +
                 "foreign key (vm_port_fk) " +
@@ -947,7 +1143,6 @@ public class ReleaseUpgradeMgr {
 
     private static void upgrade36to37(Statement stmt) throws SQLException {
         // @formatter:off
-
         execSql(stmt, "alter table DEPLOYMENT_SPEC add column dynamic boolean default false;");
         execSql(stmt, "alter table DEPLOYMENT_SPEC add column security_group_interface_fk  bigint;");
         execSql(stmt, "alter table DEPLOYMENT_SPEC " +
@@ -957,17 +1152,14 @@ public class ReleaseUpgradeMgr {
         );
 
         // @formatter:on
-
     }
 
     private static void upgrade35to36(Statement stmt) throws SQLException {
         // @formatter:off
-
         execSql(stmt, "alter table VM_PORT " +
                 "add constraint UK_VMP_ID " +
                 "unique (os_port_id);"
         );
-
         execSql(stmt, "alter table OS_NETWORK " +
                 "drop constraint UK_OSNETWORK_REGION_OSID;"
         );
@@ -976,20 +1168,16 @@ public class ReleaseUpgradeMgr {
                 "add constraint UK_OSNETWORK_OSID " +
                 "unique (openstack_id);"
         );
-
         execSql(stmt, "alter table OS_IMAGE_REFERENCE " +
                 "drop constraint UK_REGION_IMAGE_ID;"
         );
-
         execSql(stmt, "alter table OS_IMAGE_REFERENCE " +
                 "add constraint UK_IMAGE_OSID " +
                 "unique (image_ref_id);"
         );
-
         execSql(stmt, "alter table OS_FLAVOR_REFERENCE " +
                 "drop constraint UK_REGION_FLAVOR_ID;"
         );
-
         execSql(stmt, "alter table OS_FLAVOR_REFERENCE " +
                 "add constraint UK_FLAVOR_OSID unique (flavor_ref_id);"
         );
@@ -1028,7 +1216,6 @@ public class ReleaseUpgradeMgr {
                         "primary key (id)" +
                    ");"
         );
-
         stmt.execute(
                 "create table AVAILABILITY_ZONE (" +
                         "id bigint generated by default as identity," +
@@ -1152,7 +1339,6 @@ public class ReleaseUpgradeMgr {
         stmt.execute(
                 "alter table VIRTUALIZATION_CONNECTOR alter column controller_password varchar(255) null;");
 
-
         execSql(stmt, "create table HOST_AGGREGATE (" +
                 "id bigint generated by default as identity," +
                 "created_by varchar(255)," +
@@ -1196,7 +1382,6 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table OS_FLAVOR_REFERENCE " +
                 "add constraint UK_REGION_FLAVOR_ID unique (region, flavor_ref_id);"
         );
-
         execSql(stmt, "alter table OS_FLAVOR_REFERENCE " +
                 "add constraint FK_OS_FLAVOR_REFERENCE_VS " +
                 "foreign key (vs_fk) " +
@@ -1277,12 +1462,10 @@ public class ReleaseUpgradeMgr {
             "alter table HOST " +
                 "ALTER COLUMN host RENAME TO name;"
             );
-
         stmt.execute(
             "alter table HOST_AGGREGATE " +
                 "ADD COLUMN name varchar(255) not null;"
             );
-
         stmt.execute(
             "alter table VIRTUALIZATION_CONNECTOR " +
                 "ADD COLUMN controller_type varchar(255);"
@@ -1332,7 +1515,6 @@ public class ReleaseUpgradeMgr {
                 "foreign key (last_job_id_fk) " +
                 "references JOB(id);"
                 );
-
 
         execSql(stmt, "create table JOBS_ARCHIVE (" +
                "id bigint generated by default as identity," +
@@ -1427,11 +1609,9 @@ public class ReleaseUpgradeMgr {
                 ");"
         );
 
-
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE " +
                 "add column failure_policy_type varchar(255);"
         );
-
 
         execSql(stmt, "create table OS_NETWORK (" +
                 "id bigint generated by default as identity," +
@@ -1751,74 +1931,71 @@ public class ReleaseUpgradeMgr {
     //        2   jstack-compute  200        ||              200 False    R1/T1/V1
     // delete the ID 1 host which is having a dynamic Deployment spec, and then later delete the DDS 100
     private static void deleteDynamicHost(Statement stmt) throws SQLException {
-    	String sql = "delete from HOST hs  where exists (  "  +
-			 "           SELECT ID, openstack_id from (                        "  +
-			 "                SELECT a.ID, a.dynamic, b.region, b.tenant_id, b.vs_fk, b.openstack_id, b.hostHas_DS_DDS_by_RTV from DEPLOYMENT_SPEC a "  +
-			 "   	         JOIN "  +
-			 "   	         ( "  +
-			 "   	         select region, tenant_id, vs_fk, openstack_id, count(*) as hostHas_DS_DDS_by_RTV from ( "  +
-			 "   	             select m.ID as host_id, m.OPENSTACK_ID, n.DSID, n.region, n.tenant_id, n.vs_fk, n.dynamic from HOST m "  +
-			 "   	             JOIN "  +
-			 "   	             ( "  +
-			 "   	                 select x.id as DSID, x.region, x.tenant_id, x.vs_fk, x.DYNAMIC, y.countByVSRegTenant from DEPLOYMENT_SPEC AS x "  +
-			 "   	                 JOIN "  +
-			 "   	                 ( "  +
-			 "   	                     select region, tenant_id, vs_fk, count(*) as countByVSRegTenant from DEPLOYMENT_SPEC  group by region, tenant_id, vs_fk "  +
-			 "   	                 ) AS y "  +
-			 "   	                 ON x.region = y.region and x.tenant_id = y.tenant_id and x.vs_fk = y.vs_fk AND y.countByVSRegTenant  = 2  "  +
-			 "   	             ) AS n "  +
-			 "   	             ON m.DS_HOST_FK = n.DSid "  +
-			 "   	         ) as p "  +
-			 "   	         group by region, tenant_id, vs_fk, openstack_id "  +
-			 "   	         ) b "  +
-			 "   	         ON a.region = b.region and a.tenant_id=b.tenant_id and a.vs_fk=b.vs_fk "  +
-			 "           ) as sel_id where dynamic=true and hostHas_DS_DDS_by_RTV=2 "  +
-			 "           and hs.ds_host_fk = sel_id.id and hs.openstack_id = sel_id.openstack_id "  +
-			 "  ) ; ";
-    	execSql(stmt, sql);
+        String sql = "delete from HOST hs  where exists (  "  +
+             "           SELECT ID, openstack_id from (                        "  +
+             "                SELECT a.ID, a.dynamic, b.region, b.tenant_id, b.vs_fk, b.openstack_id, b.hostHas_DS_DDS_by_RTV from DEPLOYMENT_SPEC a "  +
+             "               JOIN "  +
+             "               ( "  +
+             "               select region, tenant_id, vs_fk, openstack_id, count(*) as hostHas_DS_DDS_by_RTV from ( "  +
+             "                   select m.ID as host_id, m.OPENSTACK_ID, n.DSID, n.region, n.tenant_id, n.vs_fk, n.dynamic from HOST m "  +
+             "                   JOIN "  +
+             "                   ( "  +
+             "                       select x.id as DSID, x.region, x.tenant_id, x.vs_fk, x.DYNAMIC, y.countByVSRegTenant from DEPLOYMENT_SPEC AS x "  +
+             "                       JOIN "  +
+             "                       ( "  +
+             "                           select region, tenant_id, vs_fk, count(*) as countByVSRegTenant from DEPLOYMENT_SPEC  group by region, tenant_id, vs_fk "  +
+             "                       ) AS y "  +
+             "                       ON x.region = y.region and x.tenant_id = y.tenant_id and x.vs_fk = y.vs_fk AND y.countByVSRegTenant  = 2  "  +
+             "                   ) AS n "  +
+             "                   ON m.DS_HOST_FK = n.DSid "  +
+             "               ) as p "  +
+             "               group by region, tenant_id, vs_fk, openstack_id "  +
+             "               ) b "  +
+             "               ON a.region = b.region and a.tenant_id=b.tenant_id and a.vs_fk=b.vs_fk "  +
+             "           ) as sel_id where dynamic=true and hostHas_DS_DDS_by_RTV=2 "  +
+             "           and hs.ds_host_fk = sel_id.id and hs.openstack_id = sel_id.openstack_id "  +
+             "  ) ; ";
+        execSql(stmt, sql);
     }
 
     private static void updateDeploymentSpecFK(Statement stmt, String table, String foreignKey) throws SQLException {
-    	String sql =String.format("update %s a SET a.%s = " +
-    			"(" +
-    			"select sel.id  from DEPLOYMENT_SPEC ds LEFT  JOIN (" +
-    			"select d_s.*, jn.countByVSRegTenant  from DEPLOYMENT_SPEC AS d_s " +
-    			"JOIN (" +
-    			"select region, tenant_id, vs_fk, count(*) as countByVSRegTenant from DEPLOYMENT_SPEC  group by region, tenant_id, vs_fk) AS jn " +
-    			"ON d_s.region = jn.region and d_s.tenant_id = jn.tenant_id and d_s.vs_fk = jn.vs_fk ) As sel " +
-    			"ON ds.region = sel.region and ds.tenant_id = sel.tenant_id and ds.vs_fk = sel.vs_fk " +
-    			"AND ( " +
-    			"(sel.countByVSRegTenant = 1 ) OR " +
-    			"(sel.countByVSRegTenant = 2 AND ds.DYNAMIC = TRUE AND ds.DYNAMIC <> sel.DYNAMIC OR ds.DYNAMIC = FALSE AND ds.DYNAMIC = sel.DYNAMIC AND ds.ID = sel.ID ) " +
-    			") " +
-    			"WHERE a.%s = ds.id " +
-    			");", table, foreignKey, foreignKey);
-		execSql(stmt, sql);
-	}
-
+        String sql =String.format("update %s a SET a.%s = " +
+                "(" +
+                "select sel.id  from DEPLOYMENT_SPEC ds LEFT  JOIN (" +
+                "select d_s.*, jn.countByVSRegTenant  from DEPLOYMENT_SPEC AS d_s " +
+                "JOIN (" +
+                "select region, tenant_id, vs_fk, count(*) as countByVSRegTenant from DEPLOYMENT_SPEC  group by region, tenant_id, vs_fk) AS jn " +
+                "ON d_s.region = jn.region and d_s.tenant_id = jn.tenant_id and d_s.vs_fk = jn.vs_fk ) As sel " +
+                "ON ds.region = sel.region and ds.tenant_id = sel.tenant_id and ds.vs_fk = sel.vs_fk " +
+                "AND ( " +
+                "(sel.countByVSRegTenant = 1 ) OR " +
+                "(sel.countByVSRegTenant = 2 AND ds.DYNAMIC = TRUE AND ds.DYNAMIC <> sel.DYNAMIC OR ds.DYNAMIC = FALSE AND ds.DYNAMIC = sel.DYNAMIC AND ds.ID = sel.ID ) " +
+                ") " +
+                "WHERE a.%s = ds.id " +
+                ");", table, foreignKey, foreignKey);
+        execSql(stmt, sql);
+    }
 
     private static void deleteDynamicDeploymentSpecs(Statement stmt) throws SQLException{
-		// for any given VS/Region/Tenant, having both static and dynamic deployment specs,
-		// delete the dynamic deployment spec
-		String sql = "   DELETE FROM DEPLOYMENT_SPEC ds WHERE EXISTS   "  +
-					 "   (  "  +
-					 "       select * from (  "  +
-					 "         select ds1.ID, ds1.region, ds1.tenant_id, ds1.vs_fk, ds1.DYNAMIC, sel_cnt.countByVSRegTenant  from DEPLOYMENT_SPEC AS ds1   "  +
-					 "         JOIN   "  +
-					 "         (  "  +
-					 "             select region, tenant_id, vs_fk, count(*) as countByVSRegTenant from DEPLOYMENT_SPEC  group by region, tenant_id, vs_fk  "  +
-					 "         ) AS sel_cnt   "  +
-					 "         ON ds1.region = sel_cnt.region and ds1.tenant_id = sel_cnt.tenant_id and ds1.vs_fk = sel_cnt.vs_fk  "  +
-					 "       )  AS sel  "  +
-					 "       WHERE ds.region = sel.region AND ds.tenant_id = sel.tenant_id AND ds.vs_fk = sel.vs_fk AND sel.countByVSRegTenant =2 and ds.DYNAMIC=TRUE"  +
-					 "  ) ; ";
-		execSql(stmt, sql);
-	}
+        // for any given VS/Region/Tenant, having both static and dynamic deployment specs,
+        // delete the dynamic deployment spec
+        String sql = "   DELETE FROM DEPLOYMENT_SPEC ds WHERE EXISTS   "  +
+                     "   (  "  +
+                     "       select * from (  "  +
+                     "         select ds1.ID, ds1.region, ds1.tenant_id, ds1.vs_fk, ds1.DYNAMIC, sel_cnt.countByVSRegTenant  from DEPLOYMENT_SPEC AS ds1   "  +
+                     "         JOIN   "  +
+                     "         (  "  +
+                     "             select region, tenant_id, vs_fk, count(*) as countByVSRegTenant from DEPLOYMENT_SPEC  group by region, tenant_id, vs_fk  "  +
+                     "         ) AS sel_cnt   "  +
+                     "         ON ds1.region = sel_cnt.region and ds1.tenant_id = sel_cnt.tenant_id and ds1.vs_fk = sel_cnt.vs_fk  "  +
+                     "       )  AS sel  "  +
+                     "       WHERE ds.region = sel.region AND ds.tenant_id = sel.tenant_id AND ds.vs_fk = sel.vs_fk AND sel.countByVSRegTenant =2 and ds.DYNAMIC=TRUE"  +
+                     "  ) ; ";
+        execSql(stmt, sql);
+    }
 
     private static boolean existsDepolymentSpecs(Statement stmt) throws SQLException {
-
         String sql = "select count(*) as count from DEPLOYMENT_SPEC;";
-
         String existsDS = null;
         try (ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
@@ -1829,13 +2006,13 @@ public class ReleaseUpgradeMgr {
         return !StringUtils.isNullOrEmpty(existsDS) && Integer.parseInt(existsDS) > 0;
     }
 
-	private static boolean areAllDeploymentSpecsDynamic(Statement stmt) throws SQLException {
-		return checkAllStaticOrDynamic(stmt, Boolean.TRUE);
+    private static boolean areAllDeploymentSpecsDynamic(Statement stmt) throws SQLException {
+        return checkAllStaticOrDynamic(stmt, Boolean.TRUE);
     }
 
-	private static boolean areAllDeploymentSpecsStatic(Statement stmt) throws SQLException {
-		return checkAllStaticOrDynamic(stmt, Boolean.FALSE);
-	}
+    private static boolean areAllDeploymentSpecsStatic(Statement stmt) throws SQLException {
+        return checkAllStaticOrDynamic(stmt, Boolean.FALSE);
+    }
 
     private static boolean checkAllStaticOrDynamic(Statement stmt, boolean flag) throws SQLException {
         String sql = String.format("SELECT (SELECT COUNT(*) FROM DEPLOYMENT_SPEC ) - (SELECT COUNT(*) FROM DEPLOYMENT_SPEC WHERE dynamic=%s) AS Difference;", flag);
@@ -1851,11 +2028,13 @@ public class ReleaseUpgradeMgr {
     @SuppressWarnings("deprecation")
     private static void updatePasswordScheme(Statement statement, String tableName, String columnName, EncryptionApi encrypter) throws SQLException, EncryptionException {
         String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
-        ResultSet result = statement.executeQuery(sqlQuery);
         Map<Integer, String> idsAndPasswords = new HashMap<>();
 
-        while (result.next()) {
-            idsAndPasswords.put(result.getInt("id"), encrypter.encryptAESCTR(encrypter.decryptDES(result.getString(columnName))));
+        try (ResultSet result = statement.executeQuery(sqlQuery)) {
+            while (result.next()) {
+                idsAndPasswords.put(result.getInt("id"),
+                        encrypter.encryptAESCTR(encrypter.decryptDES(result.getString(columnName))));
+            }
         }
 
         try (PreparedStatement preparedStatementUpdate = statement.getConnection().prepareStatement("UPDATE " + tableName + " SET " + columnName + " = ? WHERE id = ?")) {
@@ -1902,7 +2081,7 @@ public class ReleaseUpgradeMgr {
             try (ResultSet result = statement.executeQuery(sql)) {
                 if (result.next()) {
                     int dbVersion = result.getInt("db_version");
-                    log.info("DB version: " + dbVersion);
+                    log.info("DB version: {}", dbVersion);
                     releaseInfo = new ReleaseInfo();
                     releaseInfo.setId(1L);
                     releaseInfo.setDbVersion(dbVersion);
@@ -1910,10 +2089,6 @@ public class ReleaseUpgradeMgr {
             }
         }
         return releaseInfo;
-    }
-
-    private static boolean isLastUpgradeSucceeded() {
-        return !new File(DB_UPGRADE_IN_PROGRESS_MARKER_FILE).exists();
     }
 
     private static void createUpgradeMarkerFile() {
@@ -1933,8 +2108,7 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void execSql(Statement stmt, String sql) throws SQLException {
-        log.info("Execute sql: " + sql);
+        log.info("Execute sql: {}", sql);
         stmt.execute(sql);
     }
-
 }

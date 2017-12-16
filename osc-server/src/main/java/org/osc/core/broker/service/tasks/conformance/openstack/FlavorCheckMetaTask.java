@@ -16,8 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import com.google.common.base.Joiner;
-import org.apache.log4j.Logger;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.openstack4j.model.compute.Flavor;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -28,18 +32,17 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import java.util.Iterator;
-import java.util.Set;
+import com.google.common.base.Joiner;
 
 @Component(service = FlavorCheckMetaTask.class)
 public class FlavorCheckMetaTask extends TransactionalMetaTask {
 
-    private static final Logger log = Logger.getLogger(FlavorCheckMetaTask.class);
+    private static final Logger log = LoggerFactory.getLogger(FlavorCheckMetaTask.class);
 
     @Reference
     CreateFlavorTask createFlavorTask;

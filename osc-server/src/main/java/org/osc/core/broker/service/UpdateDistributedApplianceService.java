@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -53,20 +52,22 @@ import org.osc.core.broker.util.crypto.PKIUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class UpdateDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse>
         implements UpdateDistributedApplianceServiceApi {
 
-    private static final Logger log = Logger.getLogger(UpdateDistributedApplianceService.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateDistributedApplianceService.class);
 
     private UnlockObjectMetaTask ult = null;
 
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Reference
     private EncryptionApi encrypter;
@@ -135,7 +136,7 @@ public class UpdateDistributedApplianceService
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
-        return this.conformService.startDAConformJob(em, da, this.ult);
+        return this.daConformJobFactory.startDAConformJob(em, da, this.ult);
     }
 
     /**

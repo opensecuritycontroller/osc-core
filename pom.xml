@@ -15,377 +15,410 @@
     limitations under the License.
  -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.osc.core</groupId>
-	<artifactId>osc-root</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>org.osc.core:osc-root</name>
-	<description>OSC Parent Project</description>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<openstack4j.version>3.0.4</openstack4j.version>
-		<powermock.version>1.6.5</powermock.version>
-	</properties>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.osc.core</groupId>
+    <artifactId>osc-root</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>org.osc.core:osc-root</name>
+    <description>OSC Parent Project</description>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <openstack4j.version>3.0.4</openstack4j.version>
+        <powermock.version>1.6.5</powermock.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <!-- Sonar -->
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <sonar.language>java</sonar.language>
+    </properties>
 
-	<repositories>
-		<repository>
-			<id>jboss</id>
-			<name>JBoss</name>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
-		</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <name>JBoss</name>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>osc-nexus</id>
+            <name>OSC Nexus</name>
+            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>osc-nexus-snapshot</id>
+            <name>OSC Nexus Snapshot</name>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
+        </repository>
+    </repositories>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.annotation</artifactId>
+                <version>6.0.1</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Testing Dependencies. -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-junit4</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-core</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-api-mockito</artifactId>
+                <version>${powermock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>1.10.19</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>pl.pragmatists</groupId>
+                <artifactId>JUnitParams</artifactId>
+                <version>1.0.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>2.5.0</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <profiles>
+        <profile>
+            <!-- The 'default' profile includes only osc-core projects -->
+            <id>default</id>
+            <modules>
+                <module>osc-tools</module>
+                <module>osc-uber-openstack4j</module>
+                <module>osc-uber-kubernetes</module>
+                <module>osc-common</module>
+                <module>osc-domain</module>
+                <module>osc-service-api</module>
+                <module>osc-rest-server</module>
+                <module>osc-server</module>
+                <module>osc-ui</module>
+                <module>osc-ui-widgetset</module>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.osgi</groupId>
-				<artifactId>osgi.annotation</artifactId>
-				<version>6.0.1</version>
-				<scope>provided</scope>
-			</dependency>
-			<!-- Testing Dependencies. -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.12</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-module-junit4</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-core</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-api-mockito</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>1.10.19</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>pl.pragmatists</groupId>
-				<artifactId>JUnitParams</artifactId>
-				<version>1.0.1</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.assertj</groupId>
-				<artifactId>assertj-core</artifactId>
-				<version>2.5.0</version>
-				<scope>test</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-	<profiles>
-		<profile>
-			<!-- The 'default' profile includes only osc-core projects -->
-			<id>default</id>
-			<modules>
-				<module>osc-tools</module>
-				<module>osc-uber-openstack4j</module>
-				<module>osc-common</module>
-				<module>osc-domain</module>
-				<module>osc-service-api</module>
-				<module>osc-rest-server</module>
-				<module>osc-server</module>
-				<module>osc-ui</module>
-				<module>osc-ui-widgetset</module>
+                <module>osc-uber</module>
+                <module>osc-control</module>
 
-				<module>osc-uber</module>
-				<module>osc-control</module>
+                <module>osc-installer</module>
+                <module>osc-installer-test</module>
+                <module>osc-installer-simple</module>
 
-				<module>osc-installer</module>
-				<module>osc-installer-test</module>
-				<module>osc-installer-simple</module>
-
-				<module>osc-resolver</module>
-				<module>osc-export</module>
-			</modules>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-		</profile>
-		<profile>
-			<id>all</id>
-			<modules>
-				<module>../sdn-controller-api</module>
-				<module>../security-mgr-api</module>
+                <module>osc-resolver</module>
+                <module>osc-export</module>
+            </modules>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>all</id>
+            <modules>
+                <module>../sdn-controller-api</module>
+                <module>../security-mgr-api</module>
 
                 <module>../sdn-controller-nsc-plugin</module>
+                <module>../sdn-controller-nsfc-plugin</module>
                 <module>../security-mgr-sample-plugin</module>
-                
+
                 <module>../osc-nuage-plugin</module>
+                <module>../osc-pan-plugin</module>
 
-				<module>osc-tools</module>
-				<module>osc-uber-openstack4j</module>
-				<module>osc-common</module>
-				<module>osc-domain</module>
-				<module>osc-service-api</module>
-				<module>osc-rest-server</module>
-				<module>osc-server</module>
-				<module>osc-ui</module>
-				<module>osc-ui-widgetset</module>
+                <module>osc-tools</module>
+                <module>osc-uber-openstack4j</module>
+                <module>osc-uber-kubernetes</module>
+                <module>osc-common</module>
+                <module>osc-domain</module>
+                <module>osc-service-api</module>
+                <module>osc-rest-server</module>
+                <module>osc-server</module>
+                <module>osc-ui</module>
+                <module>osc-ui-widgetset</module>
 
-				<module>osc-uber</module>
-				<module>osc-control</module>
+                <module>osc-uber</module>
+                <module>osc-control</module>
 
-				<module>osc-installer</module>
-				<module>osc-installer-test</module>
-				<module>osc-installer-simple</module>
+                <module>osc-installer</module>
+                <module>osc-installer-test</module>
+                <module>osc-installer-simple</module>
 
-				<module>osc-resolver</module>
-				<module>osc-export</module>
-			</modules>
-		</profile>
-	</profiles>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<showWarnings>true</showWarnings>
-					<compilerArgs>
-						<arg>-Xlint:all</arg>
-					</compilerArgs>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<id>prodVer</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 
-									1.0.0-1-HASH, etc -->
-								<exec outputproperty="fullVersion" dir="." executable="sh">
-									<arg value="-c" />
-									<arg value="git describe --long | tr -d v" />
-								</exec>
-								<!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
-								<exec outputproperty="releaseVersion" dir="." executable="sh">
-									<arg value="-c" />
-									<arg value="git describe --abbrev=0 | tr -d v" />
-								</exec>
-								<echo>Full Version: ${fullVersion}</echo>
-								<echo>Version: ${releaseVersion}</echo>
-							</target>
-							<exportAntProperties>true</exportAntProperties>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>1.4.1</version>
-				<executions>
-					<execution>
-						<id>enforce-property</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireProperty>
-									<property>project.version</property>
-									<message>The project version must be set.</message>
-									<regex>${releaseVersion}</regex>
-									<regexMessage>The project version is ${project.version} but it
-										must be ${releaseVersion}.</regexMessage>
-								</requireProperty>
-							</rules>
-							<fail>true</fail>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<!-- This plugin is used to integrate CheckStyle into the build process. -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>2.15</version>
-				<dependencies>
-					<dependency>
-						<groupId>com.puppycrawl.tools</groupId>
-						<artifactId>checkstyle</artifactId>
-						<version>6.7</version>
-					</dependency>
-					<dependency>
-						<groupId>org.osc.core</groupId>
-						<artifactId>osc-tools</artifactId>
-						<version>${project.version}</version>
-					</dependency>
-				</dependencies>
-				<executions>
-					<execution>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<configLocation>quality/OSC_checks.xml</configLocation>
-							<suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
-							<headerLocation>quality/java.header</headerLocation>
-							<suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
-							<includeTestSourceDirectory>true</includeTestSourceDirectory>
-							<violationSeverity>info</violationSeverity>
-							<!-- Turning the fail-on-violation flag on -->
-							<failOnViolation>true</failOnViolation>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<!-- This plugin is used to integrate Findbugs into the build process -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.1</version>
-				<configuration>
-					<effort>Max</effort>
-					<threshold>High</threshold>
-					<xmlOutput>true</xmlOutput>
-					<!-- Turning the fail-on-error flag on -->
-					<failOnError>true</failOnError>
-					<omitVisitors>DefaultEncodingDetector</omitVisitors>
-					<argLine>-Xmx1024m</argLine>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-		<pluginManagement>
-			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>
-											org.apache.maven.plugins
-										</groupId>
-										<artifactId>
-											maven-antrun-plugin
-										</artifactId>
-										<versionRange>
-											[1.7,)
-										</versionRange>
-										<goals>
-											<goal>run</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-				<!-- This plugin configuration adds OSGi metadata to the manifests of 
-					projects that use it. It also generates Declarative Services metadata if 
-					needed -->
-				<plugin>
-					<groupId>biz.aQute.bnd</groupId>
-					<artifactId>bnd-maven-plugin</artifactId>
-					<version>3.3.0</version>
-					<configuration>
-					</configuration>
-					<executions>
-						<execution>
-							<phase>process-classes</phase>
-							<goals>
-								<goal>bnd-process</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<!-- This configuration is necessary to ensure that the manifest generated 
-					by the bnd-maven-plugin is used -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<configuration>
-						<archive>
-							<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-						</archive>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.1</version>
-				<configuration>
-					<effort>Max</effort>
-					<threshold>High</threshold>
-					<omitVisitors>DefaultEncodingDetector</omitVisitors>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>2.15</version>
-				<configuration>
-					<configLocation>quality/OSC_checks.xml</configLocation>
-					<suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
-					<headerLocation>quality/java.header</headerLocation>
-					<suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
-					<includeTestSourceDirectory>true</includeTestSourceDirectory>
-					<violationSeverity>info</violationSeverity>
-					<!-- Turning the fail-on-violation flag on -->
-					<failOnViolation>true</failOnViolation>
-				</configuration>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>checkstyle</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
-		</plugins>
-	</reporting>
+                <module>osc-resolver</module>
+                <module>osc-export</module>
+            </modules>
+        </profile>
+    </profiles>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>prodVer</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 
+                                    1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
+                                1.0.0-1-HASH, etc -->
+                                <exec outputproperty="fullVersion"
+                                    dir="." executable="sh">
+                                    <arg value="-c" />
+                                    <arg value="git describe --long | tr -d v" />
+                                </exec>
+                                <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, 
+                                    etc -->
+                                <exec outputproperty="releaseVersion"
+                                    dir="." executable="sh">
+                                    <arg value="-c" />
+                                    <arg
+                                        value="git describe --abbrev=0 | tr -d v" />
+                                </exec>
+                                <echo>Full Version: ${fullVersion}</echo>
+                                <echo>Version: ${releaseVersion}</echo>
+                            </target>
+                            <exportAntProperties>true</exportAntProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-property</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>project.version</property>
+                                    <message>The project version must be
+                                        set.</message>
+                                    <regex>${releaseVersion}</regex>
+                                    <regexMessage>The project version is
+                                        ${project.version} but it
+                                        must be
+                                        ${releaseVersion}.</regexMessage>
+                                </requireProperty>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- This plugin is used to integrate CheckStyle into the build 
+                process. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.15</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>6.7</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.osc.core</groupId>
+                        <artifactId>osc-tools</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <configLocation>quality/OSC_checks.xml</configLocation>
+                            <suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
+                            <headerLocation>quality/java.header</headerLocation>
+                            <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <violationSeverity>info</violationSeverity>
+                            <!-- Turning the fail-on-violation flag on -->
+                            <failOnViolation>true</failOnViolation>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- This plugin is used to integrate Findbugs into the build 
+                process -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>High</threshold>
+                    <xmlOutput>true</xmlOutput>
+                    <!-- Turning the fail-on-error flag on -->
+                    <failOnError>true</failOnError>
+                    <omitVisitors>DefaultEncodingDetector</omitVisitors>
+                    <argLine>-Xmx1024m</argLine>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <!--This plugin's configuration is used to store Eclipse 
+                    m2e settings only. It has no influence on the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.apache.maven.plugins
+                                        </groupId>
+                                        <artifactId>
+                                            maven-antrun-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [1.7,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>run</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+                <!-- This plugin configuration adds OSGi metadata to the 
+                    manifests of projects that use it. It also generates Declarative Services 
+                    metadata if needed -->
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-maven-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <configuration>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>process-classes</phase>
+                            <goals>
+                                <goal>bnd-process</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- This configuration is necessary to ensure that the manifest 
+                    generated by the bnd-maven-plugin is used -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        </archive>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>High</threshold>
+                    <omitVisitors>DefaultEncodingDetector</omitVisitors>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.15</version>
+                <configuration>
+                    <configLocation>quality/OSC_checks.xml</configLocation>
+                    <suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
+                    <headerLocation>quality/java.header</headerLocation>
+                    <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <violationSeverity>info</violationSeverity>
+                    <!-- Turning the fail-on-violation flag on -->
+                    <failOnViolation>true</failOnViolation>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>checkstyle</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

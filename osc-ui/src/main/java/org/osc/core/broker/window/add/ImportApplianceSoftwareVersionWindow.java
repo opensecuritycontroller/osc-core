@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -37,6 +36,8 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
@@ -51,7 +52,7 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(ImportApplianceSoftwareVersionWindow.class);
 
     private ApplianceUploader uploader = null;
 

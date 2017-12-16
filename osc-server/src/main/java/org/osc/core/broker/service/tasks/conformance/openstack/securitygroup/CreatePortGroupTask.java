@@ -19,14 +19,17 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -58,35 +61,58 @@ public class CreatePortGroupTask extends TransactionalTask {
 
         Set<SecurityGroupMember> members = this.securityGroup.getSecurityGroupMembers();
         List<NetworkElement> protectedPorts = new ArrayList<>();
-
-        for (SecurityGroupMember sgm : members) {
-            protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
-        }
-        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
-                this.securityGroup.getVirtualizationConnector(), protectedPorts);
-        if (domainId == null){
-            throw new Exception(String.format("A domain was not found for the project: '%s' and Security Group: '%s",
-                    this.securityGroup.getProjectName(), this.securityGroup.getName()));
-        }
-
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        if (CollectionUtils.isNotEmpty(protectedPorts)) {
-            for (NetworkElement vmPort : protectedPorts) {
-                ((NetworkElementImpl) vmPort).setParentId(domainId);
+        String domainId = null;
+        if (this.securityGroup.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            for (SecurityGroupMember sgm : members) {
+                protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
             }
-            NetworkElement portGp = controller.registerNetworkElement(protectedPorts);
-            if (portGp == null) {
-                throw new Exception("RegisterNetworkElement failed to return PortGroup");
+            domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
+                    this.securityGroup.getVirtualizationConnector(), protectedPorts);
+            if (domainId == null){
+                throw new Exception(String.format("A domain was not found for the project: '%s' and Security Group: '%s",
+                        this.securityGroup.getProjectName(), this.securityGroup.getName()));
             }
-            this.securityGroup.setNetworkElementId(portGp.getElementId());
-            em.merge(this.securityGroup);
 
+            for (NetworkElement elem : protectedPorts) {
+                ((NetworkElementImpl) elem).setParentId(domainId);
+            }
+        } else {
+            for (SecurityGroupMember sgm : members) {
+                if (domainId == null && !sgm.getPodPorts().isEmpty()) {
+                    domainId = sgm.getPodPorts().iterator().next().getParentId();
+                }
+
+                List<NetworkElementImpl> podPorts = getPodPorts(sgm);
+                for (NetworkElementImpl podPort : podPorts) {
+                    podPort.setParentId(domainId);
+                }
+
+                protectedPorts.addAll(podPorts);
+            }
+        }
+
+        try (SdnRedirectionApi controller = this.apiFactoryService
+                .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
+            if (CollectionUtils.isNotEmpty(protectedPorts)) {
+                NetworkElement portGp = controller.registerNetworkElement(protectedPorts);
+                if (portGp == null) {
+                    throw new Exception("RegisterNetworkElement failed to return PortGroup");
+                }
+                this.securityGroup.setNetworkElementId(portGp.getElementId());
+                em.merge(this.securityGroup);
+            }
         }
     }
 
     @Override
     public String getName() {
         return String.format("Create Port Group for security group: %s ", this.securityGroup.getName());
+    }
+
+    private static List<NetworkElementImpl> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        Set<PodPort> ports = sgm.getPodPorts();
+        return ports.stream()
+                .map(NetworkElementImpl::new)
+                .collect(Collectors.toList());
     }
 }

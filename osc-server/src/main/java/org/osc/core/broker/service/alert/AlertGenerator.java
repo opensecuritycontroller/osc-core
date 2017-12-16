@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -52,6 +51,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Types within the osc-server use the AlertGenerator type to process failures
@@ -59,7 +60,7 @@ import org.osgi.service.transaction.control.TransactionControl;
 @Component(service  = {AlertGenerator.class, AlertGeneratorApi.class})
 public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi {
 
-    private static final Logger log = Logger.getLogger(AlertGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(AlertGenerator.class);
 
     @Reference
     private DBConnectionManager dbConnectionManager;
@@ -165,11 +166,11 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
 
         request.setDto(new AlertDto());
         request.getDto().setName(alarm.getName());
-        request.getDto().setEventType(alarm.getEventType().toString());
+        request.getDto().setEventType(alarm.getEventType());
         request.getDto().setObject(new LockObjectDto(object.getId(), object.getName(),
                 new ObjectTypeDto(object.getType().name(), object.getType().toString())));
-        request.getDto().setSeverity(alarm.getSeverity().toString());
-        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
+        request.getDto().setSeverity(alarm.getSeverity());
+        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
         request.getDto().setMessage(message);
 
         AlertDtoValidator.checkForNullFields(request.getDto());

@@ -42,7 +42,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.output.StringBuilderWriter;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.client.VmidcServerRestClient;
 import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.ServerUtil;
@@ -50,12 +49,15 @@ import org.osc.core.broker.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServerControl {
-    private static final Logger log = Logger.getLogger(ServerControl.class);
+
+    private static Logger log = LoggerFactory.getLogger(ServerControl.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
-    private static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
+    private static final String CONFIG_PROPERTIES_FILE = "data/vmidcServer.conf";
     private static final String SERVER_PID_FILE = "server.pid";
 
     private static final String PRODUCT_NAME = "Open Security Controller";
@@ -66,10 +68,12 @@ public class ServerControl {
     public static final String VMIDC_DEFAULT_LOGIN = "admin";
     public static final String VMIDC_DEFAULT_PASS = "admin123";
 
+
     public static void main(final String[] args) throws Exception {
 
-        LogUtil.initLog4j();
 
+
+        LogUtil.redirectConsoleMessagesToLog();
         loadServerProps();
 
         final Options options = new Options();
@@ -133,7 +137,7 @@ public class ServerControl {
                 throw new ParseException("no option specified");
             }
         } catch (ParseException e) {
-            log.info("Error parsing command line arguments", e);
+            System.err.println("Error parsing command line arguments" + e.getMessage());
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("vmiDC", options);
             System.exit(1);
@@ -317,7 +321,7 @@ public class ServerControl {
                     int retries = 10; // 10 x 500ms = 5 seconds.
                     boolean pidFound = false;
                     while (retries > 0) {
-                        List<String> lines = new ArrayList<String>();
+                        List<String> lines = new ArrayList<>();
                         ServerUtil.execWithLines("ps " + oldPid, lines);
                         pidFound = false;
                         for (String line : lines) {

@@ -26,6 +26,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -53,6 +54,7 @@ public class DeploymentSpecEntityMgr {
         ds.setProjectName(dto.getProjectName());
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
+        ds.setNamespace(dto.getNamespace());
     }
 
     public static void fromEntity(DeploymentSpec ds, DeploymentSpecDto dto) {
@@ -67,7 +69,10 @@ public class DeploymentSpecEntityMgr {
         dto.setManagementNetworkId(ds.getManagementNetworkId());
         dto.setInspectionNetworkName(ds.getInspectionNetworkName());
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
+        dto.setPortGroupId(ds.getPortGroupId());
         dto.setCount(ds.getInstanceCount());
+        dto.setNamespace(ds.getNamespace());
+        dto.setExternalId(ds.getExternalId());
         if (ds.getLastJob() != null) {
             dto.setLastJobStatus(ds.getLastJob().getStatus().name());
             dto.setLastJobState(ds.getLastJob().getState().name());
@@ -76,7 +81,7 @@ public class DeploymentSpecEntityMgr {
         dto.setShared(ds.isShared());
         dto.setMarkForDeletion(ds.getMarkedForDeletion());
         if (!ds.getAvailabilityZones().isEmpty()) {
-            Set<AvailabilityZoneDto> azDtoSet = new HashSet<AvailabilityZoneDto>();
+            Set<AvailabilityZoneDto> azDtoSet = new HashSet<>();
             for (AvailabilityZone az : ds.getAvailabilityZones()) {
                 AvailabilityZoneDto azDto = new AvailabilityZoneDto();
                 AvailabilityZoneEntityMgr.fromEntity(az, azDto);
@@ -86,7 +91,7 @@ public class DeploymentSpecEntityMgr {
         } else if (!ds.getHosts().isEmpty()) {
             dto.setHosts(HostEntityMgr.fromEntity(ds.getHosts()));
         } else if (!ds.getHostAggregates().isEmpty()) {
-            Set<HostAggregateDto> hostAggrSet = new HashSet<HostAggregateDto>();
+            Set<HostAggregateDto> hostAggrSet = new HashSet<>();
             for (HostAggregate hostAggr : ds.getHostAggregates()) {
                 HostAggregateDto hostAggrDto = new HostAggregateDto();
                 HostAggregateEntityMgr.fromEntity(hostAggr, hostAggrDto);
@@ -121,8 +126,8 @@ public class DeploymentSpecEntityMgr {
 
         query = query.select(root)
                 .where(cb.equal(root.get("projectId"), projectId),
-                       cb.equal(root.get("region"), region),
-                       cb.equal(root.get("virtualSystem"), vs));
+                        cb.equal(root.get("region"), region),
+                        cb.equal(root.get("virtualSystem"), vs));
 
         try {
             return em.createQuery(query).getSingleResult();
@@ -131,8 +136,9 @@ public class DeploymentSpecEntityMgr {
         }
     }
 
-	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectAndRegion(EntityManager em,
-			VirtualSystem vs, String projectId, String region) {
+    // TODO Larkins: Remove the hard coded region
+    public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectWithDefaultRegionOne(EntityManager em,
+            VirtualSystem vs, String projectId) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -142,11 +148,28 @@ public class DeploymentSpecEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.get("projectId"), projectId),
-                       cb.equal(root.get("region"), region),
-                       cb.equal(root.get("virtualSystem"), vs));
+                        cb.equal(root.get("virtualSystem"), vs),
+                        cb.equal(root.get("region"), "RegionOne"));
 
         return em.createQuery(query).getResultList();
-	}
+    }
+
+    public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectAndRegion(EntityManager em,
+            VirtualSystem vs, String projectId, String region) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("projectId"), projectId),
+                        cb.equal(root.get("region"), region),
+                        cb.equal(root.get("virtualSystem"), vs));
+
+        return em.createQuery(query).getResultList();
+    }
 
     public static DeploymentSpec findById(EntityManager em, Long id) {
         return em.find(DeploymentSpec.class, id);
@@ -180,5 +203,9 @@ public class DeploymentSpecEntityMgr {
                 .where(root.get("virtualSystem").in(da.getVirtualSystems()));
 
         return em.createQuery(query).getResultList();
+    }
+
+    public static boolean isProtectingWorkload(DeploymentSpec ds) {
+        return CollectionUtils.emptyIfNull(ds.getDistributedApplianceInstances()).stream().anyMatch(dai -> !dai.getProtectedPorts().isEmpty());
     }
 }

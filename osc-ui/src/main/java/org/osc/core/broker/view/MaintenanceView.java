@@ -19,7 +19,6 @@ package org.osc.core.broker.view;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
@@ -55,6 +54,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
@@ -77,9 +78,9 @@ public class MaintenanceView extends VerticalLayout implements View {
 
     private static final long serialVersionUID = 1L;
     // private static final Logger log =
-    // Logger.getLogger(MaintenanceView.class);
+    // LogComponent.getLogger(MaintenanceView.class);
 
-    private static final Logger log = Logger.getLogger(MaintenanceView.class);
+    private static final Logger log = LoggerFactory.getLogger(MaintenanceView.class);
 
     TabSheet subMenu = null;
     TabSheet tabs = new TabSheet();

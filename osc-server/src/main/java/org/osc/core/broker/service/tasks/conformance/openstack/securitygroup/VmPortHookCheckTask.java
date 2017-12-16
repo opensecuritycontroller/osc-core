@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -33,13 +32,14 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
@@ -48,6 +48,7 @@ import org.osc.sdk.controller.element.InspectionHookElement;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 /**
  * This task just adds/update the hooks. If the SGI is marked for deletion, this task does not do anything.
@@ -55,7 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = VmPortHookCheckTask.class)
 public class VmPortHookCheckTask extends TransactionalMetaTask {
 
-    private final Logger log = Logger.getLogger(VmPortHookCheckTask.class);
+    private final Logger log = LoggerFactory.getLogger(VmPortHookCheckTask.class);
 
     @Reference
     VmPortHookCreateTask vmPortHookCreateTask;
@@ -113,7 +114,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
         this.vs = this.securityGroupInterface.getVirtualSystem();
 
         DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
-                .findByVirtualSystemAndPort(em, this.vs, this.vmPort);
+                .findByVirtualSystemAndPort(em, this.vs, this.vmPort.getId(), VMPort.class);
 
         List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
         String sgmDomainId = OpenstackUtil.extractDomainId(
@@ -186,7 +187,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
             }
 
             this.vdc.discover(assignedRedirectedDai.getDeploymentSpec().getRegion(),
-                    assignedRedirectedDai.getOsServerId());
+                    assignedRedirectedDai.getExternalId());
 
             this.log.info("Checking Inspection Hook for Security group Member: " + this.sgm.getMemberName());
 

@@ -22,7 +22,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.openstack4j.model.network.IP;
 import org.openstack4j.model.network.Network;
 import org.openstack4j.model.network.Port;
@@ -36,12 +35,14 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
 
 @Component(service = OsSvaCheckNetworkInfoTask.class)
 public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
-    private static final Logger LOG = Logger.getLogger(OsSvaCheckNetworkInfoTask.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OsSvaCheckNetworkInfoTask.class);
 
     private TaskGraph tg;
     private DistributedApplianceInstance dai;
@@ -65,6 +66,10 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             Network mgmtNetwork = neutron.getNetworkById(ds.getRegion(), ds.getManagementNetworkId());
 
+            if (mgmtNetwork == null) {
+                throw new IllegalStateException(
+                        String.format("The network %s does not exist.", ds.getManagementNetworkId()));
+            }
             if (mgmtNetwork.getSubnets() == null || mgmtNetwork.getSubnets().isEmpty()) {
                 throw new IllegalStateException(String.format(
                         "The network %s does not contain a subnet.",
@@ -121,7 +126,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
     private Port getMgmtPort(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, Openstack4JNeutron neutron) {
         List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getProjectId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
         for (Port port : ports) {
-            if (port.getDeviceId().equals(dai.getOsServerId())) {
+            if (port.getDeviceId().equals(dai.getExternalId())) {
                 return port;
             }
         }

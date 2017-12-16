@@ -16,14 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.view.securityinterface;
 
-import org.apache.log4j.Logger;
+import java.util.Arrays;
+import java.util.HashSet;
+
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.controller.FailurePolicyType;
+import org.slf4j.Logger;
 
 import com.vaadin.ui.Notification;
 
@@ -34,7 +38,7 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(UpdateSecurityGroupInterfaceWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateSecurityGroupInterfaceWindow.class);
     private final SecurityGroupInterfaceDto dto;
 
     final String CAPTION = "Update Policy Mapping";
@@ -60,12 +64,12 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
             // filling existing information to our form
             this.name.setValue(this.dto.getName());
 
-            for (Object id : this.policy.getContainerDataSource().getItemIds()) {
-                if (this.dto.getPolicyId().equals(
-                        this.policy.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
-                    this.policy.select(id);
-                }
-            }
+			for (Object id : this.policy.getContainerDataSource().getItemIds()) {
+				if (this.dto.getPolicies() !=null && !this.dto.getPolicies().isEmpty() && this.dto.getPolicies().iterator().next().getId()
+						.equals(this.policy.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
+					this.policy.select(id);
+				}
+			}
 
             this.tag.setValue(this.dto.getTagValue().toString());
 
@@ -85,10 +89,10 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
                 newDto.setIsUserConfigurable(true);
                 newDto.setTagValue(Long.parseLong(this.tag.getValue()));
                 PolicyDto policyDto = (PolicyDto) this.policy.getValue();
-                newDto.setPolicyId(policyDto.getId());
+                newDto.setPolicies(new HashSet<>(Arrays.asList(policyDto)));
                 newDto.setFailurePolicyType(FailurePolicyType.NA);
 
-                BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<SecurityGroupInterfaceDto>();
+                BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<>();
                 req.setDto(newDto);
 
                 this.updateSecurityGroupInterfaceService.dispatch(req);

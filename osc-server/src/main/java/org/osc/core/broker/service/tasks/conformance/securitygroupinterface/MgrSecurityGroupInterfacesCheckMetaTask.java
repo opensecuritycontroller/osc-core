@@ -18,10 +18,10 @@ package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -37,17 +37,21 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.DowngradeLockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
+import org.osc.sdk.manager.element.ManagerPolicyElement;
 import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 
 @Component(service = MgrSecurityGroupInterfacesCheckMetaTask.class)
 public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger log = Logger.getLogger(MgrSecurityGroupInterfacesCheckMetaTask.class);
+    private static final Logger log = LoggerFactory.getLogger(MgrSecurityGroupInterfacesCheckMetaTask.class);
 
     @Reference
     ApiFactoryService apiFactoryService;
@@ -128,12 +132,12 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
                 this.mcUnlockTask = LockUtil.lockMC(mc, LockType.WRITE_LOCK);
             } else {
                 // Upgrade to write lock. Will no op if we already have write lock
-                boolean upgradeLockSucceeded = LockManager.getLockManager().upgradeLockWithWait(
-                        new LockRequest(this.mcUnlockTask));
+                boolean upgradeLockSucceeded = LockManager.getLockManager()
+                        .upgradeLockWithWait(new LockRequest(this.mcUnlockTask));
                 if (!upgradeLockSucceeded) {
-                    throw new VmidcBrokerInvalidRequestException("Fail to gain write lock for '"
-                            + this.mcUnlockTask.getObjectRef().getType() + "' with name '"
-                            + this.mcUnlockTask.getObjectRef().getName() + "'.");
+                    throw new VmidcBrokerInvalidRequestException(
+                            "Fail to gain write lock for '" + this.mcUnlockTask.getObjectRef().getType()
+                            + "' with name '" + this.mcUnlockTask.getObjectRef().getName() + "'.");
                 }
             }
             this.tg = new TaskGraph();
@@ -176,19 +180,20 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
 
         Set<SecurityGroupInterface> securityGroupInterfaces = vs.getSecurityGroupInterfaces();
         List<? extends ManagerSecurityGroupInterfaceElement> mgrSecurityGroupInterfaces;
-        try (ManagerSecurityGroupInterfaceApi mgrApi = this.apiFactoryService.createManagerSecurityGroupInterfaceApi(vs)) {
+        try (ManagerSecurityGroupInterfaceApi mgrApi = this.apiFactoryService
+                .createManagerSecurityGroupInterfaceApi(vs)) {
             mgrSecurityGroupInterfaces = mgrApi.listSecurityGroupInterfaces();
         }
 
         for (SecurityGroupInterface sgi : securityGroupInterfaces) {
             if (!sgi.getMarkedForDeletion()) {
                 // Try to locate by Manager Id
-                ManagerSecurityGroupInterfaceElement mgrSgi = findByVmidcSecurityGroupId(mgrSecurityGroupInterfaces,
-                        sgi.getMgrSecurityGroupIntefaceId());
+                ManagerSecurityGroupInterfaceElement mgrSgi = findSecurityGroupInterfaceById(mgrSecurityGroupInterfaces,
+                        sgi.getMgrSecurityGroupInterfaceId());
                 if (mgrSgi == null) {
                     // It is possible it exists but have not been persisted in database.
                     // Search security group by name
-                    mgrSgi = findBySecurityGroupByName(mgrSecurityGroupInterfaces, sgi.getName());
+                    mgrSgi = findSecurityGroupInterfaceByName(mgrSecurityGroupInterfaces, sgi.getName());
                 }
 
                 if (mgrSgi == null) {
@@ -196,8 +201,9 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
                     tg.appendTask(this.createMgrSecurityGroupInterfaceTask.create(sgi));
                 } else {
                     if (isInterfaceNeedUpdate(sgi, mgrSgi)) {
-                        if (sgi.getMgrSecurityGroupIntefaceId() == null && mgrSgi.getSecurityGroupInterfaceId() != null) {
-                            sgi.setMgrSecurityGroupIntefaceId(mgrSgi.getSecurityGroupInterfaceId());
+                        if (sgi.getMgrSecurityGroupInterfaceId() == null
+                                && mgrSgi.getSecurityGroupInterfaceId() != null) {
+                            sgi.setMgrSecurityGroupInterfaceId(mgrSgi.getSecurityGroupInterfaceId());
                         }
                         tg.appendTask(this.updateMgrSecurityGroupInterfaceTask.create(sgi));
                     }
@@ -207,7 +213,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
 
         // Remove any security groups which has no policy binding
         for (ManagerSecurityGroupInterfaceElement mgrSgi : mgrSecurityGroupInterfaces) {
-            SecurityGroupInterface sgi = findVmidcSecurityGroupByMgrId(securityGroupInterfaces, mgrSgi);
+            SecurityGroupInterface sgi = findVmidcSecurityGroupInterfaceByMgrId(securityGroupInterfaces, mgrSgi);
             if (sgi == null || sgi.getMarkedForDeletion()) {
                 // Delete security group from Manager
                 tg.appendTask(this.deleteMgrSecurityGroupInterfaceTask.create(vs, mgrSgi));
@@ -216,17 +222,18 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         return tg;
     }
 
-    private static boolean isInterfaceNeedUpdate(SecurityGroupInterface securityGroup,
-            ManagerSecurityGroupInterfaceElement mgrSecurityGroup) {
-        return !Objects.equal(mgrSecurityGroup.getPolicyId(), securityGroup.getMgrPolicyId())
-                || !Objects.equal(mgrSecurityGroup.getTag(), securityGroup.getTag())
-                || !Objects.equal(mgrSecurityGroup.getName(), securityGroup.getName());
+    private static boolean isInterfaceNeedUpdate(SecurityGroupInterface securityGroupInterface,
+            ManagerSecurityGroupInterfaceElement mgrSecurityGroupInterfaceElement) {
+        return validatePolicyIdsIfEquals(mgrSecurityGroupInterfaceElement.getManagerPolicyElements(),
+                securityGroupInterface.getMgrPolicyIds())
+                || !Objects.equal(mgrSecurityGroupInterfaceElement.getTag(), securityGroupInterface.getTag())
+                || !Objects.equal(mgrSecurityGroupInterfaceElement.getName(), securityGroupInterface.getName());
     }
 
-    private static SecurityGroupInterface findVmidcSecurityGroupByMgrId(Set<SecurityGroupInterface> securityGroups,
+    private static SecurityGroupInterface findVmidcSecurityGroupInterfaceByMgrId(Set<SecurityGroupInterface> securityGroups,
             ManagerSecurityGroupInterfaceElement mgrSecurityGroup) {
         for (SecurityGroupInterface securityGroup : securityGroups) {
-            String sgiId = securityGroup.getMgrSecurityGroupIntefaceId();
+            String sgiId = securityGroup.getMgrSecurityGroupInterfaceId();
 
             if (sgiId != null) {
                 if (sgiId.equals(mgrSecurityGroup.getSecurityGroupInterfaceId())) {
@@ -237,7 +244,14 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         return null;
     }
 
-    private static ManagerSecurityGroupInterfaceElement findBySecurityGroupByName(
+    private static boolean validatePolicyIdsIfEquals(Set<ManagerPolicyElement> manangerPolicyElements,
+            Set<String> sgiMgrpolicyIds) {
+        Set<String> manangerPolicyIds = manangerPolicyElements.stream().map(ManagerPolicyElement::getId)
+                .collect(Collectors.toSet());
+        return !Sets.symmetricDifference(manangerPolicyIds, sgiMgrpolicyIds).isEmpty();
+    }
+
+    private static ManagerSecurityGroupInterfaceElement findSecurityGroupInterfaceByName(
             List<? extends ManagerSecurityGroupInterfaceElement> mgrSecurityGroups, String securityGroupName) {
         for (ManagerSecurityGroupInterfaceElement mgrSecurityGroup : mgrSecurityGroups) {
             if (mgrSecurityGroup.getName().equals(securityGroupName)) {
@@ -247,7 +261,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         return null;
     }
 
-    private static ManagerSecurityGroupInterfaceElement findByVmidcSecurityGroupId(
+    private static ManagerSecurityGroupInterfaceElement findSecurityGroupInterfaceById(
             List<? extends ManagerSecurityGroupInterfaceElement> mgrSecurityGroups, String securityGroupId) {
         for (ManagerSecurityGroupInterfaceElement mgrSecurityGroup : mgrSecurityGroups) {
             if (mgrSecurityGroup.getSecurityGroupInterfaceId().equals(securityGroupId)) {
@@ -278,9 +292,8 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         if (this.da != null) {
             return LockObjectReference.getObjectReferences(this.da.getApplianceManagerConnector());
         } else {
-            return LockObjectReference.getObjectReferences(this.vs.getDistributedAppliance()
-                    .getApplianceManagerConnector());
+            return LockObjectReference
+                    .getObjectReferences(this.vs.getDistributedAppliance().getApplianceManagerConnector());
         }
     }
-
 }

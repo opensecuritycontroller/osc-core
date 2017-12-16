@@ -19,13 +19,49 @@ package org.osc.core.broker.service.validator;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
 
-public class ApplianceSoftwareVersionDtoValidator {
+@Component(service = ApplianceSoftwareVersionDtoValidator.class)
+public class ApplianceSoftwareVersionDtoValidator implements DtoValidator<ApplianceSoftwareVersionDto, ApplianceSoftwareVersion> {
+    private EntityManager em;
 
-    public static void checkForNullFields(ApplianceSoftwareVersionDto dto) throws Exception {
+    void setEntityManager(EntityManager em) {
+        this.em = em;
+    }
 
+    public ApplianceSoftwareVersionDtoValidator create(EntityManager em) {
+        ApplianceSoftwareVersionDtoValidator validator = new ApplianceSoftwareVersionDtoValidator();
+        validator.em = em;
+        return validator;
+    }
+
+    @Override
+    public void validateForCreate(ApplianceSoftwareVersionDto dto) throws Exception {
+        checkForNullFields(dto);
+
+        checkFieldLength(dto);
+
+        ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(this.em, dto.getImageUrl());
+        if (asv != null) {
+            throw new VmidcBrokerValidationException("Image file: " + dto.getImageUrl()
+            + " already exists. Cannot add an image with the same name.");
+        }
+    }
+
+    @Override
+    public ApplianceSoftwareVersion validateForUpdate(ApplianceSoftwareVersionDto dto) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static void checkForNullFields(ApplianceSoftwareVersionDto dto) throws Exception {
         // build a map of (field,value) pairs to be checked for null/empty
         // values
         Map<String, Object> map = new HashMap<String, Object>();
@@ -39,7 +75,7 @@ public class ApplianceSoftwareVersionDtoValidator {
         ValidateUtil.checkForNullFields(map);
     }
 
-    public static void checkFieldLength(ApplianceSoftwareVersionDto dto) throws Exception {
+    private static void checkFieldLength(ApplianceSoftwareVersionDto dto) throws Exception {
 
         Map<String, String> map = new HashMap<String, String>();
 

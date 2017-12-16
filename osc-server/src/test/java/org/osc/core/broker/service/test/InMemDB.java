@@ -35,6 +35,7 @@ public class InMemDB {
             props.put("javax.persistence.schema-generation.database.action", "drop-and-create"); // create brand-new db schema in memory
             props.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             props.put("hibernate.show_sql", "false"); // Set this to true to debug any DB failures
+            props.put("hibernate.hbm2ddl.halt_on_error", Boolean.TRUE); // Cause test to fail in case of any errors during db creation
 
 
             emf = Persistence.createEntityManagerFactory("osc-server", props);

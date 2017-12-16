@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import org.apache.log4j.Logger;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -25,15 +28,14 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
+import org.slf4j.Logger;
 
 @Component(service = OsSvaStateCheckTask.class)
 public class OsSvaStateCheckTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(OsSvaStateCheckTask.class);
+    private final Logger log = LoggerFactory.getLogger(OsSvaStateCheckTask.class);
 
     private DistributedApplianceInstance dai;
 
@@ -53,10 +55,10 @@ public class OsSvaStateCheckTask extends TransactionalTask {
 
         Endpoint endPoint = new Endpoint(ds);
         try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
-            Server serverDAI = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
+            Server serverDAI = nova.getServer(ds.getRegion(), this.dai.getExternalId());
             // Check is SVA is Shut off
             if (serverDAI.getStatus().equals(Server.Status.SHUTOFF)) {
-                boolean isStarted = nova.startServer(ds.getRegion(), this.dai.getOsServerId());
+                boolean isStarted = nova.startServer(ds.getRegion(), this.dai.getExternalId());
                 this.log.info("SVA found in SHUTOFF state we will try to start it ... Is SVA started successfully: " + isStarted);
             }
         }

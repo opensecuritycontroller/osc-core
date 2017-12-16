@@ -34,6 +34,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.virtualization.VirtualPort;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 
@@ -48,12 +50,12 @@ public class DistributedApplianceInstance extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "virtual_system_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_DAI_VIRTUAL_SYSTEM"))
+    foreignKey = @ForeignKey(name = "FK_DAI_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "deployment_spec_fk", nullable = true,
-            foreignKey = @ForeignKey(name = "FK_DAI_DEPLOYMENT_SPEC"))
+    foreignKey = @ForeignKey(name = "FK_DAI_DEPLOYMENT_SPEC"))
     private DeploymentSpec deploymentSpec;
 
     @Column(name = "ip_address")
@@ -79,8 +81,13 @@ public class DistributedApplianceInstance extends BaseEntity {
     private String osHostName;
     @Column(name = "os_availability_zone_name")
     private String osAvailabilityZone;
-    @Column(name = "os_server_id")
-    private String osServerId;
+    @Column(name = "external_id")
+    private String externalId;
+
+    @Column(name = "inspection_element_id")
+    private String inspectionElementId;
+    @Column(name = "inspection_element_parent_id")
+    private String inspectionElementParentId;
 
     @Column(name = "inspection_os_ingress_port_id")
     private String inspectionOsIngressPortId;
@@ -115,6 +122,15 @@ public class DistributedApplianceInstance extends BaseEntity {
     @JoinColumn(name="vm_port_fk", referencedColumnName="id")
             )
     private Set<VMPort> protectedPorts = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "DISTRIBUTED_APPLIANCE_INSTANCE_POD_PORT",
+    joinColumns=
+    @JoinColumn(name="dai_fk", referencedColumnName="id"),
+    inverseJoinColumns=
+    @JoinColumn(name="pod_port_fk", referencedColumnName="id")
+            )
+    private Set<PodPort> protectedPodPorts = new HashSet<>();
 
     @Column(name = "current_console_password")
     private String currentConsolePassword;
@@ -158,6 +174,22 @@ public class DistributedApplianceInstance extends BaseEntity {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
+    }
+
+    public String getInspectionElementId() {
+        return this.inspectionElementId;
+    }
+
+    public void setInspectionElementId(String inspectionElementId) {
+        this.inspectionElementId = inspectionElementId;
+    }
+
+    public String getInspectionElementParentId() {
+        return this.inspectionElementParentId;
+    }
+
+    public void setInspectionElementParentId(String inspectionElementParentId) {
+        this.inspectionElementParentId = inspectionElementParentId;
     }
 
     public Date getLastStatus() {
@@ -228,12 +260,12 @@ public class DistributedApplianceInstance extends BaseEntity {
         this.deploymentSpec = deploymentSpec;
     }
 
-    public String getOsServerId() {
-        return this.osServerId;
+    public String getExternalId() {
+        return this.externalId;
     }
 
-    public void setOsServerId(String osServerId) {
-        this.osServerId = osServerId;
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public String getOsAvailabilityZone() {
@@ -299,16 +331,32 @@ public class DistributedApplianceInstance extends BaseEntity {
         this.floatingIpId = floatingIpId;
     }
 
-    public Set<VMPort> getProtectedPorts() {
-        return this.protectedPorts;
+    public Set<? extends VirtualPort> getProtectedPorts() {
+        if (this.protectedPorts != null && !this.protectedPorts.isEmpty()) {
+            return this.protectedPorts;
+        }
+
+        return this.protectedPodPorts;
     }
 
-    public void addProtectedPort(VMPort protectedPort) {
-        this.protectedPorts.add(protectedPort);
+    public void addProtectedPort(VirtualPort protectedPort) {
+        if (protectedPort instanceof VMPort) {
+            this.protectedPorts.add((VMPort)protectedPort);
+        } else {
+            this.protectedPodPorts.add((PodPort) protectedPort);
+        }
     }
 
-    public void removeProtectedPort(VMPort protectedPort) {
-        this.protectedPorts.remove(protectedPort);
+    public void removeProtectedPort(VirtualPort protectedPort) {
+        if (protectedPort instanceof VMPort) {
+            this.protectedPorts.remove(protectedPort);
+        } else {
+            this.protectedPodPorts.remove(protectedPort);
+        }
+    }
+
+    public void removeProtectedPodPort(PodPort protectedPort) {
+        this.protectedPodPorts.remove(protectedPort);
     }
 
     public String getMgmtIpAddress() {
@@ -360,7 +408,9 @@ public class DistributedApplianceInstance extends BaseEntity {
      * Resets all the discovered attributes for the Appliance instance.
      */
     public void resetAllDiscoveredAttributes() {
-        this.osServerId = null;
+        this.externalId = null;
+        this.mgmtOsPortId = null;
+        this.mgmtMacAddress = null;
         this.inspectionIngressMacAddress = null;
         this.inspectionOsIngressPortId = null;
         this.inspectionEgressMacAddress = null;
@@ -372,7 +422,7 @@ public class DistributedApplianceInstance extends BaseEntity {
     public void updateDaiOpenstackSvaInfo(String serverId,
             String ingressMacAddr, String ingressPortId, String egressMacAddr,
             String egressPortId) {
-        this.osServerId = serverId;
+        this.externalId = serverId;
         this.inspectionIngressMacAddress = ingressMacAddr;
         this.inspectionOsIngressPortId = ingressPortId;
         this.inspectionEgressMacAddress = egressMacAddr;

@@ -15,16 +15,6 @@
 	</parent>
 	<artifactId>osc-service-api</artifactId>
 	<name>org.osc.core:osc-service-api</name>
-	<repositories>
-		<repository>
-			<id>osc-nexus</id>
-			<name>OSC Nexus</name>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -51,7 +41,7 @@
 		<dependency>
 			<groupId>org.osc.api</groupId>
 			<artifactId>security-mgr-api</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>2.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

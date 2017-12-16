@@ -20,41 +20,40 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
-import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OsPortNotificationListener extends OsNotificationListener {
 
-    private static final Logger log = Logger.getLogger(OsPortNotificationListener.class);
+    private static final Logger log = LoggerFactory.getLogger(OsPortNotificationListener.class);
 
-    private final ConformService conformService;
+    private final SecurityGroupConformJobFactory sgConformJobFactory;
 
     private final AlertGenerator alertGenerator;
 
     private final DBConnectionManager dbMgr;
 
     public OsPortNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
-            DBConnectionManager dbMgr) {
+            List<String> objectIdList, BaseEntity entity, SecurityGroupConformJobFactory sgConformJobFactory,
+            AlertGenerator alertGenerator, RabbitMQRunner activeRunner, DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.PORT, objectIdList, entity, activeRunner);
-        this.conformService = conformService;
+        this.sgConformJobFactory = sgConformJobFactory;
         this.alertGenerator = alertGenerator;
         this.dbMgr = dbMgr;
         register(vc, objectType);
@@ -127,18 +126,8 @@ public class OsPortNotificationListener extends OsNotificationListener {
             if (keyValue == null) {
                 keyValue = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                         OsNotificationKeyType.SUBNET_ID.toString());
-
-                // if key value is null by now we assume it is a subnet related notification
-                if (keyValue != null) {
-                    Subnet subnet = SubnetEntityManager.findByOpenstackId(em, keyValue);
-                    String deviceOwner = OsNotificationUtil.getPropertyFromNotificationMessage(message,
-                            OsNotificationKeyType.DEVICE_OWNER.toString());
-                    if ((subnet.isProtectExternal() && deviceOwner.startsWith("compute:"))
-                            || (!subnet.isProtectExternal() && deviceOwner.equals(""))) {
-                        // we ignore message and do not trigger sync...
-                        keyValue = null;
-                    }
-                }
+                // Add subnet notification snippet back when the OpenStack device_owner issue is fixed.
+                // Related OSC issue: https://github.com/opensecuritycontroller/osc-core/issues/462
             }
         }
 
@@ -177,6 +166,6 @@ public class OsPortNotificationListener extends OsNotificationListener {
     private void triggerSGSync(SecurityGroup sg, EntityManager em) throws Exception {
         log.info("Running SG sync based on OS Port notification received.");
         // Message is related to registered Security Group. Trigger sync
-        this.conformService.startSecurityGroupConformanceJob(sg);
+        this.sgConformJobFactory.startSecurityGroupConformanceJob(sg);
     }
 }

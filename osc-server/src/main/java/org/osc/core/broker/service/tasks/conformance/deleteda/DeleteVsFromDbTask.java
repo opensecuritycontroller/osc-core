@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Component;
 
 @Component(service = DeleteVsFromDbTask.class)
 public class DeleteVsFromDbTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(DeleteVsFromDbTask.class);
+    //private static final Logger log = LoggerFactory.getLogger(DeleteVsFromDbTask.class);
 
     private VirtualSystem vs;
 

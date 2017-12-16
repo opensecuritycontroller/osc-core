@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.*;
+import static org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidatorTestData.*;
 
 import javax.persistence.EntityManager;
 
@@ -71,12 +71,11 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
     }
 
     private void populateDatabase() {
-       this.em.getTransaction().begin();
+        this.em.getTransaction().begin();
 
-       this.em.persist(createVirtualisationConnector(OPENSTACK_NAME_ALREADY_EXISTS,
-               CONTROLLER_IP_ALREADY_EXISTS, PROVIDER_IP_ALREADY_EXISTS));
+        this.em.persist(createVirtualizationConnector(OPENSTACK_NAME_ALREADY_EXISTS,
+                CONTROLLER_IP_ALREADY_EXISTS, PROVIDER_IP_ALREADY_EXISTS));
 
-       this.em.getTransaction().commit();
-
+        this.em.getTransaction().commit();
     }
 }

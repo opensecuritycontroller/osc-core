@@ -18,7 +18,6 @@ package org.osc.core.server.scheduler;
 
 import java.util.Date;
 
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -31,14 +30,16 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.util.StaticRegistry;
+import org.slf4j.LoggerFactory;
 import org.osc.core.common.job.FreqType;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
 
 public class ArchiveScheduledJob implements Job {
 
-    private static final Logger log = Logger.getLogger(ArchiveScheduledJob.class);
+    private static final Logger log = LoggerFactory.getLogger(ArchiveScheduledJob.class);
     public static final int ARCHIVE_STARTUP_DELAY_IN_MIN = 15;
     public static final String ARCHIVE_JOB_NAME = "archiveJobName";
     public static final String ARCHIVE_GROUP_NAME = "archiveGroupName";

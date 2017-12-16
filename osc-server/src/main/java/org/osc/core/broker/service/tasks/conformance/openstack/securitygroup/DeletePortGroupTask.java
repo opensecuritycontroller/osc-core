@@ -20,8 +20,8 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,10 +32,10 @@ public class DeletePortGroupTask extends TransactionalTask {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    private PortGroup portGroup;
+    private NetworkElementImpl portGroup;
     private SecurityGroup securityGroup;
 
-    public DeletePortGroupTask create(SecurityGroup securityGroup, PortGroup portGroup){
+    public DeletePortGroupTask create(SecurityGroup securityGroup, NetworkElementImpl portGroup){
         DeletePortGroupTask task = new DeletePortGroupTask();
         task.securityGroup = securityGroup;
         task.portGroup = portGroup;
@@ -50,9 +50,10 @@ public class DeletePortGroupTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        controller.deleteNetworkElement(this.portGroup);
+        try(SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
+                this.securityGroup.getVirtualizationConnector())) {
+            controller.deleteNetworkElement(this.portGroup);
+        }
     }
 
     @Override

@@ -20,10 +20,10 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -34,15 +34,20 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotificationRequest, BaseJobResponse>
         implements MCChangeNotificationServiceApi {
 
-    private static final Logger log = Logger.getLogger(MCChangeNotificationService.class);
+    private static final Logger log = LoggerFactory.getLogger(MCChangeNotificationService.class);
 
     @Reference
-    private ConformService conformService;
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
+
+    @Reference
+    private DistributedApplianceConformJobFactory daConformJobFactory;
 
     @Override
     public BaseJobResponse exec(MCChangeNotificationRequest request, EntityManager em) throws Exception {
@@ -59,14 +64,14 @@ public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotif
                 em, mc);
 
         if (distributedAppliances.isEmpty()) {
-            response.setJobId(this.conformService.startMCConformJob(mc, em).getId());
+            response.setJobId(this.mcConformJobFactory.startMCConformJob(mc, em).getId());
         } else if (request.notification.getObjectType() == MgrObjectType.DOMAIN) {
             // TODO: Future. Need to make this more efficient. Create a job that only
             // update domain/policy
         } else if (request.notification.getObjectType() == MgrObjectType.POLICY) {
 
             for (DistributedAppliance da : distributedAppliances) {
-                Long jobId = this.conformService.startDAConformJob(em, da);
+                Long jobId = this.daConformJobFactory.startDAConformJob(em, da);
                 response.setJobId(jobId);
                 log.info("Sync DA '" + da.getName() + "' job " + jobId + " triggered.");
             }

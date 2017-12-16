@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -32,7 +34,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -40,7 +41,10 @@ import org.osc.core.broker.rest.client.RestBaseClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsSecurityGroupNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.DistributedApplianceConformJobFactory;
+import org.osc.core.broker.service.ManagerConnectorConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -50,13 +54,13 @@ import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VersionUtil;
-import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
@@ -86,6 +90,8 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -101,13 +107,15 @@ public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
     private static final int SERVER_FATAL_ERROR_REBOOT_TIMEOUT = 15 * 1000;
-    private static final long SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
-    private static final long TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
+    private static final int SERVER_TIME_CHANGE_THRESHOLD = 1000 * 60 * 10; // 10 mins
+    private static final int TIME_CHANGE_THREAD_SLEEP_INTERVAL = 1000 * 10; // 10 secs
+    private static final int SERVER_SYNC_DELAY = 60 * 3; // 3 mins
+    private static final String REPLACEMENT_SSL_KEYPAIR_ZIP = "internal.keypair.startup.location";
 
-    private static final Logger log = Logger.getLogger(Server.class);
+    private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
-    public static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
+    public static final String CONFIG_PROPERTIES_FILE = "data/vmidcServer.conf";
     private static final String SERVER_PID_FILE = "server.pid";
 
     public static final String PRODUCT_NAME = "Open Security Controller";
@@ -125,7 +133,16 @@ public class Server implements ServerApi {
     private boolean devMode = false;
 
     @Reference
-    private ConformService conformService;
+    private DistributedApplianceConformJobFactory daConformJobFactory;
+
+    @Reference
+    private DeploymentSpecConformJobFactory dsConformJobFactory;
+
+    @Reference
+    private SecurityGroupConformJobFactory sgConformJobFactory;
+
+    @Reference
+    private ManagerConnectorConformJobFactory mcConformJobFactory;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -155,6 +172,7 @@ public class Server implements ServerApi {
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private volatile List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
+
     @Reference
     private EncryptionApi encryption;
 
@@ -170,6 +188,9 @@ public class Server implements ServerApi {
     @Reference
     private AlertGenerator alertGenerator;
 
+    @Reference
+    private X509TrustManagerApi x509TrustManager;
+
     private Thread thread;
     private BundleContext context;
     private ServiceRegistration<RabbitMQRunner> rabbitMQRegistration;
@@ -177,14 +198,16 @@ public class Server implements ServerApi {
     @Activate
     void activate(BundleContext context) {
         this.context = context;
-        Runnable server = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    startServer();
-                } catch (Exception e) {
-                    log.error("startServer failed", e);
-                }
+
+        if (doReplaceSslKeysAndReboot()) {
+            return;
+        }
+
+        Runnable server = () -> {
+            try {
+                startServer();
+            } catch (Exception e) {
+                log.error("startServer failed", e);
             }
         };
 
@@ -193,7 +216,7 @@ public class Server implements ServerApi {
     }
 
     private void startServer() throws Exception {
-        LogUtil.initLog4j();
+        LogUtil.redirectConsoleMessagesToLog();
         loadServerProps();
 
         try {
@@ -240,27 +263,23 @@ public class Server implements ServerApi {
             addShutdownHook();
             startScheduler();
 
-            Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(new TimeChangeCommand() {
-
-                @Override
-                public void execute(long timeDifference) {
-                    String timeDifferenceString = DurationFormatUtils.formatDuration(Math.abs(timeDifference),
-                            "d 'Days' H 'Hours' m 'Minutes' s 'Seconds'");
-                    if (timeDifference < 0) {
-                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
-                                "System Clock Moved Back by " + timeDifferenceString);
-                    } else {
-                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
-                                "System Clock Moved Forward by " + timeDifferenceString);
-                    }
-                    stopScheduler();
-                    try {
-                        startScheduler();
-                    } catch (SchedulerException se) {
-                        log.fatal("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
-                        + ") due to system time change. Will reboot in 15 seconds", se);
-                        handleFatalSystemError(se);
-                    }
+            Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(timeDifference -> {
+                String timeDifferenceString = DurationFormatUtils.formatDuration(Math.abs(timeDifference),
+                        "d 'Days' H 'Hours' m 'Minutes' s 'Seconds'");
+                if (timeDifference < 0) {
+                    Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                            "System Clock Moved Back by " + timeDifferenceString);
+                } else {
+                    Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                            "System Clock Moved Forward by " + timeDifferenceString);
+                }
+                stopScheduler();
+                try {
+                    startScheduler();
+                } catch (SchedulerException se) {
+                    log.error("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
+                    + ") due to system time change. Will reboot in 15 seconds", se);
+                    handleFatalSystemError(se);
                 }
             }, SERVER_TIME_CHANGE_THRESHOLD, TIME_CHANGE_THREAD_SLEEP_INTERVAL);
             timeMonitorThread.start();
@@ -270,7 +289,7 @@ public class Server implements ServerApi {
                 saveServerProp("server.reboots", "0");
             }
         } catch (Throwable e) {
-            log.fatal("Cannot start Server (pid:" + ServerUtil.getCurrentPid() + "). Will reboot in 15 seconds", e);
+            log.error("Cannot start Server (pid:" + ServerUtil.getCurrentPid() + "). Will reboot in 15 seconds", e);
             handleFatalSystemError(e);
         }
     }
@@ -279,15 +298,15 @@ public class Server implements ServerApi {
         private static final String OVF_ENV_XML_DIR = "/mnt/media";
         private static final String OVF_ENV_XML_FILE = "ovf-env.xml";
 
-        public boolean dhcp;
-        public String hostIpAddress;
-        public String hostSubnetMask;
-        public String hostDefaultGateway;
-        public String hostDnsServer1;
-        public String hostDnsServer2;
-        public String hostname;
-        public String defaultCliPassword;
-        public String defaultGuiPassword;
+        private boolean dhcp;
+        private String hostIpAddress;
+        private String hostSubnetMask;
+        private String hostDefaultGateway;
+        private String hostDnsServer1;
+        private String hostDnsServer2;
+        private String hostname;
+        private String defaultCliPassword;
+        private String defaultGuiPassword;
 
         @Override
         public String toString() {
@@ -352,15 +371,24 @@ public class Server implements ServerApi {
 
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(ApiFactoryService.class.getName(), this.apiFactoryService);
-        jobDataMap.put(ConformService.class.getName(), this.conformService);
+        jobDataMap.put(DistributedApplianceConformJobFactory.class.getName(), this.daConformJobFactory);
+        jobDataMap.put(DeploymentSpecConformJobFactory.class.getName(), this.dsConformJobFactory);
+        jobDataMap.put(SecurityGroupConformJobFactory.class.getName(), this.sgConformJobFactory);
+        jobDataMap.put(ManagerConnectorConformJobFactory.class.getName(), this.mcConformJobFactory);
+
 
         JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).usingJobData(jobDataMap).build();
         JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class).usingJobData(jobDataMap).build();
-        Trigger syncDaJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
-                .simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
 
-        Trigger syncSgJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
-                .simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
+		// TODO: Remove the delay, once plugin state listener is implemented.
+        // Related issue: https://github.com/opensecuritycontroller/osc-core/issues/545
+		Trigger syncDaJobTrigger = TriggerBuilder.newTrigger()
+				.startAt(Date.from(Instant.now().plusSeconds(SERVER_SYNC_DELAY))).withSchedule(SimpleScheduleBuilder
+				.simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
+
+		Trigger syncSgJobTrigger = TriggerBuilder.newTrigger()
+				.startAt(Date.from(Instant.now().plusSeconds(SERVER_SYNC_DELAY))).withSchedule(SimpleScheduleBuilder
+				.simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
 
         scheduler.scheduleJob(syncDaJob, syncDaJobTrigger);
         scheduler.scheduleJob(syncSgJob, syncSgJobTrigger);
@@ -437,7 +465,32 @@ public class Server implements ServerApi {
         }
     }
 
-    private void addShutdownHook() { 
+    private boolean doReplaceSslKeysAndReboot() {
+        if (!ReleaseUpgradeMgr.isLastUpgradeSucceeded()) {
+            return false;
+        }
+
+        // This method is just before the startup. It cannot be allowed to throw.
+        try {
+            Properties prop = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+            String replacementKeypairLocation = prop.getProperty(REPLACEMENT_SSL_KEYPAIR_ZIP);
+            if (replacementKeypairLocation != null) {
+                File zipFile = new File(replacementKeypairLocation);
+                if (zipFile.exists()) {
+                    log.info("New ssl key pair file located at " + replacementKeypairLocation
+                            + ". Replacing and rebooting !!");
+                    this.x509TrustManager.replaceInternalCertificate(zipFile, true);
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            log.error("Exception replacing internal ssl key pair: ", e);
+        }
+
+        return false;
+    }
+
+    private void addShutdownHook() {
         log.warn(Server.PRODUCT_NAME + " Server: Shutdown Hook...");
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -475,7 +528,7 @@ public class Server implements ServerApi {
         log.warn(Server.PRODUCT_NAME + ": Restarting server component...(pid:" + ServerUtil.getCurrentPid() + ")");
         doStop();
     }
-    
+
 	private void doStop() {
 		// Shutdown Scheduler
         stopScheduler();
@@ -570,12 +623,12 @@ public class Server implements ServerApi {
         if(cso != null) {
         	cso.ungetService(this.rabbitMQRunner.getOsDeploymentSpecNotificationRunner());
         }
-        
+
         ComponentServiceObjects<OsSecurityGroupNotificationRunner> cso2 = this.securityGroupRunnerCSO;
 		if(cso2 != null) {
 			cso2.ungetService(this.rabbitMQRunner.getSecurityGroupRunner());
 		}
-		
+
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;

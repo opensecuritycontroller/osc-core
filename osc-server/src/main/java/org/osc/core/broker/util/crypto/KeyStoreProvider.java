@@ -37,7 +37,8 @@ import javax.crypto.spec.PBEKeySpec;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
@@ -46,7 +47,7 @@ import com.google.common.base.Optional;
  */
 public final class KeyStoreProvider {
     // CONSTANTS
-    private static final String KEYSTORE_PATH = "mainKeyStore.p12";
+    private static final String KEYSTORE_PATH = "data/mainKeyStore.p12";
     private static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/broker/util/crypto/security.properties";
     private static final String KEYSTORE_PASSWORD_ALIAS = "keystore.password";
     private static final String SECRET_KEY_PASSWORD_ALGORITHM = "PBE";
@@ -139,7 +140,7 @@ public final class KeyStoreProvider {
     }
 
     // MEMBERS
-    private static final Logger LOG = Logger.getLogger(KeyStoreProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KeyStoreProvider.class);
     private KeyStore keystore = null;
 
     // INNER TYPES

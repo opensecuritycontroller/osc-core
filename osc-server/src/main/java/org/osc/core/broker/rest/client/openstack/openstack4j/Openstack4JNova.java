@@ -16,9 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import com.google.common.collect.Maps;
-import org.apache.log4j.Logger;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
 import org.openstack4j.api.Builders;
+import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.compute.Action;
 import org.openstack4j.model.compute.Flavor;
@@ -30,20 +38,16 @@ import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.openstack4j.model.compute.ext.Hypervisor;
 import org.openstack4j.model.identity.v3.Region;
 import org.openstack4j.model.network.Port;
+import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.BootstrapFileElement;
+import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.google.common.collect.Maps;
 
 public class Openstack4JNova extends BaseOpenstack4jApi {
 
-    private static final Logger log = Logger.getLogger(Openstack4JNova.class);
+    private static final Logger log = LoggerFactory.getLogger(Openstack4JNova.class);
 
     private Set<String> regions;
     private static final String OPENSTACK_NAME_PROPERTY = "name";
@@ -91,9 +95,12 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
     }
 
     public Set<String> listRegions() {
-        if (this.regions == null) {
+        if (CollectionUtils.isEmpty(this.regions)) {
             List<? extends Region> endpoints = getOs().identity().regions().list();
             this.regions = endpoints.stream().map(Region::getId).collect(Collectors.toSet());
+        }
+        if (CollectionUtils.isEmpty(this.regions)) {
+            log.warn("No regions found in the environment!");
         }
         return this.regions;
     }
@@ -116,8 +123,8 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         try {
             ServerCreateBuilder sc = Builders.server().name(svaName).flavor(flavorRef).image(imageRef);
 
-            sc.addNetworkPort(ingressInspectionPort.getId());
             sc.networks(Collections.singletonList(mgmtNetworkUuid));
+            sc.addNetworkPort(ingressInspectionPort.getId());
 
             if (additionalNicForInspection) {
                 sc.addNetworkPort(egressInspectionPort.getId());
@@ -147,13 +154,13 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
             // Server creating failed for some reason, delete the inspection port created
             ActionResponse deleteResponse = getOs().networking().port().delete(ingressInspectionPort.getId());
             if (!deleteResponse.isSuccess()) {
-                log.info("Cannot delete ingress inspection port: " + deleteResponse.getFault());
+                log.warn("Cannot delete ingress inspection port: " + deleteResponse.getFault());
             }
             if (additionalNicForInspection) {
                 // If we have multiple interfaces, egress and ingress ports are different else they are the same)
                 ActionResponse deleteEgressInspPort = getOs().networking().port().delete(egressInspectionPort.getId());
                 if (!deleteEgressInspPort.isSuccess()) {
-                    log.info("Cannot delete egress inspection port: " + deleteResponse.getFault());
+                    log.warn("Cannot delete egress inspection port: " + deleteResponse.getFault());
                 }
             }
             throw e;
@@ -167,7 +174,11 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
 
     public List<? extends Server> listServers(String region) {
         getOs().useRegion(region);
-        return getOs().compute().servers().list();
+        List<? extends Server> serverList = getOs().compute().servers().list();
+        if (CollectionUtils.isEmpty(serverList)) {
+            log.info("No servers found in region: " + region);
+        }
+        return serverList;
     }
 
     public boolean startServer(String region, String serverId) {
@@ -209,36 +220,59 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().compute().flavors().delete(id);
         if (!actionResponse.isSuccess()) {
-            log.warn("Image Id: " + id + " error: " + actionResponse.getFault());
+            String message = String.format("Deleting flavor Id: %s failed. Error: %s", id, actionResponse.getFault());
+            log.warn(message);
+            throw new ResponseException(message, actionResponse.getCode());
         }
     }
 
     // Host Aggregates
     public List<? extends HostAggregate> listHostAggregates(String region) {
         getOs().useRegion(region);
-        return getOs().compute().hostAggregates().list();
+        List<? extends HostAggregate> haList = getOs().compute().hostAggregates().list();
+        if (CollectionUtils.isEmpty(haList)) {
+            log.info("No Host Aggregates found in region: " + region);
+        }
+        return haList;
     }
 
     public HostAggregate getHostAggregateById(String region, String id) {
         getOs().useRegion(region);
-        return getOs().compute().hostAggregates().get(id);
+        HostAggregate hostAggregate = getOs().compute().hostAggregates().get(id);
+        if (hostAggregate == null) {
+            log.info(String.format("Unable to find Host Aggregate with Id: %s in region: %s ", id, region));
+        }
+        return hostAggregate;
     }
 
     // Interface Attachment
     public List<? extends InterfaceAttachment> getVmAttachedNetworks(String region, String serverId) {
         getOs().useRegion(region);
-        return getOs().compute().servers().interfaces().list(serverId);
+        List<? extends InterfaceAttachment> interfaceList = getOs().compute().servers().interfaces().list(serverId);
+        if (CollectionUtils.isEmpty(interfaceList)) {
+            log.info(String.format("Unable to find Networks attached to Server Id: %s in region: %s ", serverId,
+                    region));
+        }
+        return interfaceList;
     }
 
     // Availability Zone
     public List<? extends AvailabilityZone> listAvailabilityZones(String region) {
         getOs().useRegion(region);
-        return getOs().compute().zones().list();
+        List<? extends AvailabilityZone> azList = getOs().compute().zones().list();
+        if (CollectionUtils.isEmpty(azList)) {
+            log.info("No Availability Zones found in region: " + region);
+        }
+        return azList;
     }
 
     public List<? extends AvailabilityZone> getAvailabilityZonesDetail(String region) throws Exception {
         getOs().useRegion(region);
-        return getOs().compute().zones().list(true);
+        List<? extends AvailabilityZone> azDetailList = getOs().compute().zones().list(true);
+        if (CollectionUtils.isEmpty(azDetailList)) {
+            log.info("No Detailed Availability Zones found in region: " + region);
+        }
+        return azDetailList;
     }
 
     public static HostAvailabilityZoneMapping getMapping(List<? extends AvailabilityZone> availabilityZones)
@@ -249,6 +283,9 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
     public Set<String> getComputeHosts(String region) throws Exception {
         getOs().useRegion(region);
         List<? extends Hypervisor> list = getOs().compute().hypervisors().list();
+        if (CollectionUtils.isEmpty(list)) {
+            log.warn("No compute hosts found in region: " + region);
+        }
         return list.stream().map(Hypervisor::getHypervisorHostname).collect(Collectors.toSet());
     }
 

@@ -40,14 +40,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
-import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
@@ -65,7 +63,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({X509TrustManagerFactory.class, LockUtil.class })
 public class AddVirtualizationConnectorServiceTest {
-
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -79,9 +76,6 @@ public class AddVirtualizationConnectorServiceTest {
 
     @Mock
     private AddVirtualizationConnectorServiceRequestValidator validatorMock;
-
-    @Mock
-    private ConformService conformService;
 
     @Mock
     private UserContextApi userContext;
@@ -122,9 +116,6 @@ public class AddVirtualizationConnectorServiceTest {
 
         when(this.encryption.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
 
-        when(this.job.getId()).thenReturn(5L);
-        //PowerMockito.mockStatic(ConformService.class);
-        when(this.conformService.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
     }
 
     @After
@@ -133,9 +124,9 @@ public class AddVirtualizationConnectorServiceTest {
     }
 
     private void populateDatabase() {
-       this.em.getTransaction().begin();
+        this.em.getTransaction().begin();
 
-       this.em.getTransaction().commit();
+        this.em.getTransaction().commit();
     }
 
     @Test
@@ -145,7 +136,7 @@ public class AddVirtualizationConnectorServiceTest {
         doNothing().when(this.validatorMock).validate(OPENSTACK_NOCONTROLLER_REQUEST);
 
         // Act.
-        BaseJobResponse response = this.service.dispatch(OPENSTACK_NOCONTROLLER_REQUEST);
+        BaseResponse response = this.service.dispatch(OPENSTACK_NOCONTROLLER_REQUEST);
 
         // Assert.
         VirtualizationConnector vc = this.em.createQuery("Select vc from VirtualizationConnector vc where vc.name = '" + OPENSTACK_NOCONTROLLER_REQUEST.getDto().getName() + "'", VirtualizationConnector.class)
@@ -153,7 +144,6 @@ public class AddVirtualizationConnectorServiceTest {
         validateResponse(response, vc.getId());
         verify(this.validatorMock).validate(OPENSTACK_NOCONTROLLER_REQUEST);
         Assert.assertNotNull("Not updated", vc.getUpdatedTimestamp());
-        Assert.assertTrue("Job id should be equal", 5L == response.getJobId());
     }
 
     @Test
@@ -162,14 +152,14 @@ public class AddVirtualizationConnectorServiceTest {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
         doThrow(new VmidcBrokerValidationException(NAME_ALREADY_EXISTS)).when(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
         this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
     }
 
     @Test
@@ -182,14 +172,14 @@ public class AddVirtualizationConnectorServiceTest {
         OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(true);
 
         doThrow(new SslCertificatesExtendedException(exception, new ArrayList<CertificateResolverModel>())).when(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
         this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // clean up
         OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(false);
@@ -204,14 +194,14 @@ public class AddVirtualizationConnectorServiceTest {
         OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(true);
 
         doThrow(new SslCertificatesExtendedException(exception, new ArrayList<>())).doNothing().when(this.validatorMock)
-                .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
-        BaseJobResponse response = this.service.dispatch(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        BaseResponse response = this.service.dispatch(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock, times(2))
-                .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
         VirtualizationConnector vc = this.em.createQuery("Select vc from VirtualizationConnector vc where vc.name = '" + OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().getName() + "'", VirtualizationConnector.class)
                 .getSingleResult();
         validateResponse(response, vc.getId());

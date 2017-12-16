@@ -18,7 +18,6 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -29,26 +28,32 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeploymentSpecConformJobFactory;
+import org.osc.core.broker.service.SecurityGroupConformJobFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osgi.service.transaction.control.TransactionControl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OsNetworkNotificationListener extends OsNotificationListener {
 
-    private static final Logger log = Logger.getLogger(OsNetworkNotificationListener.class);
+    private static final Logger log = LoggerFactory.getLogger(OsNetworkNotificationListener.class);
 
-    private final ConformService conformService;
+    private final DeploymentSpecConformJobFactory dsConformJobFactory;
+    private final SecurityGroupConformJobFactory sgConformJobFactory;
 
     private final AlertGenerator alertGenerator;
 
     private final TransactionControl txControl;
 
     public OsNetworkNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
+            List<String> objectIdList, BaseEntity entity, DeploymentSpecConformJobFactory dsConformJobFactory,
+            SecurityGroupConformJobFactory sgConformJobFactory, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
             TransactionControl txControl) {
 
         super(vc, OsNotificationObjectType.NETWORK, objectIdList, entity, activeRunner);
-        this.conformService = conformService;
+        this.dsConformJobFactory = dsConformJobFactory;
+        this.sgConformJobFactory = sgConformJobFactory;
         this.alertGenerator = alertGenerator;
         this.txControl = txControl;
         register(vc, objectType);
@@ -67,11 +72,11 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
                 try {
                     this.txControl.required(() -> {
                         if (this.entity instanceof SecurityGroup) {
-                            this.conformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
+                            this.sgConformJobFactory.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
                         }
 
                         if (this.entity instanceof DeploymentSpec) {
-                            this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                            this.dsConformJobFactory.startDsConformanceJob((DeploymentSpec) this.entity, null);
                         }
                         return null;
                     });
