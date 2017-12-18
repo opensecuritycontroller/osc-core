@@ -112,7 +112,7 @@
 	</target>
 
 	<target name="checkFileExist">
-		<available file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" property="isJavaJreExist"/>
+		<available file="${basedir}/osc-server-bom/Sources/jre-8u131-linux-x64.tar.gz" property="isJavaJreExist"/>
 	</target>
 
 
@@ -128,7 +128,7 @@
 	</target>
 
 	<target name="deleteJavaJre" depends="checkFileExist" if="isJavaJreExist">
-		<delete file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" />
+		<delete file="${basedir}/osc-server-bom/Sources/jre-8u131-linux-x64.tar.gz" />
 	</target>
 
     <target name="prodVersion">
