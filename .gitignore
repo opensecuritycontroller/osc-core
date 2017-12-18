@@ -5,7 +5,11 @@
 osc-server-bom/root/opt/vmidc/bin/webapp/**
 osc-export/generated/**
 osc-export/webapp/**
-osc-export/data/**
+osc-export/data/*.db*
+osc-export/data/log/**
+osc-export/data/plugins/**
+osc-export/data/mainKeyStore.p12
+osc-export/data/osctrustore.jks
 osc-export/*.db*
 osc-export/server.pid
 osc-server-bom/root/opt/vmidc/bin/META-INF/
