@@ -264,6 +264,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
         this.protectionEntityType = new ComboBox();
         this.protectionEntityType.setTextInputAllowed(false);
         this.protectionEntityType.setNullSelectionAllowed(false);
+        this.protectionEntityType.setImmediate(true);
         this.protectionEntityType.addItem(SECURITY_GROUP_MEMBER_VM);
         this.protectionEntityType.addItem(SECURITY_GROUP_MEMBER_NETWORK);
         this.protectionEntityType.addItem(SECURITY_GROUP_MEMBER_SUBNET);
