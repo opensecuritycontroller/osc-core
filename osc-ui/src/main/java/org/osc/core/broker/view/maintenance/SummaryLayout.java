@@ -30,7 +30,6 @@ import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.util.ViewUtil;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -39,13 +38,9 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.FileDownloader;
 import com.vaadin.server.StreamResource;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
@@ -90,49 +85,7 @@ public class SummaryLayout extends FormLayout {
 
         HorizontalLayout actionContainer = new HorizontalLayout();
         actionContainer.addComponent(createDownloadButton());
-        if (this.server.getDevMode()) {
-            actionContainer.addComponent(createShutdownButton());
-        }
-        actionContainer.addComponent(createRestartButton());
         addComponent(actionContainer);
-    }
-
-    @SuppressWarnings("serial")
-    private Component createShutdownButton() {
-        Button shutdown = new Button(VmidcMessages.getString(VmidcMessages_.SUMMARY_SHUTDOWN));
-
-        shutdown.addClickListener(new ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event) {
-                Thread shutdownThread = new Thread("Stop-Server-Thread") {
-                    @Override
-                    public void run() {
-                        SummaryLayout.this.server.stopServer();
-                    }
-                };
-                shutdownThread.start();
-            }
-        });
-
-        return shutdown;
-    }
-
-    @SuppressWarnings("serial")
-    private Component createRestartButton() {
-        Button shutdown = new Button(VmidcMessages.getString(VmidcMessages_.SUMMARY_RESTART));
-
-        shutdown.addClickListener(new ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event) {
-                ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.SUMMARY_RESTART_STARTED), null,
-                        Notification.Type.TRAY_NOTIFICATION);
-                ViewUtil.showServerRestartProgress();
-                SummaryLayout.this.server.restart().then(null,
-                        p -> ViewUtil.showError("Restart server failed", p.getFailure()));
-            }
-        });
-
-        return shutdown;
     }
 
     private Table createTable() {

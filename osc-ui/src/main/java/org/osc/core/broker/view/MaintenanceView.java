@@ -216,7 +216,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildUpgradeForm() {
-        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService, this.server, this.validator);
+        return new ManageLayout(this.backupService, this.restoreService, this.server, this.validator);
     }
 
     private FormLayout buildSummary() {

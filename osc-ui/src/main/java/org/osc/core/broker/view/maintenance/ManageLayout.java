@@ -20,7 +20,6 @@ import java.io.File;
 
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.RestoreServiceApi;
-import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.BackupRequest;
@@ -57,19 +56,14 @@ public class ManageLayout extends FormLayout {
 
     private final ValidationApi validator;
 
-    public ManageLayout(BackupServiceApi backupService, UpgradeServiceApi upgradeService,
-            RestoreServiceApi restoreService, ServerApi server, ValidationApi validator) {
+    public ManageLayout(BackupServiceApi backupService, RestoreServiceApi restoreService,
+            ServerApi server, ValidationApi validator) {
         super();
         this.backupService = backupService;
         this.validator = validator;
 
-        VerticalLayout upgradeContainer = new VerticalLayout();
         VerticalLayout backupContainer = new VerticalLayout();
         VerticalLayout restoreContainer = new VerticalLayout();
-
-        // Component to Upgrade Server
-        Upgrader upgrader = new Upgrader(upgradeService);
-        upgrader.setSizeFull();
 
         DbRestorer restorer = new DbRestorer(restoreService, server, validator);
         restorer.setSizeFull();
@@ -78,17 +72,12 @@ public class ManageLayout extends FormLayout {
         Panel bkpPanel = new Panel();
         bkpPanel.setContent(createBackup());
 
-        // we do not want help button for these sub sub headers
-        upgradeContainer.addComponent(ViewUtil.createSubHeader("Upgrade", null));
-        upgradeContainer.addComponent(upgrader);
-
         backupContainer.addComponent(ViewUtil.createSubHeader("Backup Database", null));
         backupContainer.addComponent(bkpPanel);
 
         restoreContainer.addComponent(ViewUtil.createSubHeader("Restore Database", null));
         restoreContainer.addComponent(restorer);
 
-        addComponent(upgradeContainer);
         addComponent(backupContainer);
         addComponent(restoreContainer);
     }
