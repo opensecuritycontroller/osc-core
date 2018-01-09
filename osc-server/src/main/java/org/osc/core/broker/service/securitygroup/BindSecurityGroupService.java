@@ -18,6 +18,7 @@ package org.osc.core.broker.service.securitygroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -122,19 +123,20 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 					throw new VmidcBrokerValidationException(
 							"Security group interface cannot have more than one policy for security manager not supporting multiple policy binding");
 				}
-				if (!isPolicyMappingSupported && !serviceToBindTo.getPolicyIds().isEmpty()) {
-					throw new VmidcBrokerValidationException(
-							"Security manager not supporting policy mapping cannot have one or more policies");
-				}
-				if (isPolicyMappingSupported && serviceToBindTo.getPolicyIds().isEmpty()) {
-					throw new VmidcBrokerValidationException(
-							"Service to bind: " + serviceToBindTo + " must have a policy id.");
-				}
 
-				Set<Policy> policies = null;
-				policies = PolicyEntityMgr.findPoliciesById(em, serviceToBindTo.getPolicyIds(),
-						vs.getDistributedAppliance().getApplianceManagerConnector());
+                Set<Long> policyIds = serviceToBindTo.getPolicyIds() != null ? serviceToBindTo.getPolicyIds() : new HashSet<>();
+                if (!isPolicyMappingSupported && !policyIds.isEmpty()) {
+                    throw new VmidcBrokerValidationException(
+                            "Security manager not supporting policy mapping cannot have one or more policies");
+                }
+                if (isPolicyMappingSupported && policyIds.isEmpty()) {
+                    throw new VmidcBrokerValidationException(
+                            "Service to bind: " + serviceToBindTo + " must have a policy id.");
+                }
 
+                Set<Policy> policies = null;
+                policies = PolicyEntityMgr.findPoliciesById(em, policyIds,
+                        vs.getDistributedAppliance().getApplianceManagerConnector());
 				if (this.apiFactoryService.supportsFailurePolicy(this.securityGroup)) {
 					// If failure policy is supported, failure policy is a required field
 					if (serviceToBindTo.getFailurePolicyType() == null
