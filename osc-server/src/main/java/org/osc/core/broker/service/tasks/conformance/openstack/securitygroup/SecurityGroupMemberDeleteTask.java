@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -33,9 +36,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.slf4j.LoggerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service=SecurityGroupMemberDeleteTask.class)
 public class SecurityGroupMemberDeleteTask extends TransactionalTask {
@@ -60,21 +63,14 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
         if (this.sgm.getType() == SecurityGroupMemberType.VM) {
             VM vm = this.sgm.getVm();
 
-            if (vm.getSecurityGroupMembers().size() == 1) {
+            vm.getSecurityGroupMembers().remove(this.sgm);
+            if (vm.getSecurityGroupMembers().size() == 0) {
                 // VM has reference only to this SGM. Delete the vm too.
                 this.log.info("No other references to VM found. Deleting VM " + vm.getName());
-                int portsDeleted = 0;
-                int totalVmPorts = vm.getPorts().size();
-                for (VMPort vmport : vm.getPorts()) {
-                    if (vmport.getNetwork() == null) {
-                        OSCEntityManager.delete(em, vmport, this.txBroadcastUtil);
-                        portsDeleted++;
-                    }
-                }
-                if (portsDeleted == totalVmPorts) {
-                    // Only if all ports were deleted, delete the VM.
-                    OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
-                }
+                Set<VMPort> portsToRemove = vm.getPorts().stream().filter(p -> p.getNetwork() == null).collect(toSet());
+
+                // If portsToRemove equals all ports, VM itself is deleted.
+                deleteFromDB(em, portsToRemove);
             } else {
                 vm.getSecurityGroupMembers().remove(this.sgm);
             }
@@ -109,17 +105,7 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
             if (network.getSecurityGroupMembers().size() == 1) {
                 // Network has reference only to this SGM. Delete the network too.
                 this.log.info("No other references to Network found. Deleting Network " + network.getName());
-                for (VMPort vmPort : network.getPorts()) {
-                    // If the VM was created on behalf of this port, delete it.
-                    VM vm = vmPort.getVm();
-                    OSCEntityManager.delete(em, vmPort, this.txBroadcastUtil);
-                    if (vm != null) {
-                        vm.removePort(vmPort);
-                        if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
-                            OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
-                        }
-                    }
-                }
+                deleteFromDB(em, network.getPorts());
                 OSCEntityManager.delete(em, network, this.txBroadcastUtil);
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
@@ -130,17 +116,7 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
             if (subnet.getSecurityGroupMembers().size() == 1) {
                 // Subnet has reference only to this SGM. Delete the subnet too.
                 this.log.info("No other references to Subnet found. Deleting Subnet " + subnet.getName());
-                for (VMPort vmPort : subnet.getPorts()) {
-                    // If the VM was created on behalf of this port, delete it.
-                    VM vm = vmPort.getVm();
-                    OSCEntityManager.delete(em, vmPort, this.txBroadcastUtil);
-                    if (vm != null) {
-                        vm.removePort(vmPort);
-                        if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
-                            OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
-                        }
-                    }
-                }
+                deleteFromDB(em, subnet.getPorts());
                 OSCEntityManager.delete(em, subnet, this.txBroadcastUtil);
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
@@ -160,4 +136,41 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
         return LockObjectReference.getObjectReferences(this.sgm.getSecurityGroup());
     }
 
+    private void deleteFromDB(EntityManager em, Set<VMPort> ports) {
+        Set<VM> vmsToRemove = new HashSet<>();
+
+        // guard against ConcurrentModificationException;
+        Set<VMPort> portsClone = new HashSet<>(ports);
+        for (VMPort vmPort : portsClone) {
+            VM vm = vmPort.getVm();
+            if (vm != null) {
+                vm.removePort(vmPort);
+                vmPort.setVm(null);
+            }
+
+            Network network = vmPort.getNetwork();
+            if (network != null) {
+                network.removePort(vmPort);
+            }
+
+            for (DistributedApplianceInstance dai : vmPort.getDais()) {
+                dai.removeProtectedPort(vmPort);
+                vmPort.removeDai(dai);
+            }
+
+            this.log.info("Removing port " + vmPort);
+            OSCEntityManager.delete(em, vmPort, this.txBroadcastUtil);
+
+            if (vm != null) {
+                if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
+                    vmsToRemove.add(vm);
+                }
+            }
+        }
+
+        for (VM vm : vmsToRemove) {
+            this.log.info("Removing vm " + vm);
+            OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
+        }
+    }
 }
