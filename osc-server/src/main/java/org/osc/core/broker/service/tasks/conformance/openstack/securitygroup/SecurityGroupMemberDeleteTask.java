@@ -162,13 +162,13 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
         OSCEntityManager.delete(em, port, this.txBroadcastUtil);
     }
 
+    /**
+     * This method is only called when all the ports are gone.
+     * @param em
+     * @param vm
+     */
     private void deleteFromDB(EntityManager em, VM vm) {
         this.log.info("Removing vm " + vm);
-
-        for (VMPort port : vm.getPorts()) {
-            deleteFromDB(em, port);
-        }
-
         OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
     }
 
@@ -179,7 +179,6 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
             VM vm = vmPort.getVm();
             deleteFromDB(em, vmPort);
             if (vm != null) {
-                vm.removePort(vmPort);
                 if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
                     deleteFromDB(em, vm);
                 }
@@ -195,7 +194,6 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
             VM vm = vmPort.getVm();
             deleteFromDB(em, vmPort);
             if (vm != null) {
-                vm.removePort(vmPort);
                 if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
                     deleteFromDB(em, vm);
                 }
