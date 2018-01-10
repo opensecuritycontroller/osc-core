@@ -315,10 +315,10 @@
 												dir="${basedir}/../../security-mgr-sample-plugin/target/"
 												includes="SampleMgrPlugin*.bar" />
 										</copy>
-										<copy tofile="${basedir}/plugins/PANMgrPlugin.bar">
+										<copy tofile="${basedir}/plugins/Panorama.bar">
 											<fileset
 												dir="${basedir}/../../osc-pan-plugin/target/"
-												includes="PANMgrPlugin*.bar" />
+												includes="Panorama*.bar" />
 										</copy>
 										<copy tofile="${basedir}/plugins/NscSdnControllerPlugin.bar">
 											<fileset dir="${basedir}/../../sdn-controller-nsc-plugin/target/"
