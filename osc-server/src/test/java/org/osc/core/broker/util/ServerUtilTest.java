@@ -41,7 +41,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.osc.core.broker.rest.client.ClientResponseNotOkException;
 import org.osc.core.broker.rest.client.VmidcServerRestClient;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -170,99 +169,6 @@ public class ServerUtilTest {
         // Assert.
         Assert.assertTrue(gentleShutdownIterationsCounter.size() == 4);
         Assert.assertFalse(testPassed[0]);
-    }
-
-    @Test
-    public void testTerminateProcessInRunningServer_WithNoActiveConnection_ThrowsClientResponseInPutResource() throws Exception {
-        // Arrange.
-        Mockito.doThrow(ClientResponseNotOkException.class)
-        .when(this.vmidcServerRestClientMock).putResource(Matchers.anyString(), Matchers.any());
-        Mockito.when(this.serverStatusResponseInjectionMock.getProcessId()).thenReturn(this.oldProcessId);
-
-        // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
-                this.oldProcessId, this.serverStatusResponseInjectionMock);
-
-        // Assert.
-        Assert.assertTrue(isServerRunning);
-    }
-
-    @Test
-    public void testTerminateProcessInRunningServer_WithNoActiveProcess_ReturnsNoRunningServer() throws Exception {
-        // Arrange.
-        Mockito.doNothing().when(this.vmidcServerRestClientMock).putResource(Matchers.anyString(), Matchers.any());
-        Mockito.when(this.serverStatusResponseInjectionMock.getProcessId()).thenReturn(null);
-
-        mockGetCurrentPid();
-
-        // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
-                this.oldProcessId, this.serverStatusResponseInjectionMock);
-
-        // Assert.
-        Assert.assertFalse(isServerRunning);
-    }
-
-    @Test
-    public void testTerminateProcessInRunningServer_WithExceptionInGetProcessId_ThrowsClientResponseException() throws Exception {
-        // Arrange.
-        Mockito.doNothing().when(this.vmidcServerRestClientMock).putResource(Matchers.anyString(), Matchers.any());
-        Mockito.doThrow(ClientResponseNotOkException.class).when(this.serverStatusResponseInjectionMock).getProcessId();
-
-        mockGetCurrentPid();
-
-        // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
-                this.oldProcessId, this.serverStatusResponseInjectionMock);
-
-        // Assert.
-        Assert.assertFalse(isServerRunning);
-    }
-
-    @Test
-    public void testTerminateProcessInRunningServer_WithPendingUpgrade_TerminatesProcessId() throws Exception {
-        // Arrange.
-        Mockito.doNothing().when(this.vmidcServerRestClientMock).putResource(Matchers.anyString(), Matchers.any());
-        Mockito.when(this.serverStatusResponseInjectionMock.getProcessId()).thenReturn(this.oldProcessId);
-        mockGetCurrentPid();
-
-        replace(method(ServerUtil.class, "killProcess", String.class)).with(
-                new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object object, Method method, Object[] arguments) throws Throwable {
-                        return "0";
-                    }
-                });
-
-        // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
-                this.oldProcessId, this.serverStatusResponseInjectionMock);
-
-        // Assert.
-        Assert.assertFalse(isServerRunning);
-    }
-
-    @Test
-    public void testTerminateProcessInRunningServer_InPendingUpgradeUnableToKillProcess_ThrowsInterruptedExceptionInKillProcess() throws Exception {
-        // Arrange.
-        Mockito.doNothing().when(this.vmidcServerRestClientMock).putResource(Matchers.anyString(), Matchers.any());
-        Mockito.when(this.serverStatusResponseInjectionMock.getProcessId()).thenReturn(this.oldProcessId);
-        mockGetCurrentPid();
-
-        replace(method(ServerUtil.class, "killProcess", String.class)).with(
-                new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object object, Method method, Object[] arguments) throws Throwable {
-                        throw new InterruptedException();
-                    }
-                });
-
-        // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
-                this.oldProcessId, this.serverStatusResponseInjectionMock);
-
-        // Assert.
-        Assert.assertFalse(isServerRunning);
     }
 
     @Test
