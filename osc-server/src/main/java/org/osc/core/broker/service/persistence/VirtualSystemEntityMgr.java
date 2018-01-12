@@ -184,6 +184,10 @@ public class VirtualSystemEntityMgr {
         return prevVal;
     }
 
+	/**
+	 * @param VirtualSystem
+	 * @return true if ServiceFunctionChain(SFC) is bind with SecurityGroup(SG)
+	 */
     public static boolean isProtectingWorkload(VirtualSystem vs) {
         return CollectionUtils.emptyIfNull(vs.getDeploymentSpecs()).stream()
             .anyMatch(ds -> DeploymentSpecEntityMgr.isProtectingWorkload(ds));

@@ -163,7 +163,8 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     }
 
     @Test
-    public void testValidateDA_WhenChainedToSfcAndSgDeleteRequest_ThrowsValidationException() throws Exception {
+    public void testValidateDAReferenceToSfcAndSecurityGroup_WhenChainedToSfcAndSgDeleteRequest_ThrowsValidationException()
+            throws Exception {
         // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
         DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
@@ -181,19 +182,21 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         da.addVirtualSystem(vs);
         PowerMockito.mockStatic(SecurityGroupEntityMgr.class);
         Mockito.when(SecurityGroupEntityMgr.listSecurityGroupsBySfcId(em,VALID_ID_WITH_SFC)).thenReturn(sgList);
-        Mockito.when(em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
+        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
                 .thenReturn(da);
-        exception.expect(VmidcBrokerValidationException.class);
-        exception.expectMessage(
-                String.format("Cannot delete distributed appliance which is currently referencing Service Function Chain '%s' and binded to a SecurityGroup(s) '%s'",
-						sfc.getName(), sg.getName()));
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(
+                String.format(
+                        "distributed appliance cannot be deleted which is currently referencing Service Function Chain '%s' and binded to a SecurityGroup(s) '%s'",
+                        sfc.getName(), sg.getName()));
 
         // Act
-        validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
+        this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
     }
 
-   @Test
-    public void testValidateDA_WhenChainedToSfcDeleteRequest_ThrowsValidationException() throws Exception {
+    @Test
+    public void testValidateDAReferenceToSfcAndSecurityGroup_WhenChainedToSfcDeleteRequest_ThrowsValidationException()
+            throws Exception {
         // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
         DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
@@ -208,13 +211,14 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         Mockito.when(SecurityGroupEntityMgr.listSecurityGroupsBySfcId(em,VALID_ID_WITH_SFC)).thenReturn(sgList);
         Mockito.when(em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
                 .thenReturn(da);
-        exception.expect(VmidcBrokerValidationException.class);
-        exception.expectMessage(
-                String.format("Cannot delete distributed appliance which is currently referencing Service Function Chain '%s'",
-						sfc.getName()));
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(
+                String.format(
+                        "distributed appliance cannot be deleted which is currently referencing Service Function Chain '%s'",
+                        sfc.getName()));
 
         // Act
-        validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
+        this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
     }
 
     private static BaseDeleteRequest createRequest(Long id, boolean forceDelete) {

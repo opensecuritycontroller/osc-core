@@ -75,7 +75,7 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
             try {
                 validateVSReferenceToSfcAndSecurityGroup(em, vs);
             } catch (VmidcBrokerValidationException ex) {
-                throw new VmidcBrokerValidationException(ex.getMessage() + " with name " + da.getName());
+                throw new VmidcBrokerValidationException(da.getName() + " " + ex.getMessage());
             }
         }
     }
@@ -95,11 +95,11 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
                 .collect(Collectors.joining(", "));
         if (!sgNames.isEmpty()) {
             throw new VmidcBrokerValidationException(String.format(
-                    "Cannot delete distributed appliance which is currently referencing Service Function Chain '%s' and binded to a SecurityGroup(s) '%s'",
+                    "distributed appliance cannot be deleted which is currently referencing Service Function Chain '%s' and binded to a SecurityGroup(s) '%s'",
                     sfc.getName(), sgNames));
         } else if (!sfc.getMarkedForDeletion() && sfc != null) {
             throw new VmidcBrokerValidationException(String.format(
-                    "Cannot delete distributed appliance which is currently referencing Service Function Chain '%s'",
+                    "distributed appliance cannot be deleted which is currently referencing Service Function Chain '%s'",
                     sfc.getName()));
         }
     }
