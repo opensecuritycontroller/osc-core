@@ -43,7 +43,8 @@ import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestVa
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
+//TODO balmukund: Because the class under test now has a dependency on a complex DB query listReferencedVSBySecurityGroup it must be refactored to use an in mem db.
+// Until then powermock is being used to mock static dependencies. This should be removed when this refactoring happens.
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SecurityGroupEntityMgr.class,DistributedApplianceEntityMgr.class})
 public class DeleteDistributedApplianceRequestValidatorTest {
@@ -137,8 +138,10 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         Assert.assertEquals("The received ID in non force delete case  is different than expected VALID_ID_FOR_DELETION.", VALID_ID_FOR_DELETION, da.getId());
     }
 
+    //TODO balmukund: Because the class under test now has a dependency on a complex DB query listReferencedVSBySecurityGroup it must be refactored to use an in mem db.
+    // until then Powermock is being used to mock static dependencies. This should be removed when this refactoring happens.
     @Test
-    public void testValidateAndLoad_WhenChainedToSfcDeleteRequest_ThrowsValidationException() throws Exception {
+    public void testValidateAndLoad_WhenChainedToSfc_ThrowsValidationException() throws Exception {
         // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
         DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
@@ -163,7 +166,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     }
 
     @Test
-    public void testValidateDAReferenceToSfcAndSecurityGroup_WhenChainedToSfcAndSgDeleteRequest_ThrowsValidationException()
+    public void testValidateAndLoad_WhenChainedToSfcAndSg_WhenSfcMode_ThrowsValidationException()
             throws Exception {
         // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
@@ -185,17 +188,15 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
                 .thenReturn(da);
         this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage(
-                String.format(
-                        "distributed appliance cannot be deleted which is currently referencing Service Function Chain '%s' and binded to a SecurityGroup(s) '%s'",
-                        sfc.getName(), sg.getName()));
+        this.exception.expectMessage(String.format("Distributed appliance is referencing to Service Function Chain '%s' and binded to a Security Group(s) '%s'",
+                sfc.getName(), sg.getName()));
 
         // Act
         this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
     }
 
     @Test
-    public void testValidateDAReferenceToSfcAndSecurityGroup_WhenChainedToSfcDeleteRequest_ThrowsValidationException()
+    public void testValidateAndLoad_WhenChainedToSfc_WhenSfcMode_ThrowsValidationException()
             throws Exception {
         // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
@@ -212,10 +213,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         Mockito.when(em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
                 .thenReturn(da);
         this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage(
-                String.format(
-                        "distributed appliance cannot be deleted which is currently referencing Service Function Chain '%s'",
-                        sfc.getName()));
+        this.exception.expectMessage(String.format("Distributed appliance is referencing to Service Function Chain '%s'",sfc.getName()));
 
         // Act
         this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
