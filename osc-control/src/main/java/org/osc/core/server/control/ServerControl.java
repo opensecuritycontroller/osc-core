@@ -26,13 +26,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -291,65 +287,6 @@ public class ServerControl {
 
             log.warn("Current pid:" + ServerUtil.getCurrentPid() + ". Running server (pid:" + oldPid + ") version: "
                     + res.getVersion() + " with db version: " + res.getDbVersion());
-
-            // If we're here, server is running. Check for active pending
-            // upgrade
-            log.warn("Checking pending server upgrade.");
-
-            try {
-                restClient.putResource("upgradecomplete", Entity.entity(null, MediaType.APPLICATION_JSON));
-                // If we made it to here, running server is in active upgrade mode
-                // It should be shutting down now. We'll wait till the old process
-                // goes away first by testing if we can get status.
-                log.warn("Pending active server upgrade. Waiting for old process (" + oldPid
-                        + ") to exit... (current pid:" + ServerUtil.getCurrentPid() + ")");
-                int oldServerStatusCheckCount = 5; // 5 x 500ms = 2.5 seconds.
-                while (oldServerStatusCheckCount > 0) {
-                    try {
-                        oldServerStatusCheckCount--;
-                        Thread.sleep(500);
-                        restClient.getResource("status", ServerStatusResponse.class);
-                    } catch (Exception e) {
-                        // If we got an exception, we assume old process
-                        // terminated
-                        break;
-                    }
-                }
-
-                if (oldPid != null) {
-                    // Making sure that old process also went away.
-                    int retries = 10; // 10 x 500ms = 5 seconds.
-                    boolean pidFound = false;
-                    while (retries > 0) {
-                        List<String> lines = new ArrayList<>();
-                        ServerUtil.execWithLines("ps " + oldPid, lines);
-                        pidFound = false;
-                        for (String line : lines) {
-                            if (line.contains(oldPid)) {
-                                pidFound = true;
-                                break;
-                            }
-                        }
-                        if (!pidFound) {
-                            break;
-                        }
-                        log.info("Old process (" + oldPid + ") is still running. Retry (" + retries
-                                + ") wait for graceful termination.");
-                        retries--;
-                        Thread.sleep(500);
-                    }
-                    // If process is still there, we'll force termination.
-                    if (pidFound) {
-                        log.warn("Old process (" + oldPid + ") is still running. Triggering forceful termination.");
-                        ServerUtil.execWithLog("kill -9 " + oldPid);
-                    }
-                }
-
-                // We'll proceed normal startup as the newly upgraded server.
-                return false;
-            } catch (Exception ex) {
-                log.warn("No active pending upgrade.");
-            }
 
             return true;
         } catch (ProcessingException | ConnectException e1) {

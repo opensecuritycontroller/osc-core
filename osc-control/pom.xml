@@ -46,29 +46,8 @@
 							<Implementation-Version>${project.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
-
-				<!-- Create vmiDCControl-upgrade jar -->
 				</configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <configuration>
-              <classifier>upgrade</classifier>
-              <includes>
-                <include>**/control/OldUpgrade*</include>
-              </includes>
-
-                            <archive>
-                                <manifest>
-                                    <mainClass>org.osc.core.server.control.OldUpgrade</mainClass>
-                                </manifest>
-                            </archive>
-                        </configuration>
-                    </execution>
-                </executions>
+   
             </plugin>
 
             <plugin>

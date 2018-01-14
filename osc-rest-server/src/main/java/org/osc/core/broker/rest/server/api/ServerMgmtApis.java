@@ -29,7 +29,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -44,7 +43,6 @@ import javax.ws.rs.core.StreamingOutput;
 import org.osc.core.broker.rest.server.ApiUtil;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
-import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.api.BackupServiceApi;
@@ -157,45 +155,6 @@ public class ServerMgmtApis {
                 .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM)
                 .header("content-disposition", "attachment; filename = oscServerDBBackup.zip")
                 .build();
-    }
-
-    @LocalHostAuth
-    @Path("/upgradecomplete")
-    @PUT
-    public Response upgradeServerReady() {
-
-        logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid() + "): Check pending upgrade server.");
-        if (!this.server.isUnderMaintenance()) {
-            logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid() + "): No pending upgrade.");
-            return Response.status(Status.BAD_REQUEST).build();
-        }
-
-        logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid()
-                + "): Upgraded server is up. Start shutdown...");
-        Thread shutdownThread = new Thread("Shutdown-Thread") {
-            @Override
-            public void run() {
-                try {
-                    /*
-                     * Introduce a slight delay so REST response can be
-                     * completed
-                     */
-                    Thread.sleep(500);
-                    File originalServerFile = new File("vmiDCServer.org");
-                    if (originalServerFile.exists()) {
-                        logger.info("Original Server file exists, deleting original server.");
-                        originalServerFile.delete();
-                    }
-                    ServerMgmtApis.this.server.stopServer();
-                } catch (Exception e) {
-                    logger.error("upgradedServerReady (pid:" + ServerMgmtApis.this.server.getCurrentPid()
-                            + "): Shutting down Tomcat after upgrade experienced failures", e);
-                }
-            }
-        };
-        shutdownThread.start();
-
-        return Response.status(Status.OK).build();
     }
 
     @ApiOperation(value = "Get SSL certificates list", response = SslCertificateDto.class, responseContainer = "Set")

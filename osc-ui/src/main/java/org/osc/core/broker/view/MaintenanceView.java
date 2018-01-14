@@ -33,7 +33,6 @@ import org.osc.core.broker.service.api.SetEmailSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
-import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
@@ -90,9 +89,6 @@ public class MaintenanceView extends VerticalLayout implements View {
 
     @Reference
     BackupServiceApi backupService;
-
-    @Reference
-    UpgradeServiceApi upgradeService;
 
     @Reference
     RestoreServiceApi restoreService;
@@ -216,7 +212,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildUpgradeForm() {
-        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService, this.server, this.validator);
+        return new ManageLayout(this.backupService, this.restoreService, this.server, this.validator);
     }
 
     private FormLayout buildSummary() {

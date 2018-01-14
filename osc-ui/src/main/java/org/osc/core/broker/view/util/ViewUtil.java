@@ -37,7 +37,6 @@ import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.window.LoadingIndicatorCRUDBaseWindow;
-import org.osc.core.broker.window.ProgressIndicatorWindow;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.tepi.filtertable.FilterGenerator;
@@ -695,28 +694,6 @@ public class ViewUtil {
             notif.setDelayMsec(10000); // 10 seconds delay
         }
         notif.show(UI.getCurrent().getPage());
-    }
-
-    public static void showServerRestartProgress() {
-        final ProgressIndicatorWindow progressIndicatorWindow = new ProgressIndicatorWindow();
-        try {
-            log.info("================ Server restart ...");
-
-            // add modal window on screen when Upgrading...
-            progressIndicatorWindow.setWidth("550px");
-            progressIndicatorWindow.setHeight("130px");
-            progressIndicatorWindow.setCaption("Server restart");
-            progressIndicatorWindow.updateStatus(
-                    "Please wait for the \"Session Expired\" to appear on the top and follow the instructions.");
-
-            UI.getCurrent().addWindow(progressIndicatorWindow);
-            progressIndicatorWindow.bringToFront();
-
-        } catch (Exception ex) {
-            log.error("=============== Failed to restart server", ex);
-            ViewUtil.iscNotification("Server restart failed. " + ex.getMessage(), Notification.Type.ERROR_MESSAGE);
-            progressIndicatorWindow.close();
-        }
     }
 
 }
