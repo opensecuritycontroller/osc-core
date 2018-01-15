@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 
@@ -25,16 +27,26 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
+import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
-
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+//TODO balmukund: Because the class under test now has a dependency on a complex DB query listReferencedVSBySecurityGroup it must be refactored to use an in mem db.
+// Until then powermock is being used to mock static dependencies. This should be removed when this refactoring happens.
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({SecurityGroupEntityMgr.class,DistributedApplianceEntityMgr.class})
 public class DeleteDistributedApplianceRequestValidatorTest {
 
     private static final Long VALID_ID = 1l;
@@ -126,8 +138,10 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         Assert.assertEquals("The received ID in non force delete case  is different than expected VALID_ID_FOR_DELETION.", VALID_ID_FOR_DELETION, da.getId());
     }
 
+    //TODO balmukund: Because the class under test now has a dependency on a complex DB query listReferencedVSBySecurityGroup it must be refactored to use an in mem db.
+    // until then Powermock is being used to mock static dependencies. This should be removed when this refactoring happens.
     @Test
-    public void testValidateAndLoad_WhenChainedToSfcDeleteRequest_ThrowsValidationException() throws Exception {
+    public void testValidateAndLoad_WhenChainedToSfc_ThrowsValidationException() throws Exception {
         // Arrange
         final Long VALID_ID_WITH_SFC = 4l;
         DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
@@ -138,13 +152,68 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         vs.setEncapsulationType(TagEncapsulationType.VLAN);
         vs.setServiceFunctionChains(Arrays.asList(sfc));
         da.addVirtualSystem(vs);
-
+        PowerMockito.mockStatic(DistributedApplianceEntityMgr.class);
+        PowerMockito.when(DistributedApplianceEntityMgr.isProtectingWorkload(da)).thenReturn(true);
         Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
                 .thenReturn(da);
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage(
                 String.format("The distributed appliance with name '%s' and id '%s' is currently protecting a workload",
                         da.getName(), da.getId()));
+
+        // Act
+        this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
+    }
+
+    @Test
+    public void testValidateAndLoad_WhenChainedToSfcAndSg_WhenSfcMode_ThrowsValidationException()
+            throws Exception {
+        // Arrange
+        final Long VALID_ID_WITH_SFC = 4l;
+        DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
+        List<SecurityGroup> sgList=new ArrayList<>();
+        SecurityGroup sg=new SecurityGroup(null,null,null);
+        sg.setName("sg");
+        sgList.add(sg);
+        ServiceFunctionChain sfc = new ServiceFunctionChain("sfc-1", null);
+        sfc.setId(VALID_ID_WITH_SFC);
+        VirtualSystem vs = new VirtualSystem(null);
+        vs.setName("vs-1");
+        vs.setEncapsulationType(TagEncapsulationType.VLAN);
+        vs.setServiceFunctionChains(Arrays.asList(sfc));
+
+        da.addVirtualSystem(vs);
+        PowerMockito.mockStatic(SecurityGroupEntityMgr.class);
+        Mockito.when(SecurityGroupEntityMgr.listSecurityGroupsBySfcId(em,VALID_ID_WITH_SFC)).thenReturn(sgList);
+        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
+                .thenReturn(da);
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(String.format("Distributed appliance is referencing to Service Function Chain '%s' and binded to a Security Group(s) '%s'",
+                sfc.getName(), sg.getName()));
+
+        // Act
+        this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
+    }
+
+    @Test
+    public void testValidateAndLoad_WhenChainedToSfc_WhenSfcMode_ThrowsValidationException()
+            throws Exception {
+        // Arrange
+        final Long VALID_ID_WITH_SFC = 4l;
+        DistributedAppliance da = createDA(VALID_ID_WITH_SFC, false);
+        ServiceFunctionChain sfc = new ServiceFunctionChain("sfc-1", null);
+        List<SecurityGroup> sgList=new ArrayList<>();
+        VirtualSystem vs = new VirtualSystem(null);
+        vs.setName("vs-1");
+        vs.setEncapsulationType(TagEncapsulationType.VLAN);
+        vs.setServiceFunctionChains(Arrays.asList(sfc));
+        da.addVirtualSystem(vs);
+        PowerMockito.mockStatic(SecurityGroupEntityMgr.class);
+        Mockito.when(SecurityGroupEntityMgr.listSecurityGroupsBySfcId(em,VALID_ID_WITH_SFC)).thenReturn(sgList);
+        Mockito.when(em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_WITH_SFC)))
+                .thenReturn(da);
+        this.exception.expect(VmidcBrokerValidationException.class);
+        this.exception.expectMessage(String.format("Distributed appliance is referencing to Service Function Chain '%s'",sfc.getName()));
 
         // Act
         this.validator.validateAndLoad(createRequest(VALID_ID_WITH_SFC, false));
