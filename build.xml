@@ -79,8 +79,8 @@
 		<copy tofile="Build${fullVersion}/SampleMgrPlugin.bar">
 			<fileset dir="${basedir}/../security-mgr-sample-plugin/target/" includes="SampleMgrPlugin*.bar" />
 		</copy>
-		<copy tofile="Build${fullVersion}/PANMgrPlugin.bar">
-			<fileset dir="${basedir}/../osc-pan-plugin/target/" includes="PANMgrPlugin*.bar" />
+		<copy tofile="Build${fullVersion}/Panorama.bar">
+			<fileset dir="${basedir}/../osc-pan-plugin/target/" includes="Panorama*.bar" />
 		</copy>
 		<copy tofile="Build${fullVersion}/NscSdnControllerPlugin.bar">
 			<fileset dir="${basedir}/../sdn-controller-nsc-plugin/target/" includes="NscSdnControllerPlugin*.bar" />

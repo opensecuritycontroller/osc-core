@@ -290,7 +290,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 // are already deleted and this essentially a no op. The tasks SecurityGroupMemberVmCheckTask etc
                 // need to make sure hooks are removed in case of delete tg.
                 boolean shouldRemoveHooks = !this.apiFactoryService.supportsPortGroup(this.sg)
-                        || !this.apiFactoryService.supportsNeutronSFC(this.sg);
+                        && !this.apiFactoryService.supportsNeutronSFC(this.sg);
                 if (shouldRemoveHooks) {
                     tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(em, sgi));
                 }
