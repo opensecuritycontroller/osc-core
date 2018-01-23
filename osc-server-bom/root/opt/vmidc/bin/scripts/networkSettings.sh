@@ -15,5 +15,5 @@
 # limitations under the License.
 
 #Finds the Default Gateway from the route
-defaultGateway=`route -nee|egrep -e "^0.0.0.0"|tr -s " " |cut -d" " -f2`
+defaultGateway=`netstat -nr|grep -e "^0.0.0.0"|tr -s " " |cut -d" " -f2`
 echo $defaultGateway

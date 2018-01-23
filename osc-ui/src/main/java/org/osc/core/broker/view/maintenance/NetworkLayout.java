@@ -181,7 +181,6 @@ public class NetworkLayout extends FormLayout {
         return response.hasDeployedInstances();
     }
 
-    @SuppressWarnings("serial")
     private OptionGroup createOptionGroup() {
         mode = new OptionGroup();
         mode.addItem("DHCP");

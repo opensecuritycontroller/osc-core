@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class NetworkSettingsApi {
 
     private final String NETWORK_RESOLV = "/etc/resolv.conf";
-    private static final String NAT_SETTINGS_SCRIPT = "./scripts/networkSettings.sh";
+    private static final String NETWORK_SETTINGS_SCRIPT = "./scripts/networkSettings.sh";
     private static final Logger log = LoggerFactory.getLogger(NetworkSettingsApi.class);
 
     public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
@@ -49,7 +49,6 @@ public class NetworkSettingsApi {
         if (ServerUtil.isWindows()) {
             return networkSettingsDto;
         }
-        // only return IP in DHCP mode
         networkSettingsDto.setDhcp(true);
         String hostIpAddress = null;
         try {
@@ -64,23 +63,22 @@ public class NetworkSettingsApi {
         } catch (SocketException | UnknownHostException e) {
             log.error("Failed to get host and/or ip address", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to get DNS Server(s)", e);
 		}
         return networkSettingsDto;
     }
 
     private String[] getDNSSettings() throws IOException {
         String[] dns = { "", "", "" };
-
-        int i = 0;
+        int index = 0;
         try (FileReader fileReader = new FileReader(this.NETWORK_RESOLV);
              Scanner in = new Scanner(fileReader)) {
             while (in.hasNextLine()) {
                 String[] tokens = in.nextLine().split(" ");
                 String s = tokens[0];
                 if (s.startsWith("name") && tokens.length > 1) {
-                    dns[i++] = tokens[1];
-                    if (i > 2) {
+                    dns[index++] = tokens[1];
+                    if (index > 2) {
                         break;
                     }
                 }
@@ -93,7 +91,6 @@ public class NetworkSettingsApi {
     private String getNetMask(String ipAddr) {
         String[] ipAddrParts = ipAddr.split("\\.");
         String mask = "";
-
         int octet = Integer.parseInt(ipAddrParts[0]);
         if (octet <= 127) {
             mask = "255.0.0.0";
@@ -110,30 +107,25 @@ public class NetworkSettingsApi {
     }
 
     private String getDefaultGateway() {
-        return getNetworkDefaultGateway();
-    }
-
-    private String getNetworkDefaultGateway() {
-
         String networkField = null;
-        Process process = null;
+        Process networkSettingsProcess = null;
         BufferedReader netwokInput = null;
         try {
-            ProcessBuilder builder = new ProcessBuilder("/bin/sh", NAT_SETTINGS_SCRIPT);
-            process = builder.start();
-            netwokInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            ProcessBuilder networkSettingsbuilder = new ProcessBuilder("/bin/sh", NETWORK_SETTINGS_SCRIPT);
+            networkSettingsProcess = networkSettingsbuilder.start();
+            netwokInput = new BufferedReader(new InputStreamReader(networkSettingsProcess.getInputStream()));
             String line;
             while ((line = netwokInput.readLine()) != null) {
                 networkField = line;
             }
-            int statusCode = process.waitFor();
+            int statusCode = networkSettingsProcess.waitFor();
             if (statusCode != 0) {
-                log.error("Problem encountered during " + NAT_SETTINGS_SCRIPT + " execution");
+                log.error("Problem encountered during " + NETWORK_SETTINGS_SCRIPT + " execution");
             }
         } catch (Exception e) {
-            log.error("Exception occured during " + NAT_SETTINGS_SCRIPT + " execution");
-            if (process != null) {
-                process.destroy();
+            log.error("Exception occured during " + NETWORK_SETTINGS_SCRIPT + " execution");
+            if (networkSettingsProcess != null) {
+                networkSettingsProcess.destroy();
             }
         }
     return networkField;

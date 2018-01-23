@@ -42,30 +42,14 @@ public class NetworkSettingsApiTest {
         networkSettingsDto = new NetworkSettingsDto();
     }
 
-    @Test
-    public void testGetNetworkSettings_WithNone_ReturnDefaultGateway() throws Exception {
+	@Test
+	public void testGetNetworkSettings_WithSpecificIPAddr_ReturnNetMask() throws Exception {
         String ip = "172.17.0.2";
         String hostDefaultGateway = "172.17.0.1";
         String[] hostDNSSvr = { "10.248.2.1", "10.3.86.116" };
         NetworkSettingsApi networkSettingsApiSpy = PowerMockito.spy(new NetworkSettingsApi());
         PowerMockito.doReturn(hostDNSSvr).when(networkSettingsApiSpy, "getDNSSettings");
-        PowerMockito.doReturn(hostDefaultGateway).when(networkSettingsApiSpy, "getNetworkDefaultGateway");
-        PowerMockito.mockStatic(NetworkUtil.class);
-        PowerMockito.mockStatic(ServerUtil.class);
-        PowerMockito.when(ServerUtil.isWindows()).thenReturn(false);
-        PowerMockito.when(NetworkUtil.getHostIpAddress()).thenReturn(ip);
-        networkSettingsDto = networkSettingsApiSpy.getNetworkSettings();
-        Assert.assertEquals("172.17.0.1", networkSettingsDto.getHostDefaultGateway());
-    }
-
-    @Test
-    public void testGetNetworkSettings_WithIP_ReturnNetMask() throws Exception {
-        String ip = "172.17.0.2";
-        String hostDefaultGateway = "172.17.0.1";
-        String[] hostDNSSvr = { "10.248.2.1", "10.3.86.116" };
-        NetworkSettingsApi networkSettingsApiSpy = PowerMockito.spy(new NetworkSettingsApi());
-        PowerMockito.doReturn(hostDNSSvr).when(networkSettingsApiSpy, "getDNSSettings");
-        PowerMockito.doReturn(hostDefaultGateway).when(networkSettingsApiSpy, "getNetworkDefaultGateway");
+        PowerMockito.doReturn(hostDefaultGateway).when(networkSettingsApiSpy, "getDefaultGateway");
         PowerMockito.mockStatic(NetworkUtil.class);
         PowerMockito.mockStatic(ServerUtil.class);
         PowerMockito.when(ServerUtil.isWindows()).thenReturn(false);
