@@ -1,4 +1,4 @@
-FROM arvindn05:osc-base
+FROM osc-base-image:osc-base
 
 MAINTAINER Arvind Nadendla <arvindn05@gmail.com>
 
