@@ -16,15 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.util.network;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -38,7 +35,6 @@ import org.slf4j.LoggerFactory;
 public class NetworkSettingsApi {
 
     private final String NETWORK_RESOLV = "/etc/resolv.conf";
-    private static final String NETWORK_SETTINGS_SCRIPT = "./scripts/networkSettings.sh";
     private static final Logger log = LoggerFactory.getLogger(NetworkSettingsApi.class);
 
     public NetworkSettingsDto getNetworkSettings() {
@@ -88,48 +84,27 @@ public class NetworkSettingsApi {
     return dns;
     }
 
-    String getIPv4LocalNetMask() {
+    private String getIPv4LocalNetMask() {
         String netMask="";
+        String[] cmd = { "/bin/sh", "-c", "ip addr show eth0 |grep inet|tr -s ' ' |cut -d' ' -f3" };
+        List<String> outlines=new ArrayList<String>();
 
-        try {
-            InetAddress localHost = Inet4Address.getLocalHost();
-            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
-            int netPrefix = networkInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength();
-            int shift = (1 << 31);
-            for (int i = netPrefix - 1; i > 0; i--) {
-                shift = (shift >> 1);
-            }
-            netMask = Integer.toString((shift >> 24) & 255) + "." + Integer.toString((shift >> 16) & 255)
-                    + "." + Integer.toString((shift >> 8) & 255) + "." + Integer.toString(shift & 255);
-        } catch (Exception e) {
-            log.error("Exception occured during netmask fetch "+e);
+        ServerUtil.execWithLog(cmd, outlines, true);
+        for(String line:outlines) {
+            netMask=line;
         }
 
     return netMask;
     }
 
-    String getDefaultGateway() {
+    private String getDefaultGateway() {
         String defaultGateway = null;
-        Process networkSettingsProcess = null;
-        BufferedReader netwokInput = null;
+        String[] cmd = { "/bin/sh", "-c", "ip route|grep default|tr -s ' ' |cut -d' ' -f3" };
+        List<String> outlines=new ArrayList<String>();
 
-        try {
-            ProcessBuilder networkSettingsbuilder = new ProcessBuilder("/bin/sh", NETWORK_SETTINGS_SCRIPT);
-            networkSettingsProcess = networkSettingsbuilder.start();
-            netwokInput = new BufferedReader(new InputStreamReader(networkSettingsProcess.getInputStream()));
-            String line;
-            while ((line = netwokInput.readLine()) != null) {
-                defaultGateway = line;
-            }
-            int statusCode = networkSettingsProcess.waitFor();
-            if (statusCode != 0) {
-                log.error("Problem encountered during " + NETWORK_SETTINGS_SCRIPT + " execution");
-            }
-        } catch (Exception e) {
-            log.error("Exception occured during " + NETWORK_SETTINGS_SCRIPT + " execution");
-            if (networkSettingsProcess != null) {
-                networkSettingsProcess.destroy();
-            }
+        ServerUtil.execWithLog(cmd, outlines, true);
+        for(String line:outlines) {
+            defaultGateway=line;
         }
 
     return defaultGateway;
