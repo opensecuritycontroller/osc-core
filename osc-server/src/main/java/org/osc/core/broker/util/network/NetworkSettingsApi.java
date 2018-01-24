@@ -20,6 +20,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
@@ -38,10 +41,6 @@ public class NetworkSettingsApi {
     private static final String NETWORK_SETTINGS_SCRIPT = "./scripts/networkSettings.sh";
     private static final Logger log = LoggerFactory.getLogger(NetworkSettingsApi.class);
 
-    public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
-
-    }
-
     public NetworkSettingsDto getNetworkSettings() {
 
         NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();
@@ -54,7 +53,7 @@ public class NetworkSettingsApi {
         try {
             hostIpAddress = NetworkUtil.getHostIpAddress();
             networkSettingsDto.setHostIpAddress(hostIpAddress);
-            networkSettingsDto.setHostSubnetMask(getNetMask(hostIpAddress));
+            networkSettingsDto.setHostSubnetMask(getIPv4LocalNetMask());
             networkSettingsDto.setHostDefaultGateway(getDefaultGateway());
             String[] dns = getDNSSettings();
             networkSettingsDto.setHostDnsServer1(dns[0]);
@@ -71,6 +70,7 @@ public class NetworkSettingsApi {
     private String[] getDNSSettings() throws IOException {
         String[] dns = { "", "", "" };
         int index = 0;
+
         try (FileReader fileReader = new FileReader(this.NETWORK_RESOLV);
              Scanner in = new Scanner(fileReader)) {
             while (in.hasNextLine()) {
@@ -85,38 +85,41 @@ public class NetworkSettingsApi {
             }
         }
 
-        return dns;
+    return dns;
     }
 
-    private String getNetMask(String ipAddr) {
-        String[] ipAddrParts = ipAddr.split("\\.");
-        String mask = "";
-        int octet = Integer.parseInt(ipAddrParts[0]);
-        if (octet <= 127) {
-            mask = "255.0.0.0";
-        } else if (octet >= 128 && octet <= 191) {
-            mask = "255.255.0.0";
-        } else if (octet >= 192 && octet <= 223) {
-            mask = "255.255.255.0";
-        } else if (octet >= 224 && octet <= 239) {
-            mask = "255.0.0.0";
-        } else if (octet >= 240 && octet <= 254) {
-            mask = "255.0.0.0";
+    String getIPv4LocalNetMask() {
+        String netMask="";
+
+        try {
+            InetAddress localHost = Inet4Address.getLocalHost();
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
+            int netPrefix = networkInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength();
+            int shift = (1 << 31);
+            for (int i = netPrefix - 1; i > 0; i--) {
+                shift = (shift >> 1);
+            }
+            netMask = Integer.toString((shift >> 24) & 255) + "." + Integer.toString((shift >> 16) & 255)
+                    + "." + Integer.toString((shift >> 8) & 255) + "." + Integer.toString(shift & 255);
+        } catch (Exception e) {
+            log.error("Exception occured during netmask fetch "+e);
         }
-    return mask;
+
+    return netMask;
     }
 
-    private String getDefaultGateway() {
-        String networkField = null;
+    String getDefaultGateway() {
+        String defaultGateway = null;
         Process networkSettingsProcess = null;
         BufferedReader netwokInput = null;
+
         try {
             ProcessBuilder networkSettingsbuilder = new ProcessBuilder("/bin/sh", NETWORK_SETTINGS_SCRIPT);
             networkSettingsProcess = networkSettingsbuilder.start();
             netwokInput = new BufferedReader(new InputStreamReader(networkSettingsProcess.getInputStream()));
             String line;
             while ((line = netwokInput.readLine()) != null) {
-                networkField = line;
+                defaultGateway = line;
             }
             int statusCode = networkSettingsProcess.waitFor();
             if (statusCode != 0) {
@@ -128,6 +131,7 @@ public class NetworkSettingsApi {
                 networkSettingsProcess.destroy();
             }
         }
-    return networkField;
+
+    return defaultGateway;
     }
 }

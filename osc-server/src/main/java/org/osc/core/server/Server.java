@@ -241,7 +241,6 @@ public class Server implements ServerApi {
                             networkSettingsDto.setHostDefaultGateway(envProp.hostDefaultGateway);
                             networkSettingsDto.setHostDnsServer1(envProp.hostDnsServer1);
                             networkSettingsDto.setHostDnsServer2(envProp.hostDnsServer2);
-                            api.setNetworkSettings(networkSettingsDto);
                         }
                     } catch (Exception ex) {
                         log.error("Failed to read OVF attributes.", ex);

@@ -45,7 +45,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
@@ -56,7 +55,6 @@ public class NetworkLayout extends FormLayout {
     private static final Logger log = LoggerFactory.getLogger(NetworkLayout.class);
 
     public Table networkTable = null;
-    private OptionGroup mode = null;
     private Button editNATSettings = null;
     public Table natTable;
 
@@ -102,7 +100,11 @@ public class NetworkLayout extends FormLayout {
             Panel natPanel = new Panel("NAT Details");
             VerticalLayout natLayout = new VerticalLayout();
             HorizontalLayout editNatLayout = new HorizontalLayout();
-            optionLayout.addComponent(createOptionGroup());
+            HorizontalLayout dhcpLayout = new HorizontalLayout();
+            dhcpLayout.addStyleName("network-options");
+            dhcpLayout.setEnabled(false);
+            dhcpLayout.setImmediate(true);
+            optionLayout.addComponent(dhcpLayout);
             editNatLayout.addStyleName(StyleConstants.COMPONENT_SPACING_TOP_BOTTOM);
             editNatLayout.addComponent(createNATEditButton());
             natLayout.addComponent(editNatLayout);
@@ -181,15 +183,6 @@ public class NetworkLayout extends FormLayout {
         return response.hasDeployedInstances();
     }
 
-    private OptionGroup createOptionGroup() {
-        mode = new OptionGroup();
-        mode.addItem("DHCP");
-        mode.addStyleName("network-options");
-        mode.setImmediate(true);
-        mode.setEnabled(false);
-        return mode;
-    }
-
     private Table createNetworkTable() {
         Table table = new Table();
         table.setSizeFull();
@@ -248,9 +241,6 @@ public class NetworkLayout extends FormLayout {
                     .setValue(getNetworkSettingsResponse.getHostDnsServer1());
             this.networkTable.getItem(5).getItemProperty("Value")
                     .setValue(getNetworkSettingsResponse.getHostDnsServer2());
-            if (getNetworkSettingsResponse.isDhcp()) {
-                mode.select("DHCP");
-            }
         } catch (Exception ex) {
             log.error("Failed to get network settings", ex);
         }
