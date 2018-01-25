@@ -65,16 +65,17 @@ public class NetworkSettingsApi {
 
     private String[] getDNSSettings() throws IOException {
 
-        String[] dns = { "", "" };
+        List<String> dns = new ArrayList<>();
         int index = 0;
 
         try (FileReader fileReader = new FileReader(this.NETWORK_RESOLV);
-             Scanner in = new Scanner(fileReader)) {
+            Scanner in = new Scanner(fileReader)) {
             while (in.hasNextLine()) {
                 String[] tokens = in.nextLine().split(" ");
                 String s = tokens[0];
                 if (s.startsWith("name") && tokens.length > 1) {
-                    dns[index++] = tokens[1];
+                    dns.add(tokens[1]);
+                    index++;
                     if (index > 1) {
                         break;
                     }
@@ -82,7 +83,7 @@ public class NetworkSettingsApi {
             }
         }
 
-    return dns;
+    return dns.stream().toArray(String[]::new);
     }
 
     String getIPv4LocalNetMask() {
@@ -97,7 +98,7 @@ public class NetworkSettingsApi {
         }
 
         if(exitCode != 0) {
-            log.error("Encountered error during:"+cmd +" execution");
+            log.error("Encountered error during: {} execution", cmd);
         }
 
     return netMask;
@@ -115,7 +116,7 @@ public class NetworkSettingsApi {
         }
 
         if(exitCode != 0) {
-            log.error("Encountered error during:"+cmd +" execution");
+            log.error("Encountered error during: {} execution", cmd);
         }
 
     return defaultGateway;
