@@ -64,7 +64,8 @@ public class NetworkSettingsApi {
     }
 
     private String[] getDNSSettings() throws IOException {
-        String[] dns = { "", "", "" };
+
+        String[] dns = { "", "" };
         int index = 0;
 
         try (FileReader fileReader = new FileReader(this.NETWORK_RESOLV);
@@ -74,7 +75,7 @@ public class NetworkSettingsApi {
                 String s = tokens[0];
                 if (s.startsWith("name") && tokens.length > 1) {
                     dns[index++] = tokens[1];
-                    if (index > 2) {
+                    if (index > 1) {
                         break;
                     }
                 }
@@ -84,27 +85,37 @@ public class NetworkSettingsApi {
     return dns;
     }
 
-    private String getIPv4LocalNetMask() {
+    String getIPv4LocalNetMask() {
+
         String netMask="";
         String[] cmd = { "/bin/sh", "-c", "ip addr show eth0 |grep inet|tr -s ' ' |cut -d' ' -f3" };
-        List<String> outlines=new ArrayList<String>();
+        List<String> outlines=new ArrayList<>();
 
-        ServerUtil.execWithLog(cmd, outlines, true);
+        int exitCode = ServerUtil.execWithLog(cmd, outlines, true);
         for(String line:outlines) {
             netMask=line;
+        }
+
+        if(exitCode != 0) {
+            log.error("Encountered error during:"+cmd +" execution");
         }
 
     return netMask;
     }
 
-    private String getDefaultGateway() {
-        String defaultGateway = null;
-        String[] cmd = { "/bin/sh", "-c", "ip route|grep default|tr -s ' ' |cut -d' ' -f3" };
-        List<String> outlines=new ArrayList<String>();
+    String getDefaultGateway() {
 
-        ServerUtil.execWithLog(cmd, outlines, true);
+        String defaultGateway = "";
+        String[] cmd = { "/bin/sh", "-c", "ip route|grep default|tr -s ' ' |cut -d' ' -f3" };
+        List<String> outlines=new ArrayList<>();
+
+        int exitCode = ServerUtil.execWithLog(cmd, outlines, true);
         for(String line:outlines) {
             defaultGateway=line;
+        }
+
+        if(exitCode != 0) {
+            log.error("Encountered error during:"+cmd +" execution");
         }
 
     return defaultGateway;
