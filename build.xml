@@ -177,7 +177,7 @@
     <target name="createDockerImage" description="create docker image">
         <exec executable="docker" resultproperty="tar.result">
             <arg value="pull" />
-            <arg value="centos:7" />
+            <arg value="centos:latest" />
         </exec>
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
