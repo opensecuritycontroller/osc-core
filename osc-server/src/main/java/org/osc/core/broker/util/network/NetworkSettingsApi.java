@@ -63,7 +63,7 @@ public class NetworkSettingsApi {
             log.error("Failed to get DNS Server(s)", e);
         }
 
-    return networkSettingsDto;
+        return networkSettingsDto;
     }
 
     private List<String> getDNSSettings() throws IOException {
@@ -86,7 +86,7 @@ public class NetworkSettingsApi {
             }
         }
 
-    return dns;
+        return dns;
     }
 
     String getIPv4LocalNetMask() {
@@ -106,7 +106,7 @@ public class NetworkSettingsApi {
             break;
         }
 
-    return netMask;
+        return netMask;
     }
 
     String getDefaultGateway() {
@@ -126,6 +126,6 @@ public class NetworkSettingsApi {
             break;
         }
 
-    return defaultGateway;
+        return defaultGateway;
     }
 }

@@ -82,7 +82,7 @@ public class NetworkLayout extends FormLayout {
         this.getNATSettingsService = getNATSettingsService;
         this.setNATSettingsService = setNATSettingsService;
         this.server = server;
-        this.validator=validator;
+        this.validator = validator;
         try {
 
             // creating layout to hold option group and edit button
