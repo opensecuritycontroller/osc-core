@@ -15,11 +15,9 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.util.network;
-
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,8 +27,10 @@ import org.osc.core.broker.util.ServerUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-//TODO balmukund: The class under test now powermock is being used to mock static dependencies. 
+//TODO balmukund: The class under test now PowerMockito is being used to mock static dependencies.
 //This will be removed when refactoring happens along with other classes.
+//TODO balmukund: Mock/Stub Input list for ServerUtil.execWithLog will be done during refactoring the class.
+//Also will cover the abnormal case as well.
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ ServerUtil.class })
 public class NetworkSettingsApiTest {
@@ -43,24 +43,23 @@ public class NetworkSettingsApiTest {
         networkSettingsApi = new NetworkSettingsApi();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    public void testGetIPv4LocalNetMask_With_IP_Command_ReturnNetMask() throws IOException
+    public void testGetIPv4LocalNetMask_With_IPCommand_ReturnNetMask() throws IOException
     {
         PowerMockito.mockStatic(ServerUtil.class);
-        PowerMockito.when(ServerUtil.execWithLines(Matchers.anyString(), Matchers.anyList())).thenReturn(0);
+        PowerMockito.when(ServerUtil.execWithLog(Matchers.anyString(), Matchers.anyList())).thenReturn(0);
         String netmask = this.networkSettingsApi.getIPv4LocalNetMask();
         assertNotNull(netmask);
     }
-	
-    @SuppressWarnings("unchecked")
+
     @Test
-    public void testGetDefaultGateway_With_IP_Command_ReturnDefaultGateway() throws IOException
+    public void testGetDefaultGateway_With_IPCommand_Exec_ReturnDefaultGateway() throws IOException
     {
         PowerMockito.mockStatic(ServerUtil.class);
-        PowerMockito.when(ServerUtil.execWithLines(Matchers.anyString(), Matchers.anyList())).thenReturn(0);
+        PowerMockito.when(ServerUtil.execWithLog(Matchers.anyString(), Matchers.anyList())).thenReturn(0);
         String defaultGateway = this.networkSettingsApi.getDefaultGateway();
         assertNotNull(defaultGateway);
     }
+
 }
 

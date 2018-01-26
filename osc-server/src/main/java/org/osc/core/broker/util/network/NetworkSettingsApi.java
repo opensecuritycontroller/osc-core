@@ -44,26 +44,29 @@ public class NetworkSettingsApi {
         if (ServerUtil.isWindows()) {
             return networkSettingsDto;
         }
+
         networkSettingsDto.setDhcp(true);
         String hostIpAddress = null;
+
         try {
             hostIpAddress = NetworkUtil.getHostIpAddress();
             networkSettingsDto.setHostIpAddress(hostIpAddress);
             networkSettingsDto.setHostSubnetMask(getIPv4LocalNetMask());
             networkSettingsDto.setHostDefaultGateway(getDefaultGateway());
-            String[] dns = getDNSSettings();
-            networkSettingsDto.setHostDnsServer1(dns[0]);
-            networkSettingsDto.setHostDnsServer2(dns[1]);
+            List<String> dns = getDNSSettings();
+            networkSettingsDto.setHostDnsServer1(dns.get(0));
+            networkSettingsDto.setHostDnsServer2(dns.get(1));
 
         } catch (SocketException | UnknownHostException e) {
             log.error("Failed to get host and/or ip address", e);
         } catch (IOException e) {
             log.error("Failed to get DNS Server(s)", e);
-		}
-        return networkSettingsDto;
+        }
+
+    return networkSettingsDto;
     }
 
-    private String[] getDNSSettings() throws IOException {
+    private List<String> getDNSSettings() throws IOException {
 
         List<String> dns = new ArrayList<>();
         int index = 0;
@@ -83,22 +86,24 @@ public class NetworkSettingsApi {
             }
         }
 
-    return dns.stream().toArray(String[]::new);
+    return dns;
     }
 
     String getIPv4LocalNetMask() {
 
-        String netMask="";
+        String netMask = "";
         String[] cmd = { "/bin/sh", "-c", "ip addr show eth0 |grep inet|tr -s ' ' |cut -d' ' -f3" };
-        List<String> outlines=new ArrayList<>();
+        List<String> outlines = new ArrayList<>();
 
-        int exitCode = ServerUtil.execWithLog(cmd, outlines, true);
-        for(String line:outlines) {
-            netMask=line;
+        int exitCode = ServerUtil.execWithLog(cmd, outlines);
+        if (exitCode != 0) {
+            log.error("Encountered error during: {} execution", cmd);
+            return null;
         }
 
-        if(exitCode != 0) {
-            log.error("Encountered error during: {} execution", cmd);
+        for(String line:outlines) {
+            netMask = line;
+            break;
         }
 
     return netMask;
@@ -108,15 +113,17 @@ public class NetworkSettingsApi {
 
         String defaultGateway = "";
         String[] cmd = { "/bin/sh", "-c", "ip route|grep default|tr -s ' ' |cut -d' ' -f3" };
-        List<String> outlines=new ArrayList<>();
+        List<String> outlines = new ArrayList<>();
 
-        int exitCode = ServerUtil.execWithLog(cmd, outlines, true);
-        for(String line:outlines) {
-            defaultGateway=line;
+        int exitCode = ServerUtil.execWithLog(cmd, outlines);
+        if (exitCode != 0) {
+            log.error("Encountered error during: {} execution", cmd);
+            return null;
         }
 
-        if(exitCode != 0) {
-            log.error("Encountered error during: {} execution", cmd);
+        for (String line:outlines) {
+            defaultGateway = line;
+            break;
         }
 
     return defaultGateway;
