@@ -31,21 +31,21 @@ import org.osc.core.broker.service.dto.VirtualSystemDto;
 
 public class ServiceFunctionChainEntityMgr {
 
-	public static void fromEntity(ServiceFunctionChain sfcEntity, ServiceFunctionChainDto dto) {
-		dto.setName(sfcEntity.getName());
-		dto.setId(sfcEntity.getId());
-		dto.setParentId(sfcEntity.getVirtualizationConnector().getId());
-		List<VirtualSystemDto> vsDtoList = new ArrayList<VirtualSystemDto>();
+    public static void fromEntity(ServiceFunctionChain sfcEntity, ServiceFunctionChainDto dto) {
+        dto.setName(sfcEntity.getName());
+        dto.setId(sfcEntity.getId());
+        dto.setParentId(sfcEntity.getVirtualizationConnector().getId());
+        List<VirtualSystemDto> vsDtoList = new ArrayList<VirtualSystemDto>();
 
-		for (VirtualSystem vs : sfcEntity.getVirtualSystems()) {
-			VirtualSystemDto vsDto = new VirtualSystemDto();
-			VirtualSystemEntityMgr.fromEntity(vs, vsDto);
-			vsDtoList.add(vsDto);
-		}
-		dto.setVirtualSystemDto(vsDtoList);
-	}
+        for (VirtualSystem vs : sfcEntity.getVirtualSystems()) {
+            VirtualSystemDto vsDto = new VirtualSystemDto();
+            VirtualSystemEntityMgr.fromEntity(vs, vsDto);
+            vsDtoList.add(vsDto);
+        }
+        dto.setVirtualSystemDto(vsDtoList);
+    }
 
-	public static ServiceFunctionChain findById(EntityManager em, Long id) {
+    public static ServiceFunctionChain findById(EntityManager em, Long id) {
         return em.find(ServiceFunctionChain.class, id);
     }
 

@@ -33,45 +33,45 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateServiceFunctionChainService
-		extends ServiceDispatcher<AddOrUpdateServiceFunctionChainRequest, BaseResponse>
-		implements UpdateServiceFunctionChainServiceApi {
+extends ServiceDispatcher<AddOrUpdateServiceFunctionChainRequest, BaseResponse>
+implements UpdateServiceFunctionChainServiceApi {
 
-	RequestValidator<AddOrUpdateServiceFunctionChainRequest, ServiceFunctionChain> validator;
+    RequestValidator<AddOrUpdateServiceFunctionChainRequest, ServiceFunctionChain> validator;
 
-	@Reference
-	private ServiceFunctionChainRequestValidator validatorFactory;
+    @Reference
+    private ServiceFunctionChainRequestValidator validatorFactory;
 
-	@Override
-	public BaseResponse exec(AddOrUpdateServiceFunctionChainRequest request, EntityManager em) throws Exception {
+    @Override
+    public BaseResponse exec(AddOrUpdateServiceFunctionChainRequest request, EntityManager em) throws Exception {
 
-		if (this.validator == null) {
-			this.validator = this.validatorFactory.create(em);
-		}
+        if (this.validator == null) {
+            this.validator = this.validatorFactory.create(em);
+        }
 
-		//TODO: karimull Check for SFC in use before update ; after binding and installinspectionhook task are done
+        //TODO: karimull Check for SFC in use before update ; after binding and installinspectionhook task are done
 
-		ServiceFunctionChain sfc = this.validator.validateAndLoad(request);
+        ServiceFunctionChain sfc = this.validator.validateAndLoad(request);
 
-		// remove old/existing list
+        // remove old/existing list
 
         if (CollectionUtils.emptyIfNull(sfc.getVirtualSystems()) != null) {
             sfc.getVirtualSystems().clear();
         }
 
-		//update the entity to remove all the primary key association in case of a shuffle in the vsid list
-		OSCEntityManager.update(em, sfc, this.txBroadcastUtil);
-		em.flush();
+        //update the entity to remove all the primary key association in case of a shuffle in the vsid list
+        OSCEntityManager.update(em, sfc, this.txBroadcastUtil);
+        em.flush();
 
-		// add the new vsid list to entity
-		for (Long vsId : CollectionUtils.emptyIfNull(request.getVirtualSystemIds())) {
-			sfc.addVirtualSystem(VirtualSystemEntityMgr.findById(em, vsId));
-		}
-		OSCEntityManager.update(em, sfc, this.txBroadcastUtil);
+        // add the new vsid list to entity
+        for (Long vsId : CollectionUtils.emptyIfNull(request.getVirtualSystemIds())) {
+            sfc.addVirtualSystem(VirtualSystemEntityMgr.findById(em, vsId));
+        }
+        OSCEntityManager.update(em, sfc, this.txBroadcastUtil);
 
-		BaseResponse response = new BaseResponse();
-		response.setId(sfc.getId());
+        BaseResponse response = new BaseResponse();
+        response.setId(sfc.getId());
 
-		return response;
-	}
+        return response;
+    }
 
 }

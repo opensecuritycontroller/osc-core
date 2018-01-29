@@ -35,36 +35,36 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class AddServiceFunctionChainService
-		extends ServiceDispatcher<AddOrUpdateServiceFunctionChainRequest, BaseResponse>
-		implements AddServiceFunctionChainServiceApi {
+extends ServiceDispatcher<AddOrUpdateServiceFunctionChainRequest, BaseResponse>
+implements AddServiceFunctionChainServiceApi {
 
-	RequestValidator<AddOrUpdateServiceFunctionChainRequest, ServiceFunctionChain> validator;
+    RequestValidator<AddOrUpdateServiceFunctionChainRequest, ServiceFunctionChain> validator;
 
-	@Reference
-	private ServiceFunctionChainRequestValidator validatorFactory;
+    @Reference
+    private ServiceFunctionChainRequestValidator validatorFactory;
 
-	@Override
-	public BaseResponse exec(AddOrUpdateServiceFunctionChainRequest request, EntityManager em) throws Exception {
+    @Override
+    public BaseResponse exec(AddOrUpdateServiceFunctionChainRequest request, EntityManager em) throws Exception {
 
-		if (this.validator == null) {
-			this.validator = this.validatorFactory.create(em);
-		}
-		this.validator.validate(request);
+        if (this.validator == null) {
+            this.validator = this.validatorFactory.create(em);
+        }
+        this.validator.validate(request);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getDto().getParentId());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getDto().getParentId());
 
-		ServiceFunctionChain sfc = new ServiceFunctionChain(request.getName(), vc);
+        ServiceFunctionChain sfc = new ServiceFunctionChain(request.getName(), vc);
 
-		for (Long vsId : CollectionUtils.emptyIfNull(request.getVirtualSystemIds())) {
-			sfc.addVirtualSystem(VirtualSystemEntityMgr.findById(em, vsId));
-		}
+        for (Long vsId : CollectionUtils.emptyIfNull(request.getVirtualSystemIds())) {
+            sfc.addVirtualSystem(VirtualSystemEntityMgr.findById(em, vsId));
+        }
 
-		OSCEntityManager.create(em, sfc, this.txBroadcastUtil);
+        OSCEntityManager.create(em, sfc, this.txBroadcastUtil);
 
-		BaseResponse response = new BaseResponse();
-		response.setId(sfc.getId());
+        BaseResponse response = new BaseResponse();
+        response.setId(sfc.getId());
 
-		return response;
+        return response;
 
-	}
+    }
 }

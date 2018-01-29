@@ -328,7 +328,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
 
         if (doReboot) {
             LOG.info("Replaced internal private/public key! Rebooting system ! ! !");
-            ServerUtil.execWithLog("/sbin/reboot");
+            ServerUtil.execWithLog(new String[] { "/opt/vmidc/bin/vmidc.sh", "--stop"});
         }
     }
 

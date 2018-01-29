@@ -19,7 +19,7 @@
 
 	<property name="image-format" value="vmdk_only" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
-
+        <target name="dockerimage" depends="build,dockerImageBuild,clean" description="build all and generate docker image in tar" />
 	<target name="build" depends="deleteJavaJre">
 		<echo>Ant version: ${ant.version}</echo>
 		<echo>Ant Java/JVM version: ${ant.java.version}</echo>
@@ -132,17 +132,76 @@
 	</target>
 
     <target name="prodVersion">
-            <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
-            <exec outputproperty="fullVersion" dir="." executable="sh">
-			<arg value="-c" />
-                <arg value="git describe --long | tr -d v" />
-		</exec>
-            <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
-            <exec outputproperty="releaseVersion" dir="." executable="sh">
-                <arg value="-c" />
-                <arg value="git describe --abbrev=0 | tr -d v" />
-		</exec>
-            <echo>Full Version: ${fullVersion}</echo>
-            <echo>Version: ${releaseVersion}</echo>
-	</target>
+        <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
+        <exec outputproperty="fullVersion" dir="." executable="sh">
+            <arg value="-c" />
+            <arg value="git describe --long | tr -d v" />
+        </exec>
+        <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
+        <exec outputproperty="releaseVersion" dir="." executable="sh">
+            <arg value="-c" />
+            <arg value="git describe --abbrev=0 | tr -d v" />
+        </exec>
+        <echo>Full Version: ${fullVersion}</echo>
+        <echo>Version: ${releaseVersion}</echo>
+    </target>
+
+    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,copyAndUnzipServerUpgradeBundle,copyServerUpgradeBundle,createDockerImage" description="Copy result files to build dir">
+        <zip destfile="Build${fullVersion}/OSC-${releaseVersion}_Build${fullVersion}.zip">
+            <fileset dir="Build${fullVersion}" includes="**/*.tar **/serverUpgradeBundle-*.zip" />
+        </zip>
+    </target>
+
+    <target name="checkServerUpgradeBundleExist">
+        <available file="docker/serverUpgradeBundle*.zip" property="isServerUpgradeBundleExist"/>
+    </target>
+
+    <target name="deleteOldServerUpgradeBundle" depends="checkServerUpgradeBundleExist" if="isServerUpgradeBundleExist">
+        <delete>
+            <fileset dir="docker/" includes="serverUpgradeBundle-*.zip" />
+        </delete>
+    </target>
+
+    <target name="copyAndUnzipServerUpgradeBundle" depends="deleteOldServerUpgradeBundle">
+        <copy file="target/serverUpgradeBundle.zip" tofile="docker/serverUpgradeBundle-${fullVersion}.zip" />
+            <exec executable="unzip" resultproperty="tar.result" dir="docker/">
+                <arg value="serverUpgradeBundle-${fullVersion}.zip" />
+            </exec>
+    </target>
+
+    <target name="clean" >
+        <delete file="docker/serverUpgradeBundle-${fullVersion}.zip"/>
+        <delete dir="docker/opt" />
+    </target>
+
+    <target name="createDockerImage" description="create docker image">
+        <exec executable="docker" resultproperty="tar.result">
+            <arg value="pull" />
+            <arg value="centos:latest" />
+        </exec>
+        <exec executable="docker" resultproperty="tar.result" dir="docker/">
+            <arg value="build" />
+            <arg value="-f" />
+            <arg value="Dockerfile-osc-base" />
+            <arg value="." />
+            <arg value="-t" />
+            <arg value="osc-base-image:osc-base" />
+        </exec>
+        <exec executable="docker" resultproperty="tar.result" dir="docker/">
+            <arg value="build" />
+            <arg value="-f" />
+            <arg value="Dockerfile" />
+            <arg value="." />
+            <arg value="-t" />
+            <arg value="osc-docker-image:osc" />
+        </exec>
+        <exec executable="docker" resultproperty="tar.result" dir="Build${fullVersion}/">
+            <arg value="image" />
+            <arg value="save" />
+            <arg value="-o" />
+            <arg value="osc-docker.tar" />
+            <arg value="osc-docker-image:osc" />
+        </exec>
+    </target>
+        
 </project>

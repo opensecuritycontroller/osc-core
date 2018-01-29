@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteServiceFunctionChainService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
-		implements DeleteServiceFunctionChainServiceApi {
+implements DeleteServiceFunctionChainServiceApi {
 
     @Reference
     protected ServiceFunctionChainRequestValidator validator;
@@ -40,13 +40,13 @@ public class DeleteServiceFunctionChainService extends ServiceDispatcher<BaseIdR
     @Override
     public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
 
-		BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
-        
-		this.validator.create(em).validateVirtualConnector(em, request.getParentId());
-		
+        BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
+
+        this.validator.create(em).validateVirtualConnector(em, request.getParentId());
+
         ServiceFunctionChain sfc = em.find(ServiceFunctionChain.class, request.getId());
         if (sfc == null) {
-        	throw new VmidcBrokerValidationException("Service Function Chain with Id " + request.getId() + " is not found.");
+            throw new VmidcBrokerValidationException("Service Function Chain with Id " + request.getId() + " is not found.");
         }
 
         // Initializing Entity Manager

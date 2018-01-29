@@ -30,8 +30,8 @@ import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -45,6 +45,8 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
 public class SummaryLayout extends FormLayout {
+
+    private static final String LOGDIR_PATH = "data/log";
 
     /**
      *
@@ -160,11 +162,11 @@ public class SummaryLayout extends FormLayout {
                         getDBBackup();
                     }
                     // creating a zip file resource to download
-                    fin = new FileInputStream(SummaryLayout.this.archiver.archive("log", "ServerSupportBundle.zip"));
+                    fin = new FileInputStream(SummaryLayout.this.archiver.archive(LOGDIR_PATH, "ServerSupportBundle.zip"));
                 } catch (Exception exception) {
                     log.error("Failed! to receive zip file from Archieve Util", exception);
                 } finally {
-                	SummaryLayout.this.backupService.deleteBackupFilesFrom("log");
+                	SummaryLayout.this.backupService.deleteBackupFilesFrom(LOGDIR_PATH);
                     SummaryLayout.this.download.setEnabled(true);
                 }
                 return fin;
