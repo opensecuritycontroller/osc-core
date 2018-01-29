@@ -30,7 +30,6 @@ import org.osc.core.broker.service.validator.NetworkSettingsDtoValidator;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.slf4j.LoggerFactory;
-import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,17 +56,8 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
     @Override
     public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, EntityManager em) throws Exception {
 
-        NetworkSettingsApi networkSettingsApi = new NetworkSettingsApi();
         NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();
         networkSettingsDto.setDhcp(request.isDhcp());
-        if (!request.isDhcp()) {
-            networkSettingsDto.setHostIpAddress(request.getHostIpAddress());
-            networkSettingsDto.setHostSubnetMask(request.getHostSubnetMask());
-            networkSettingsDto.setHostDefaultGateway(request.getHostDefaultGateway());
-            networkSettingsDto.setHostDnsServer1(request.getHostDnsServer1());
-            networkSettingsDto.setHostDnsServer2(request.getHostDnsServer2());
-            validate(request);
-        }
         boolean isIpChanged = !NetworkUtil.getHostIpAddress().equals(request.getHostIpAddress());
 
         if(isIpChanged) {
@@ -76,7 +66,6 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
             this.server.shutdownWebsocket();
         }
 
-        networkSettingsApi.setNetworkSettings(networkSettingsDto);
         SetNetworkSettingsResponse response = new SetNetworkSettingsResponse();
 
         /*

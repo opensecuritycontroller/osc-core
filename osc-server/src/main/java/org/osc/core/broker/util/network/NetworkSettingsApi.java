@@ -20,52 +20,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
-import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.ServerUtil;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
 public class NetworkSettingsApi {
 
-    final String BOOTPROTOCOL = "BOOTPROTO";
-    final String IPADDRESS = "IPADDR";
-    final String NETMASK = "NETMASK";
-    final String GATEWAY = "GATEWAY";
-    final String DNSSERVER = "nameserver";
-
-    final String DEFAULT_INTERFACE_CONFIG_FILE = "/etc/sysconfig/network-scripts/ifcfg-eth0";
-    final String NETWORK_CONFIG_FILE = "/etc/sysconfig/network";
-    final String NETWORK_RESOLV = "/etc/resolv.conf";
-    final String BASH_SCRIPT = "./scripts/networkSettings.sh";
-
+    private final String NETWORK_RESOLV = "/etc/resolv.conf";
     private static final Logger log = LoggerFactory.getLogger(NetworkSettingsApi.class);
-
-    public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
-
-        String proto = "static";
-
-        // in case in future we decide to allow admins to switch from static IP
-        // address back to dynamic
-        if (networkSettingsDto.isDhcp()) {
-            proto = "dhcp";
-            networkSettingsDto.setHostIpAddress("");
-            networkSettingsDto.setHostSubnetMask("");
-            networkSettingsDto.setHostDefaultGateway("");
-            networkSettingsDto.setHostDnsServer1("");
-            networkSettingsDto.setHostDnsServer2("");
-        }
-
-        ServerUtil.execWithLog(new String[] { "/bin/sh", this.BASH_SCRIPT, proto, networkSettingsDto.getHostIpAddress(),
-                networkSettingsDto.getHostSubnetMask(), networkSettingsDto.getHostDefaultGateway(),
-                networkSettingsDto.getHostDnsServer1(), networkSettingsDto.getHostDnsServer2() });
-    }
 
     public NetworkSettingsDto getNetworkSettings() {
 
@@ -75,70 +45,53 @@ public class NetworkSettingsApi {
             return networkSettingsDto;
         }
 
-        Properties networkInterfaceConfig = new Properties();
+        networkSettingsDto.setDhcp(true);
+        String hostIpAddress = null;
+        String dnsSvr1 = "";
+        String dnsSvr2 = "";
 
         try {
-            networkInterfaceConfig = FileUtil.loadProperties(this.DEFAULT_INTERFACE_CONFIG_FILE);
-        } catch (IOException e) {
-            log.error("Failed to load network settings", e);
-        }
-
-        String bootProtocol = networkInterfaceConfig.getProperty(this.BOOTPROTOCOL, "");
-
-        // return IP, netmask, GW, and DNS IP in static mode
-        if (bootProtocol.equals("static")) {
-
-            networkSettingsDto.setDhcp(false);
-            networkSettingsDto.setHostIpAddress(networkInterfaceConfig.getProperty(this.IPADDRESS));
-            networkSettingsDto.setHostSubnetMask(networkInterfaceConfig.getProperty(this.NETMASK));
-
-            Properties networkConfig = new Properties();
-            try {
-                networkConfig = FileUtil.loadProperties(this.NETWORK_CONFIG_FILE);
-            } catch (IOException e) {
-                log.error("Failed to load network settings", e);
-            }
-
-            networkSettingsDto.setHostDefaultGateway(networkConfig.getProperty(this.GATEWAY));
-            try {
-                String[] dns = getDNSSettings();
-                networkSettingsDto.setHostDnsServer1(dns[0]);
-                networkSettingsDto.setHostDnsServer2(dns[1]);
-            } catch (IOException e) {
-                log.error("Failed to load DNS settings", e);
-            }
-
-        } else {
-            // only return IP in DHCP mode
-            networkSettingsDto.setDhcp(true);
-            String hostIpAddress = null;
-            try {
-                hostIpAddress = NetworkUtil.getHostIpAddress();
-            } catch (SocketException | UnknownHostException e) {
-                log.error("Failed to get host and/or ip address", e);
-            }
+            hostIpAddress = NetworkUtil.getHostIpAddress();
             networkSettingsDto.setHostIpAddress(hostIpAddress);
-            networkSettingsDto.setHostSubnetMask("");
-            networkSettingsDto.setHostDefaultGateway("");
-            networkSettingsDto.setHostDnsServer1("");
-            networkSettingsDto.setHostDnsServer2("");
+            networkSettingsDto.setHostSubnetMask(getIPv4LocalNetMask());
+            networkSettingsDto.setHostDefaultGateway(getDefaultGateway());
+
+            List<String> dns = getDNSSettings();
+            for (int index = 0; index < dns.size(); index++) {
+                if (index == 0) {
+                    dnsSvr1 = dns.get(index);
+                }
+                if (index == 1) {
+                    dnsSvr2 = dns.get(index);
+                    break;
+                }
+            }
+            networkSettingsDto.setHostDnsServer1(dnsSvr1);
+            networkSettingsDto.setHostDnsServer2(dnsSvr2);
+
+        } catch (SocketException | UnknownHostException e) {
+            log.error("Failed to get host and/or ip address", e);
+        } catch (IOException e) {
+            log.error("Failed to get DNS Server(s)", e);
         }
 
         return networkSettingsDto;
     }
 
-    private String[] getDNSSettings() throws IOException {
-        String[] dns = { "", "" };
+    private List<String> getDNSSettings() throws IOException {
 
-        int i = 0;
+        List<String> dns = new ArrayList<>();
+        int index = 0;
+
         try (FileReader fileReader = new FileReader(this.NETWORK_RESOLV);
-             Scanner in = new Scanner(fileReader)) {
+            Scanner in = new Scanner(fileReader)) {
             while (in.hasNextLine()) {
                 String[] tokens = in.nextLine().split(" ");
                 String s = tokens[0];
                 if (s.startsWith("name") && tokens.length > 1) {
-                    dns[i++] = tokens[1];
-                    if (i > 2) {
+                    dns.add(tokens[1]);
+                    index++;
+                    if (index > 1) {
                         break;
                     }
                 }
@@ -148,4 +101,43 @@ public class NetworkSettingsApi {
         return dns;
     }
 
+    String getIPv4LocalNetMask() {
+
+        String netMask = "";
+        String[] cmd = { "/bin/sh", "-c", "ip addr show eth0 |grep inet|tr -s ' ' |cut -d' ' -f3" };
+        List<String> outlines = new ArrayList<>();
+
+        int exitCode = ServerUtil.execWithLog(cmd, outlines);
+        if (exitCode != 0) {
+            log.error("Encountered error during: {} execution", cmd);
+            return null;
+        }
+
+        for(String line:outlines) {
+            netMask = line;
+            break;
+        }
+
+        return netMask;
+    }
+
+    String getDefaultGateway() {
+
+        String defaultGateway = "";
+        String[] cmd = { "/bin/sh", "-c", "ip route|grep default|tr -s ' ' |cut -d' ' -f3" };
+        List<String> outlines = new ArrayList<>();
+
+        int exitCode = ServerUtil.execWithLog(cmd, outlines);
+        if (exitCode != 0) {
+            log.error("Encountered error during: {} execution", cmd);
+            return null;
+        }
+
+        for (String line:outlines) {
+            defaultGateway = line;
+            break;
+        }
+
+        return defaultGateway;
+    }
 }

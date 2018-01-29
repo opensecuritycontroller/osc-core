@@ -28,11 +28,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -52,7 +47,6 @@ import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
-import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.util.FileUtil;
@@ -65,7 +59,6 @@ import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.log.LogUtil;
-import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
 import org.osc.core.server.websocket.WebSocketRunner;
@@ -92,9 +85,6 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * This component exposes both the API and the implementation so that
@@ -226,29 +216,6 @@ public class Server implements ServerApi {
             log.warn("############ Version: " + VersionUtil.getVersion().getVersionStr() + ". ############");
             log.warn("\n");
             ServerUtil.writePIDToFile(SERVER_PID_FILE);
-
-            NetworkSettingsApi api = new NetworkSettingsApi();
-            if (api.getNetworkSettings().isDhcp()) {
-                EnvironmentProperties envProp = parseEnvironmentPropertiesXml();
-                if (envProp != null) {
-                    try {
-                        log.info("Setting network info: " + envProp.toString());
-                        if (envProp.hostIpAddress != null && !envProp.hostIpAddress.isEmpty()) {
-                            NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();
-                            networkSettingsDto.setDhcp(false);
-                            networkSettingsDto.setHostIpAddress(envProp.hostIpAddress);
-                            networkSettingsDto.setHostSubnetMask(envProp.hostSubnetMask);
-                            networkSettingsDto.setHostDefaultGateway(envProp.hostDefaultGateway);
-                            networkSettingsDto.setHostDnsServer1(envProp.hostDnsServer1);
-                            networkSettingsDto.setHostDnsServer2(envProp.hostDnsServer2);
-                            api.setNetworkSettings(networkSettingsDto);
-                        }
-                    } catch (Exception ex) {
-                        log.error("Failed to read OVF attributes.", ex);
-                    }
-                }
-            }
-
             ReleaseUpgradeMgr.initDb(this.encryption, this.dbParams, this.dbMgr);
             DatabaseUtils.createDefaultDB(this.dbMgr, this.txBroadcastUtil);
             DatabaseUtils.markRunningJobAborted(this.dbMgr, this.txBroadcastUtil);
@@ -295,8 +262,6 @@ public class Server implements ServerApi {
     }
 
     public static class EnvironmentProperties {
-        private static final String OVF_ENV_XML_DIR = "/mnt/media";
-        private static final String OVF_ENV_XML_FILE = "ovf-env.xml";
 
         private boolean dhcp;
         private String hostIpAddress;
@@ -317,51 +282,6 @@ public class Server implements ServerApi {
                     + this.defaultGuiPassword + "]";
         }
 
-    }
-
-    public static EnvironmentProperties parseEnvironmentPropertiesXml() throws ParserConfigurationException, SAXException, IOException {
-        File vmwareConf = new File(EnvironmentProperties.OVF_ENV_XML_DIR + File.separator + EnvironmentProperties.OVF_ENV_XML_FILE);
-        if (!vmwareConf.exists()) {
-            log.info("VMware Virtual Appliance Configuration file missing.");
-            return null;
-        }
-
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        Document document = db.parse(vmwareConf);
-
-        EnvironmentProperties env = new EnvironmentProperties();
-        NodeList nodeList = document.getElementsByTagName("Property");
-        for (int i = 0, size = nodeList.getLength(); i < size; i++) {
-            String key = nodeList.item(i).getAttributes().getNamedItem("oe:key").getTextContent();
-            String value = nodeList.item(i).getAttributes().getNamedItem("oe:value").getTextContent();
-
-            if (value == null || value.isEmpty()) {
-                continue;
-            }
-
-            if (key.equalsIgnoreCase("sbm_gui_passwd_0")) {
-                env.defaultGuiPassword = value;
-            } else if (key.equalsIgnoreCase("sbm_cli_en_passwd_0")) {
-                env.defaultCliPassword = value;
-            } else if (key.equalsIgnoreCase("sbm_hostname")) {
-                env.hostname = value;
-            } else if (key.equalsIgnoreCase("sbm_ip_0")) {
-                env.hostIpAddress = value;
-            } else if (key.equalsIgnoreCase("sbm_netmask_0")) {
-                env.hostSubnetMask = value;
-            } else if (key.equalsIgnoreCase("sbm_gateway_0")) {
-                env.hostDefaultGateway = value;
-            } else if (key.equalsIgnoreCase("sbm_dns1_0")) {
-                env.hostDnsServer1 = value;
-            } else if (key.equalsIgnoreCase("sbm_dns2_0")) {
-                env.hostDnsServer2 = value;
-            }
-        }
-
-        log.warn("Appliance Env Info= " + env.toString());
-
-        return env;
     }
 
     private void startScheduler() throws SchedulerException {
