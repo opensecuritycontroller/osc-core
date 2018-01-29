@@ -10,7 +10,7 @@ yum install -y wget && \
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u161-b12/0da788060d494f5095bf8624735fa2f1/jre-8u161-linux-x64.rpm && \
 yum localinstall -y jre-8u161-linux-x64.rpm && \
 rm -rf jre-8u161-linux-x64.rpm && \
-yum install -y net-tools && \
+yum install -y iproute && \
 yum install -y graphviz && \
 rm -rf /var/cache/yum
 
