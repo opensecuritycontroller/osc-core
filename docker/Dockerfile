@@ -1,9 +1,9 @@
-FROM arvindn05:osc-base
+FROM osc-base-image:osc-base
 
 MAINTAINER Arvind Nadendla <arvindn05@gmail.com>
 
 # Copy OSC opt folder to container
-COPY . /
+COPY opt /opt
 
 EXPOSE 8090 443
 
