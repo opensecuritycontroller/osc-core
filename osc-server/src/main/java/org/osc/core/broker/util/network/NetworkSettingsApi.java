@@ -47,15 +47,26 @@ public class NetworkSettingsApi {
 
         networkSettingsDto.setDhcp(true);
         String hostIpAddress = null;
+        String dnsSvr1 = "";
+        String dnsSvr2 = "";
 
         try {
             hostIpAddress = NetworkUtil.getHostIpAddress();
             networkSettingsDto.setHostIpAddress(hostIpAddress);
             networkSettingsDto.setHostSubnetMask(getIPv4LocalNetMask());
             networkSettingsDto.setHostDefaultGateway(getDefaultGateway());
+
             List<String> dns = getDNSSettings();
-            networkSettingsDto.setHostDnsServer1(dns.get(0));
-            networkSettingsDto.setHostDnsServer2(dns.get(1));
+            for (int index = 0; index < dns.size(); index++) {
+                if (index == 0) {
+                    dnsSvr1 = dns.get(index);
+                }
+                if (index == 1) {
+                    dnsSvr2 = dns.get(index);
+                }
+            }
+            networkSettingsDto.setHostDnsServer1(dnsSvr1);
+            networkSettingsDto.setHostDnsServer2(dnsSvr2);
 
         } catch (SocketException | UnknownHostException e) {
             log.error("Failed to get host and/or ip address", e);
