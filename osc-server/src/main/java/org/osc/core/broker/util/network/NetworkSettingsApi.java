@@ -63,6 +63,7 @@ public class NetworkSettingsApi {
                 }
                 if (index == 1) {
                     dnsSvr2 = dns.get(index);
+                    break;
                 }
             }
             networkSettingsDto.setHostDnsServer1(dnsSvr1);

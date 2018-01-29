@@ -29,8 +29,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 //TODO balmukund: The class under test now PowerMockito is being used to mock static dependencies.
 //This will be removed when refactoring happens along with other classes.
-//TODO balmukund: Assert Check will improve as well will add Mock/Stub Input list for ServerUtil.execWithLog and will be done during refactoring the class.
-//Also will cover the abnormal case as well.
+//TODO balmukund: Improve assert to actually validate that the netmask is within the the output list of execWithLog.
+//TDO balmukund: Will cover abnormal case as well.
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ ServerUtil.class })
 public class NetworkSettingsApiTest {
