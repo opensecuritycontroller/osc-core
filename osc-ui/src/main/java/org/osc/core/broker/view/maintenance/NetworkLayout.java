@@ -37,18 +37,14 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.update.SetNATSettingsWindow;
-import org.osc.core.broker.window.update.SetNetworkSettingsWindow;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
@@ -59,16 +55,12 @@ public class NetworkLayout extends FormLayout {
     private static final Logger log = LoggerFactory.getLogger(NetworkLayout.class);
 
     public Table networkTable = null;
-    private OptionGroup mode = null;
-    private Button editIPSettings = null;
     private Button editNATSettings = null;
     public Table natTable;
 
     private GetNetworkSettingsServiceApi getNetworkSettingsService;
 
     private CheckNetworkSettingsServiceApi checkNetworkSettingsService;
-
-    private SetNetworkSettingsServiceApi setNetworkSettingsService;
 
     private GetNATSettingsServiceApi getNATSettingsService;
 
@@ -87,28 +79,32 @@ public class NetworkLayout extends FormLayout {
         super();
         this.getNetworkSettingsService = getNetworkSettingsService;
         this.checkNetworkSettingsService = checkNetworkSettingsService;
-        this.setNetworkSettingsService = setNetworkSettingsService;
         this.getNATSettingsService = getNATSettingsService;
         this.setNATSettingsService = setNATSettingsService;
         this.server = server;
+        this.validator = validator;
         try {
 
             // creating layout to hold option group and edit button
             HorizontalLayout optionLayout = new HorizontalLayout();
-            optionLayout.addComponent(createIPSettingsEditButton());
-            optionLayout.addComponent(createOptionGroup());
             optionLayout.addStyleName(StyleConstants.COMPONENT_SPACING_TOP_BOTTOM);
 
             Panel networkPanel = new Panel("IP Details");
             VerticalLayout networkLayout = new VerticalLayout();
-            networkLayout.addComponent(optionLayout);
-            this.networkTable = createNetworkTable();
-            networkLayout.addComponent(this.networkTable);
-            networkPanel.setContent(networkLayout);
+            Panel networkPanelDHCP = new Panel("DHCP");
+            networkTable = createNetworkTable();
+            networkLayout.addComponent(networkTable);
+            networkPanelDHCP.setContent(networkLayout);
+            networkPanel.setContent(networkPanelDHCP);
 
             Panel natPanel = new Panel("NAT Details");
             VerticalLayout natLayout = new VerticalLayout();
             HorizontalLayout editNatLayout = new HorizontalLayout();
+            HorizontalLayout dhcpLayout = new HorizontalLayout();
+            dhcpLayout.addStyleName("network-options");
+            dhcpLayout.setEnabled(false);
+            dhcpLayout.setImmediate(true);
+            optionLayout.addComponent(dhcpLayout);
             editNatLayout.addStyleName(StyleConstants.COMPONENT_SPACING_TOP_BOTTOM);
             editNatLayout.addComponent(createNATEditButton());
             natLayout.addComponent(editNatLayout);
@@ -133,25 +129,6 @@ public class NetworkLayout extends FormLayout {
     }
 
     @SuppressWarnings("serial")
-    private Button createIPSettingsEditButton() {
-        // creating edit button
-        this.editIPSettings = new Button("Edit");
-        this.editIPSettings.setEnabled(true);
-        this.editIPSettings.addStyleName(StyleConstants.BUTTON_TOOLBAR);
-        this.editIPSettings.addClickListener(new ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event) {
-                try {
-                    editIPSettingsClicked();
-                } catch (Exception e) {
-                    ViewUtil.showError("Error editing IP settings", e);
-                }
-            }
-        });
-        return this.editIPSettings;
-    }
-
-    @SuppressWarnings("serial")
     private Button createNATEditButton() {
         // creating edit button
         this.editNATSettings = new Button("Edit");
@@ -168,36 +145,6 @@ public class NetworkLayout extends FormLayout {
             }
         });
         return this.editNATSettings;
-    }
-
-    @SuppressWarnings("serial")
-    private void editIPSettingsClicked() throws Exception {
-        try {
-            if (!hasDeployedInstances()) {
-                ViewUtil.addWindow(new SetNetworkSettingsWindow(this, this.setNetworkSettingsService));
-            } else {
-                final VmidcWindow<OkCancelButtonModel> alertWindow = WindowUtil.createAlertWindow(
-                        VmidcMessages.getString(VmidcMessages_.NW_CHANGE_WARNING_TITLE),
-                        VmidcMessages.getString(VmidcMessages_.NW_CHANGE_WARNING));
-                alertWindow.getComponentModel().setOkClickedListener(new ClickListener() {
-
-                    @Override
-                    public void buttonClick(ClickEvent event) {
-                        alertWindow.close();
-                        try {
-                            ViewUtil.addWindow(new SetNetworkSettingsWindow(NetworkLayout.this,
-                                    NetworkLayout.this.setNetworkSettingsService));
-                        } catch (Exception e) {
-                            ViewUtil.showError("Error displaying IP setting window", e);
-                        }
-                    }
-                });
-                ViewUtil.addWindow(alertWindow);
-            }
-        } catch (Exception e) {
-            log.error("Failed to check if IP settings can be changed. Launching edit settings window", e);
-            ViewUtil.addWindow(new SetNetworkSettingsWindow(this, this.setNetworkSettingsService));
-        }
     }
 
     @SuppressWarnings("serial")
@@ -234,31 +181,6 @@ public class NetworkLayout extends FormLayout {
         CheckNetworkSettingResponse response = this.checkNetworkSettingsService.dispatch(new Request() {
         });
         return response.hasDeployedInstances();
-    }
-
-    @SuppressWarnings("serial")
-    private OptionGroup createOptionGroup() {
-        this.mode = new OptionGroup();
-        this.mode.addItem("DHCP");
-        this.mode.addItem("Static");
-        this.mode.addStyleName("network-options");
-        this.mode.setImmediate(true);
-        this.mode.addValueChangeListener(new ValueChangeListener() {
-            @Override
-            public void valueChange(ValueChangeEvent event) {
-                if (NetworkLayout.this.mode.getValue().equals("DHCP")) {
-                    NetworkLayout.this.editIPSettings.setEnabled(false);
-                    populateNetworkTable();
-                    NetworkLayout.this.mode.setEnabled(true);
-                }
-                if (NetworkLayout.this.mode.getValue().equals("Static")) {
-                    NetworkLayout.this.editIPSettings.setEnabled(true);
-                    NetworkLayout.this.mode.setEnabled(false);
-                }
-
-            }
-        });
-        return this.mode;
     }
 
     private Table createNetworkTable() {
@@ -319,12 +241,6 @@ public class NetworkLayout extends FormLayout {
                     .setValue(getNetworkSettingsResponse.getHostDnsServer1());
             this.networkTable.getItem(5).getItemProperty("Value")
                     .setValue(getNetworkSettingsResponse.getHostDnsServer2());
-            if (getNetworkSettingsResponse.isDhcp()) {
-                this.mode.select("DHCP");
-                this.editIPSettings.setEnabled(false);
-            } else if (!getNetworkSettingsResponse.isDhcp()) {
-                this.mode.select("Static");
-            }
         } catch (Exception ex) {
             log.error("Failed to get network settings", ex);
         }
