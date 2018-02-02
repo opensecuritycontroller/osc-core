@@ -8,6 +8,7 @@ osc-export/webapp/**
 osc-export/data/*.db*
 osc-export/data/log/**
 osc-export/data/plugins/**
+osc-export/data/ovf/**
 osc-export/data/mainKeyStore.p12
 osc-export/data/osctrustore.jks
 osc-export/*.db*
