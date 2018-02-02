@@ -17,7 +17,7 @@
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +38,10 @@ import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.openstack4j.model.compute.ext.Hypervisor;
 import org.openstack4j.model.identity.v3.Region;
 import org.openstack4j.model.network.Port;
-import org.slf4j.LoggerFactory;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.BootstrapFileElement;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
@@ -131,7 +131,7 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
             }
 
             for (BootstrapFileElement file : bootstrapInfo.getBootstrapFiles()) {
-                sc.addPersonality(file.getName(), Arrays.toString(file.getContent()));
+                sc.addPersonality(file.getName(), new String(file.getContent(), StandardCharsets.UTF_8));
             }
             sc.configDrive(true);
 
