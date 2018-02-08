@@ -19,7 +19,7 @@
 
 	<property name="image-format" value="vmdk_only" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
-        <target name="dockerimage" depends="build,dockerImageBuild,clean" description="build all and generate docker image in tar" />
+        <target name="dockerimage" depends="dockerImageBuild" description="build all and generate docker image in tar" />
 	<target name="build" depends="deleteJavaJre">
 		<echo>Ant version: ${ant.version}</echo>
 		<echo>Ant Java/JVM version: ${ant.java.version}</echo>
@@ -146,32 +146,10 @@
         <echo>Version: ${releaseVersion}</echo>
     </target>
 
-    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,copyAndUnzipServerUpgradeBundle,copyServerUpgradeBundle,createDockerImage" description="Copy result files to build dir">
+    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,copyPlugins,createDockerImage" description="Copy result files to build dir">
         <zip destfile="Build${fullVersion}/OSC-${releaseVersion}_Build${fullVersion}.zip">
-            <fileset dir="Build${fullVersion}" includes="**/*.tar **/serverUpgradeBundle-*.zip" />
+            <fileset dir="Build${fullVersion}" includes="**/*.tar " />
         </zip>
-    </target>
-
-    <target name="checkServerUpgradeBundleExist">
-        <available file="docker/serverUpgradeBundle*.zip" property="isServerUpgradeBundleExist"/>
-    </target>
-
-    <target name="deleteOldServerUpgradeBundle" depends="checkServerUpgradeBundleExist" if="isServerUpgradeBundleExist">
-        <delete>
-            <fileset dir="docker/" includes="serverUpgradeBundle-*.zip" />
-        </delete>
-    </target>
-
-    <target name="copyAndUnzipServerUpgradeBundle" depends="deleteOldServerUpgradeBundle">
-        <copy file="target/serverUpgradeBundle.zip" tofile="docker/serverUpgradeBundle-${fullVersion}.zip" />
-            <exec executable="unzip" resultproperty="tar.result" dir="docker/">
-                <arg value="serverUpgradeBundle-${fullVersion}.zip" />
-            </exec>
-    </target>
-
-    <target name="clean" >
-        <delete file="docker/serverUpgradeBundle-${fullVersion}.zip"/>
-        <delete dir="docker/opt" />
     </target>
 
     <target name="createDockerImage" description="create docker image">
@@ -179,8 +157,14 @@
             <arg value="pull" />
             <arg value="centos:latest" />
         </exec>
+        <property environment="env"/>
+
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
+            <arg value="--build-arg" />
+            <arg value="https_proxy=${env.https_proxy}" />
+            <arg value="--build-arg" />
+            <arg value="http_proxy=${env.http_proxy}" />
             <arg value="-f" />
             <arg value="Dockerfile-osc-base" />
             <arg value="." />
@@ -189,6 +173,10 @@
         </exec>
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
+            <arg value="--build-arg" />
+            <arg value="https_proxy=${env.https_proxy}" />
+            <arg value="--build-arg" />
+            <arg value="http_proxy=${env.http_proxy}" />
             <arg value="-f" />
             <arg value="Dockerfile" />
             <arg value="." />

@@ -17,13 +17,22 @@ cache:
   directories:
   - $HOME/.m2
   - $HOME/build/opensecuritycontroller/osc-core/osc-server-bom/Sources/
+
 sudo: false
+services: 
+    - docker
 language:
     - java
 jdk:
     - oraclejdk8
 git:
   depth: 99999
+
+addons:
+  apt:
+    packages:
+      - ant
+
 addons:
   apt:
     packages:
@@ -47,5 +56,8 @@ script:
       else
         mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report sonar:sonar;
       fi
+    - export http_proxy=""
+    - export https_proxy=""
+    - ant dockerimage
 after_success:
     - bash <(curl -s https://codecov.io/bash)
