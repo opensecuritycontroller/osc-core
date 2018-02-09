@@ -7,37 +7,15 @@ yum install -y wget && \
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u162-b12/0da788060d494f5095bf8624735fa2f1/jre-8u162-linux-x64.rpm && \
 yum localinstall -y jre-8u162-linux-x64.rpm && \
 rm -rf jre-8u162-linux-x64.rpm && \
-wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u162-b12/0da788060d494f5095bf8624735fa2f1/jdk-8u162-linux-x64.rpm && \
-yum localinstall -y jdk-8u162-linux-x64.rpm && \
-rm -rf jre-8u162-linux-x64.rpm && \
 yum install -y iproute && \
 yum install -y graphviz && \
-yum install -y ant && \
-yum install -y unzip && \
-yum install -y git && \
-rm -rf /var/cache/yum && \
-cd /usr/local && \ 
-wget http://www-eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz && \
-tar xzf apache-maven-3.3.9-bin.tar.gz && \
-rm -rf apache-maven-3.3.9-bin.tar.gz && \
-ln -s apache-maven-3.3.9 apache-maven && \
-mkdir $HOME/.m2 && \
-mkdir -p $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher && \
-wget -O $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher/biz.aQute.launcher-3.3.0.jar  http://central.maven.org/maven2/biz/aQute/bnd/biz.aQute.launcher/3.3.0/biz.aQute.launcher-3.3.0.jar
- 
+rm -rf /var/cache/yum  
 
 # Set environment variables.
-ENV JAVA_HOME /usr/java/jdk1.8.0_162
-ENV HOME /root
-ENV M2_HOME /usr/local/apache-maven
-ENV MAVEN_HOME /usr/local/apache-maven
-ENV PATH ${M2_HOME}/bin:${PATH}
+ENV JAVA_HOME /usr/java/jre1.8.0_162
 
 # Define working directory.
 WORKDIR /root
-
-COPY settings.xml $HOME/.m2/settings.xml
-RUN  if [ "$http_proxy" = "" ] ; then rm -r $HOME/.m2/settings.xml ; fi 
 
 # Define default command.
 CMD ["bash"]

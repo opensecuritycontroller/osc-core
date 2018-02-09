@@ -56,8 +56,10 @@ script:
       else
         mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report sonar:sonar;
       fi
+
     - export http_proxy=""
     - export https_proxy=""
-    - travis_wait ant 5 dockerimage > /dev/null 2>&1
+    - ant dockerimage
+
 after_success:
     - bash <(curl -s https://codecov.io/bash)
