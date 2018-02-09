@@ -58,6 +58,6 @@ script:
       fi
     - export http_proxy=""
     - export https_proxy=""
-    - ant dockerimage
+    - travis_wait ant 5 dockerimage > /dev/null 2>&1
 after_success:
     - bash <(curl -s https://codecov.io/bash)

@@ -10,6 +10,9 @@ cd target && \
 unzip serverUpgradeBundle.zip && \
 cp -r opt / && \
 cd $HOME && \
+yum remove -y ant && \
+yum remove -y jdk && \
+rm -rf /usr/local/apache-maven* && \
 rm -rf osc-core
 
 EXPOSE 8090 443
