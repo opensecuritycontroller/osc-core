@@ -146,7 +146,7 @@
         <echo>Version: ${releaseVersion}</echo>
     </target>
 
-    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,build,copyAndUnzipServerUpgradeBundle,copyServerUpgradeBundle,copyPlugins,createDockerImage" description="Copy result files to build dir">
+    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,copyAndUnzipServerUpgradeBundle,copyServerUpgradeBundle,copyPlugins,createDockerImage" description="Copy result files to build dir">
         <zip destfile="Build${fullVersion}/OSC-${releaseVersion}_Build${fullVersion}.zip">
             <fileset dir="Build${fullVersion}" includes="**/*.tar **/serverUpgradeBundle-*.zip" />
         </zip>
@@ -173,6 +173,16 @@
         <delete file="docker/serverUpgradeBundle-${fullVersion}.zip"/>
         <delete dir="docker/opt" />
     </target>
+    
+    <target name="proxy.check">
+        <property environment="env"/>
+        <condition property="proxy-is-ser">
+            <AND>
+                <isset property="env.https_proxy" />
+                <isset property="env.http_proxy" />
+            </AND>
+        </condition>
+    </target> 
 
     <target name="createDockerImage" description="create docker image">
         <exec executable="docker" resultproperty="tar.result">
@@ -183,10 +193,10 @@
 
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
-            <arg value="--build-arg" />
-            <arg value="https_proxy=${env.https_proxy}" />
-            <arg value="--build-arg" />
-            <arg value="http_proxy=${env.http_proxy}" />
+            <arg value="--build-arg" if:set="env.https_proxy" />
+            <arg value="https_proxy=${env.https_proxy}" if:set="env.https_proxy" />
+            <arg value="--build-arg" if:set="env.http_proxy" />
+            <arg value="http_proxy=${env.http_proxy}" if:set="env.http_proxy" />
             <arg value="-f" />
             <arg value="Dockerfile-osc-base" />
             <arg value="." />
@@ -195,10 +205,10 @@
         </exec>
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
-            <arg value="--build-arg" />
-            <arg value="https_proxy=${env.https_proxy}" />
-            <arg value="--build-arg" />
-            <arg value="http_proxy=${env.http_proxy}" />
+            <arg value="--build-arg" if:set="env.https_proxy" />
+            <arg value="https_proxy=${env.https_proxy}" if:set="env.https_proxy" />
+            <arg value="--build-arg" if:set="env.http_proxy" />
+            <arg value="http_proxy=${env.http_proxy}" if:set="env.http_proxy" />
             <arg value="-f" />
             <arg value="Dockerfile" />
             <arg value="." />

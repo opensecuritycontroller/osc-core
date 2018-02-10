@@ -31,12 +31,8 @@ git:
 addons:
   apt:
     packages:
-      - ant
-
-addons:
-  apt:
-    packages:
       - oracle-java8-installer
+      - unzip
 #Issue with BND tools, see https://github.com/bndtools/bndtools/issues/1294
 before_install:
     - mkdir -p $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher
@@ -57,9 +53,11 @@ script:
         mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report sonar:sonar;
       fi
 
-    - export http_proxy=""
-    - export https_proxy=""
-    - ant dockerimage
+    - cp target/serverUpgradeBundle.zip docker/
+    - cd docker
+    - unzip serverUpgradeBundle.zip
+    - docker build -f Dockerfile-osc-base . -t osc-base-image:osc-base
+    - docker build -f Dockerfile . -t osc-docker-image:osc
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
