@@ -173,16 +173,6 @@
         <delete file="docker/serverUpgradeBundle-${fullVersion}.zip"/>
         <delete dir="docker/opt" />
     </target>
-    
-    <target name="proxy.check">
-        <property environment="env"/>
-        <condition property="proxy-is-ser">
-            <AND>
-                <isset property="env.https_proxy" />
-                <isset property="env.http_proxy" />
-            </AND>
-        </condition>
-    </target> 
 
     <target name="createDockerImage" description="create docker image">
         <exec executable="docker" resultproperty="tar.result">
@@ -190,7 +180,6 @@
             <arg value="centos:latest" />
         </exec>
         <property environment="env"/>
-
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
             <arg value="--build-arg" if:set="env.https_proxy" />

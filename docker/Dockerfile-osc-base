@@ -9,7 +9,7 @@ yum localinstall -y jre-8u162-linux-x64.rpm && \
 rm -rf jre-8u162-linux-x64.rpm && \
 yum install -y iproute && \
 yum install -y graphviz && \
-rm -rf /var/cache/yum  
+rm -rf /var/cache/yum
 
 # Set environment variables.
 ENV JAVA_HOME /usr/java/jre1.8.0_162

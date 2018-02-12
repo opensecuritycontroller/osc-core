@@ -53,11 +53,7 @@ script:
         mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report sonar:sonar;
       fi
 
-    - cp target/serverUpgradeBundle.zip docker/
-    - cd docker
-    - unzip serverUpgradeBundle.zip
-    - docker build -f Dockerfile-osc-base . -t osc-base-image:osc-base
-    - docker build -f Dockerfile . -t osc-docker-image:osc
+    - ant dockerImageBuild
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
