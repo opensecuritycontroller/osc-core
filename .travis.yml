@@ -17,17 +17,22 @@ cache:
   directories:
   - $HOME/.m2
   - $HOME/build/opensecuritycontroller/osc-core/osc-server-bom/Sources/
+
 sudo: false
+services: 
+    - docker
 language:
     - java
 jdk:
     - oraclejdk8
 git:
   depth: 99999
+
 addons:
   apt:
     packages:
       - oracle-java8-installer
+      - unzip
 #Issue with BND tools, see https://github.com/bndtools/bndtools/issues/1294
 before_install:
     - mkdir -p $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher
@@ -47,5 +52,8 @@ script:
       else
         mvn org.jacoco:jacoco-maven-plugin:prepare-agent install org.jacoco:jacoco-maven-plugin:report sonar:sonar;
       fi
+
+    - ant dockerImageBuild
+
 after_success:
     - bash <(curl -s https://codecov.io/bash)

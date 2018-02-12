@@ -146,7 +146,7 @@
         <echo>Version: ${releaseVersion}</echo>
     </target>
 
-    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,copyAndUnzipServerUpgradeBundle,copyServerUpgradeBundle,createDockerImage" description="Copy result files to build dir">
+    <target name="dockerImageBuild" depends="prodVersion,createBuildDir,copyAndUnzipServerUpgradeBundle,copyServerUpgradeBundle,copyPlugins,createDockerImage" description="Copy result files to build dir">
         <zip destfile="Build${fullVersion}/OSC-${releaseVersion}_Build${fullVersion}.zip">
             <fileset dir="Build${fullVersion}" includes="**/*.tar **/serverUpgradeBundle-*.zip" />
         </zip>
@@ -179,8 +179,13 @@
             <arg value="pull" />
             <arg value="centos:latest" />
         </exec>
+        <property environment="env"/>
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
+            <arg value="--build-arg" if:set="env.https_proxy" />
+            <arg value="https_proxy=${env.https_proxy}" if:set="env.https_proxy" />
+            <arg value="--build-arg" if:set="env.http_proxy" />
+            <arg value="http_proxy=${env.http_proxy}" if:set="env.http_proxy" />
             <arg value="-f" />
             <arg value="Dockerfile-osc-base" />
             <arg value="." />
@@ -189,6 +194,10 @@
         </exec>
         <exec executable="docker" resultproperty="tar.result" dir="docker/">
             <arg value="build" />
+            <arg value="--build-arg" if:set="env.https_proxy" />
+            <arg value="https_proxy=${env.https_proxy}" if:set="env.https_proxy" />
+            <arg value="--build-arg" if:set="env.http_proxy" />
+            <arg value="http_proxy=${env.http_proxy}" if:set="env.http_proxy" />
             <arg value="-f" />
             <arg value="Dockerfile" />
             <arg value="." />
