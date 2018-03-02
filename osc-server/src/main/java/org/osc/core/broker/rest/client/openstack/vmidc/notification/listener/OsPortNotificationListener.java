@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
+import static org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsSyncJobSubmitter.triggerSGSync;
+
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -133,7 +135,7 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
         if (keyValue != null) {
             // start SG sync as the port is relevant to this SG object...
-            triggerSGSync(sg, em);
+            triggerSGSync(sg, em, this.sgConformJobFactory);
         }
 
     }
@@ -149,23 +151,17 @@ public class OsPortNotificationListener extends OsNotificationListener {
                         ((port.getNetwork() != null && this.objectIdList.contains(port.getNetwork().getOpenstackId()))
                                 || (port.getVm() != null && this.objectIdList.contains(port.getVm().getOpenstackId()))
                                 || (port.getSubnet() != null && this.objectIdList.contains(port.getSubnet().getOpenstackId())))) {
-                    triggerSGSync(sg, em);
+                    triggerSGSync(sg, em, this.sgConformJobFactory);
                 }
 
             } else {
                 String projectId = OsNotificationUtil.getPropertyFromNotificationMessage(message,
                         OsNotificationKeyType.CONTEXT_PROJECT_ID.toString());
                 if (this.objectIdList.contains(projectId)) {
-                    triggerSGSync(sg, em);
+                    triggerSGSync(sg, em, this.sgConformJobFactory);
                 }
             }
         }
-
     }
 
-    private void triggerSGSync(SecurityGroup sg, EntityManager em) throws Exception {
-        log.info("Running SG sync based on OS Port notification received.");
-        // Message is related to registered Security Group. Trigger sync
-        this.sgConformJobFactory.startSecurityGroupConformanceJob(sg);
-    }
 }
