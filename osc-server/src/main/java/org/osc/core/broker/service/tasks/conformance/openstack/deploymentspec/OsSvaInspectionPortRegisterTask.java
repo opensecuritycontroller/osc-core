@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates SVA for given dai
+ * Register inspection port for the given dai via RedirectionApi.
  */
 @Component(service = OsSvaInspectionPortRegisterTask.class)
 public class OsSvaInspectionPortRegisterTask extends TransactionalTask {
