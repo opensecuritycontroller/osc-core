@@ -152,6 +152,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
         OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
+        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getExternalId());
     }
 
     private String getImageRefIdByRegion(VirtualSystem vs, String region) {

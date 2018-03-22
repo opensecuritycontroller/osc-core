@@ -71,8 +71,6 @@ public class OsSvaInspectionPortRegisterTask extends TransactionalTask {
 
         VirtualizationConnector vc = vs.getVirtualizationConnector();
 
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-
         if (vc.isControllerDefined()) {
             try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
