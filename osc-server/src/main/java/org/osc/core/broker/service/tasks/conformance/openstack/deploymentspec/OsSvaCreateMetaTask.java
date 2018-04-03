@@ -52,6 +52,8 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
     @Reference
     private OsSvaServerCreateTask osSvaServerCreateTask;
     @Reference
+    private OsSvaInspectionPortRegisterTask osSvaInspectionPortRegisterTask;
+    @Reference
     private OsSvaEnsureActiveTask osSvaEnsureActiveTask;
     @Reference
     private OsSvaCheckFloatingIpTask osSvaCheckFloatingIpTask;
@@ -81,6 +83,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
         task.apiFactoryService = this.apiFactoryService;
         task.mgrCreateMemberDeviceTask = this.mgrCreateMemberDeviceTask;
         task.osSvaServerCreateTask = this.osSvaServerCreateTask;
+        task.osSvaInspectionPortRegisterTask = this.osSvaInspectionPortRegisterTask;
         task.osSvaEnsureActiveTask = this.osSvaEnsureActiveTask;
         task.osSvaCheckFloatingIpTask = this.osSvaCheckFloatingIpTask;
         task.osSvaCheckNetworkInfoTask = this.osSvaCheckNetworkInfoTask;
@@ -122,6 +125,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
         this.tg.addTask(this.osSvaServerCreateTask.create(this.dai, this.hypervisorHostName, this.availabilityZone));
         this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
+        this.tg.appendTask(this.osSvaInspectionPortRegisterTask.create(this.dai));
 
         this.tg.appendTask(this.osSvaCheckNetworkInfoTask.create(this.dai));
 

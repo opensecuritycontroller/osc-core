@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,17 +38,13 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.slf4j.LoggerFactory;
-import org.osc.sdk.controller.DefaultInspectionPort;
-import org.osc.sdk.controller.DefaultNetworkPort;
-import org.osc.sdk.controller.api.SdnRedirectionApi;
-import org.osc.sdk.controller.element.Element;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -156,54 +151,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
-        if (vc.isControllerDefined()) {
-            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
-                DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
-                        createdServer.getIngressInspectionMacAddr());
-                DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
-                        createdServer.getEgressInspectionMacAddr());
-
-                if (this.apiFactoryService.supportsNeutronSFC(this.dai.getVirtualSystem())) {
-                    // In case of neutron SFC, port group id needs to be used when registering and updated in the DS
-                    String portGroupId = ds.getPortGroupId();
-                    boolean pgAlreadyCreatedByOther = (portGroupId != null);
-
-                    Element element = controller
-                            .registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
-
-                    portGroupId = element.getParentId();
-
-                    this.log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
-                            portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
-
-                    if (!pgAlreadyCreatedByOther) {
-                        ds = em.find(DeploymentSpec.class, ds.getId());
-                        ds.setPortGroupId(portGroupId);
-                        OSCEntityManager.update(em, ds, this.txBroadcastUtil);
-                    }
-
-                } else if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
-                    String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(),
-                                                    ds.getProjectName(),
-                                                    ds.getVirtualSystem().getVirtualizationConnector(),
-                                                    Arrays.asList(ingressPort));
-
-                    ingressPort.setParentId(domainId);
-                    egressPort.setParentId(domainId);
-
-                  //Element object in DefaultInspectionport is not used at this point, hence null
-                    controller.registerInspectionPort(
-                            new DefaultInspectionPort(ingressPort, egressPort, null));
-                } else {
-                    controller.registerInspectionPort(
-                            new DefaultInspectionPort(ingressPort, egressPort, null));
-                }
-            }
-        }
-
-        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getExternalId());
-
         OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
+        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getExternalId());
     }
 
     private String getImageRefIdByRegion(VirtualSystem vs, String region) {
