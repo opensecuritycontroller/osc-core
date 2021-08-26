@@ -26,7 +26,7 @@ language:
 jdk:
     - oraclejdk8
 git:
-  depth: 99999
+  depth: 3
 
 addons:
   apt:
